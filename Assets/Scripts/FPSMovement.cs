@@ -29,14 +29,23 @@ public class FPSMovement : MonoBehaviour
     private bool jumpInput;
     private bool runInput;
     
+    private PlayerInput playerInput;
+    
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         playerCamera = GetComponentInChildren<Camera>();
+        playerInput = GetComponent<PlayerInput>();
         
         if (playerCamera == null)
         {
             Debug.LogError("No camera found as child of this GameObject!");
+            return;
+        }
+        
+        if (playerInput == null)
+        {
+            Debug.LogError("No PlayerInput component found! Please add PlayerInput component and assign the InputSystem_Actions asset.");
             return;
         }
         
@@ -62,40 +71,34 @@ public class FPSMovement : MonoBehaviour
     
     void EnableInputActions()
     {
-        // These methods will be called by the Input System
-        // Make sure to set up the Input Actions asset in Unity
+        // Input actions are handled by PlayerInput component
+        // Make sure PlayerInput component is configured with the InputSystem_Actions asset
     }
     
     void DisableInputActions()
     {
-        // Clean up input actions
+        // Input actions are handled by PlayerInput component
     }
     
-    // Input System callback methods
-    public void OnMove(InputAction.CallbackContext context)
+    // Input System callback methods for PlayerInput
+    public void OnMove(InputValue value)
     {
-        moveInput = context.ReadValue<Vector2>();
+        moveInput = value.Get<Vector2>();
     }
     
-    public void OnLook(InputAction.CallbackContext context)
+    public void OnLook(InputValue value)
     {
-        lookInput = context.ReadValue<Vector2>();
+        lookInput = value.Get<Vector2>();
     }
     
-    public void OnJump(InputAction.CallbackContext context)
+    public void OnJump(InputValue value)
     {
-        if (context.performed)
-            jumpInput = true;
-        else if (context.canceled)
-            jumpInput = false;
+        jumpInput = value.isPressed;
     }
     
-    public void OnRun(InputAction.CallbackContext context)
+    public void OnSprint(InputValue value)
     {
-        if (context.performed)
-            runInput = true;
-        else if (context.canceled)
-            runInput = false;
+        runInput = value.isPressed;
     }
     
     void Update()

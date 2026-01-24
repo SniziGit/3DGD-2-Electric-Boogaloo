@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3300000}
   - component: {fileID: 2300000}
   - component: {fileID: 6591410}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Third_03_Strip_2x6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -117,7 +117,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 400002}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Third_03_Strip_2x6
   m_TagString: Untagged
   m_Icon: {fileID: 0}

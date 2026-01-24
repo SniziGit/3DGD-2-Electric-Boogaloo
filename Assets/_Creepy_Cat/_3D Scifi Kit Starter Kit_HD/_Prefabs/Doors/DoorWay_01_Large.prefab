@@ -95,6 +95,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 400002}
+  - component: {fileID: -4514385954746185854}
   m_Layer: 0
   m_Name: DoorWay_01_Large
   m_TagString: Untagged
@@ -135,6 +136,18 @@ Transform:
   - {fileID: 482634}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &-4514385954746185854
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41b2272a86df5cb44a3cba5a8a6fa081, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &111324
 GameObject:
   m_ObjectHideFlags: 0

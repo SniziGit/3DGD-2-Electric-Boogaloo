@@ -550,6 +550,7 @@ GameObject:
   m_Component:
   - component: {fileID: 466374}
   - component: {fileID: 8267484}
+  - component: {fileID: -613271969255270302}
   m_Layer: 0
   m_Name: Door_Vert_01
   m_TagString: Untagged
@@ -672,3 +673,15 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &-613271969255270302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 166374}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41b2272a86df5cb44a3cba5a8a6fa081, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 403482}
   - component: {fileID: 3303482}
   - component: {fileID: 2303482}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Stairway_PillarAngle_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -95,7 +95,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 403484}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Stairway_PillarAngle_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}

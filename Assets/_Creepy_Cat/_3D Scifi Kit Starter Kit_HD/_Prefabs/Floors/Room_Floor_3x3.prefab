@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 431766}
   - component: {fileID: 10881320}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Point light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -106,7 +106,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 416038}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Pipes_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -140,7 +140,7 @@ GameObject:
   - component: {fileID: 426528}
   - component: {fileID: 3382750}
   - component: {fileID: 2385960}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Light_SideLight_03
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -227,7 +227,7 @@ GameObject:
   - component: {fileID: 3311384}
   - component: {fileID: 2330300}
   - component: {fileID: 6542830}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Angle_01_6x6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -335,7 +335,7 @@ GameObject:
   - component: {fileID: 3335812}
   - component: {fileID: 2343610}
   - component: {fileID: 6547806}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Angle_01_6x6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -442,7 +442,7 @@ GameObject:
   - component: {fileID: 416426}
   - component: {fileID: 3357664}
   - component: {fileID: 2392462}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Light_SideLight_03
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -528,7 +528,7 @@ GameObject:
   - component: {fileID: 422820}
   - component: {fileID: 3397730}
   - component: {fileID: 2343894}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Pipes_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -615,7 +615,7 @@ GameObject:
   - component: {fileID: 3333360}
   - component: {fileID: 2370070}
   - component: {fileID: 6578118}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Squared_01_6x6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -720,7 +720,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 495756}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Squared_02_6x6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -755,7 +755,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 416414}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Squared_01_6x9
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -787,7 +787,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 400742}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Angle_01_6x8
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -819,7 +819,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 424646}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Angle_01_6x6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -854,7 +854,7 @@ GameObject:
   - component: {fileID: 3366344}
   - component: {fileID: 2333130}
   - component: {fileID: 6564734}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Squared_02_6x6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -960,7 +960,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 464128}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Light_SideLight_03
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -993,7 +993,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 468728}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Room_Floor_3x3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1034,7 +1034,7 @@ GameObject:
   m_Component:
   - component: {fileID: 496484}
   - component: {fileID: 10808354}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Point light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1133,7 +1133,7 @@ GameObject:
   - component: {fileID: 3388742}
   - component: {fileID: 2332360}
   - component: {fileID: 6519412}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Angle_01_6x6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1238,7 +1238,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 463858}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Squared_01_6x7
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1270,7 +1270,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 476672}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Light_SideLight_03
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1303,7 +1303,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 463914}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Squared_01_6x8
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1338,7 +1338,7 @@ GameObject:
   - component: {fileID: 3364482}
   - component: {fileID: 2312064}
   - component: {fileID: 6575240}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Squared_01_6x6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1446,7 +1446,7 @@ GameObject:
   - component: {fileID: 3335818}
   - component: {fileID: 2344544}
   - component: {fileID: 6556390}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Squared_01_6x6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1551,7 +1551,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 440020}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Angle_01_6x9
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1586,7 +1586,7 @@ GameObject:
   - component: {fileID: 3341876}
   - component: {fileID: 2326924}
   - component: {fileID: 6581040}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Angle_01_6x6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1694,7 +1694,7 @@ GameObject:
   - component: {fileID: 3351702}
   - component: {fileID: 2356142}
   - component: {fileID: 6579202}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Squared_01_6x6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1799,7 +1799,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 486900}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Angle_01_6x7
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1831,7 +1831,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 423826}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Squared_01_6x6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
