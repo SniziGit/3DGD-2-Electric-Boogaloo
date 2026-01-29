@@ -479,9 +479,25 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
+      propertyPath: maxRooms
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
+      propertyPath: wallPrefab
+      value: 
+      objectReference: {fileID: 4434480023597636553, guid: ddd09e405c5f25040999e9c3c0037efe, type: 3}
+    - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: corridorPrefab
       value: 
       objectReference: {fileID: 7864143128494020873, guid: ca5860ee6687fd0429fe4304dab6ee4e, type: 3}
+    - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
+      propertyPath: roomTraversalCost
+      value: 20.09
+      objectReference: {fileID: 0}
+    - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
+      propertyPath: maxAttemptsPerOpening
+      value: 99
+      objectReference: {fileID: 0}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: roomPrefabs.Array.size
       value: 3
