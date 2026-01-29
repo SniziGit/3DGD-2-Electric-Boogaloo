@@ -1,19 +1,16 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class MapGen : MonoBehaviour
 {
     [Header("Room Settings")]
-    [Tooltip("Prefabs for different room types")]
     [SerializeField] private GameObject[] roomPrefabs;
 
     [Header("Corridor Settings")]
-    [Tooltip("Prefab used for straight corridor segments.")]
     [SerializeField] private GameObject corridorPrefab;
-
-    [Tooltip("Distance to leave between two connected room openings (corridor length/gap).")]
-    [SerializeField] private float corridorSpacing = 3f;
-
+    [SerializeField] private float minCorridorSpacing = 2f;
+    [SerializeField] private float maxCorridorSpacing = 4f;
     [SerializeField] private float roomTraversalCost = 0f;
 
     [Header("Dungeon Expansion")]
@@ -25,23 +22,14 @@ public class MapGen : MonoBehaviour
     [Header("Extra Connections (Loops)")]
     [Range(0f, 1f)]
     [SerializeField] private float extraConnectionChancePerOpening = 0.15f;
-
     [SerializeField] private int maxExtraConnections = 12;
-
     [SerializeField] private float maxExtraConnectionDistance = 3.5f;
 
-    // Tracks all generated rooms (for fast membership checks)
     private readonly HashSet<RoomGen> generatedRooms = new();
-
-    // Cached bounds for overlap checks
     private readonly List<Bounds> roomBounds = new();
-
     private readonly List<(RoomOpening A, RoomOpening B)> treeOpenings = new();
     private readonly List<(RoomOpening A, RoomOpening B)> extraOpenings = new();
 
-    // -------------------------------------------------------------------------
-    // Entry point: generate rooms then connect them with corridors
-    // -------------------------------------------------------------------------
     private void Start()
     {
         if (!generateOnStart)
@@ -51,6 +39,12 @@ public class MapGen : MonoBehaviour
 
         GenerateDungeon();
     }
+
+    private bool IsValidOpening(RoomOpening opening) => opening != null && !opening.IsConnected;
+    
+    private bool IsValidEdge((RoomOpening A, RoomOpening B) edge) => edge.A != null && edge.B != null;
+    
+    private RoomGen GetRoomFromOpening(RoomOpening opening) => opening?.GetComponentInParent<RoomGen>();
 
     private void GenerateDungeon()
     {
@@ -86,19 +80,16 @@ public class MapGen : MonoBehaviour
         Queue<RoomOpening> pendingOpenings = new();
         foreach (RoomOpening opening in GetOrCreateOpenings(startRoom))
         {
-            if (opening != null && !opening.IsConnected)
+            if (IsValidOpening(opening))
             {
                 pendingOpenings.Enqueue(opening);
-                Debug.Log($"Added opening {opening.FacingDirection} to queue");
             }
         }
-
-        Debug.Log($"Starting generation with {pendingOpenings.Count} pending openings");
 
         while (pendingOpenings.Count > 0 && generatedRooms.Count < maxRooms)
         {
             RoomOpening opening = pendingOpenings.Dequeue();
-            if (opening == null || opening.IsConnected)
+            if (!IsValidOpening(opening))
             {
                 continue;
             }
@@ -107,12 +98,10 @@ public class MapGen : MonoBehaviour
 
             if (!TrySpawnConnectedRoom(opening, out RoomGen newRoom, out RoomOpening newRoomOpening))
             {
-                Debug.Log($"Failed to spawn room for opening {opening.FacingDirection} - sealing with wall");
                 opening.Seal(wallPrefab, transform);
                 continue;
             }
 
-            Debug.Log($"Successfully spawned new room for opening {opening.FacingDirection}");
             opening.MarkConnected(newRoomOpening);
             newRoomOpening.MarkConnected(opening);
 
@@ -120,16 +109,14 @@ public class MapGen : MonoBehaviour
 
             foreach (RoomOpening next in GetOrCreateOpenings(newRoom))
             {
-                if (next != null && !next.IsConnected)
+                if (IsValidOpening(next))
                 {
                     pendingOpenings.Enqueue(next);
-                    Debug.Log($"Added new opening {next.FacingDirection} to queue");
                 }
             }
         }
 
         NameAndConnectMainPath();
-        Debug.Log($"Generation complete. Total rooms: {generatedRooms.Count}");
     }
 
     private void NameAndConnectMainPath()
@@ -138,7 +125,7 @@ public class MapGen : MonoBehaviour
         {
             foreach ((RoomOpening A, RoomOpening B) edge in treeOpenings)
             {
-                if (edge.A != null && edge.B != null)
+                if (IsValidEdge(edge))
                 {
                     CreateCorridor(edge.A.transform.position, edge.B.transform.position);
                 }
@@ -163,10 +150,7 @@ public class MapGen : MonoBehaviour
             return;
         }
 
-        // Longest possible main path in this generated graph (tree diameter):
-        // 1) BFS from any node to find one endpoint.
-        // 2) BFS from that endpoint to find the opposite endpoint.
-        // The parent map from step 2 reconstructs the main path.
+        // Find longest path (tree diameter) for main path identification
         RoomGen first = FindFurthestRoomByTravelDistance(any, adjacency, out _);
         RoomGen last = FindFurthestRoomByTravelDistance(first, adjacency, out Dictionary<RoomGen, RoomGen> parentFromFirst);
 
@@ -189,57 +173,24 @@ public class MapGen : MonoBehaviour
 
         AddExtraConnections();
 
-        // Instantiate corridors on the main path first.
+        // Create corridors: main path first, then remaining tree edges, then extra connections
         foreach ((RoomOpening A, RoomOpening B) edge in treeOpenings)
         {
-            if (edge.A == null || edge.B == null)
-            {
-                continue;
-            }
+            if (!IsValidEdge(edge)) continue;
 
-            RoomGen ra = edge.A.GetComponentInParent<RoomGen>();
-            RoomGen rb = edge.B.GetComponentInParent<RoomGen>();
-            if (ra == null || rb == null)
-            {
-                continue;
-            }
-
-            if (mainPathEdges.Contains((ra, rb)))
-            {
-                CreateCorridor(edge.A.transform.position, edge.B.transform.position);
-            }
-        }
-
-        // Then instantiate all remaining tree corridors so everything branches into the main path.
-        foreach ((RoomOpening A, RoomOpening B) edge in treeOpenings)
-        {
-            if (edge.A == null || edge.B == null)
-            {
-                continue;
-            }
-
-            RoomGen ra = edge.A.GetComponentInParent<RoomGen>();
-            RoomGen rb = edge.B.GetComponentInParent<RoomGen>();
-            if (ra == null || rb == null)
-            {
-                continue;
-            }
-
-            if (!mainPathEdges.Contains((ra, rb)))
-            {
-                CreateCorridor(edge.A.transform.position, edge.B.transform.position);
-            }
-        }
-
-        // Finally, instantiate extra loop corridors.
-        foreach ((RoomOpening A, RoomOpening B) edge in extraOpenings)
-        {
-            if (edge.A == null || edge.B == null)
-            {
-                continue;
-            }
+            RoomGen ra = GetRoomFromOpening(edge.A);
+            RoomGen rb = GetRoomFromOpening(edge.B);
+            if (ra == null || rb == null) continue;
 
             CreateCorridor(edge.A.transform.position, edge.B.transform.position);
+        }
+
+        foreach ((RoomOpening A, RoomOpening B) edge in extraOpenings)
+        {
+            if (IsValidEdge(edge))
+            {
+                CreateCorridor(edge.A.transform.position, edge.B.transform.position);
+            }
         }
     }
 
@@ -247,48 +198,25 @@ public class MapGen : MonoBehaviour
     {
         Dictionary<RoomGen, List<(RoomGen Neighbor, float Weight)>> adjacency = new();
 
-        foreach (RoomGen room in generatedRooms)
+        foreach (RoomGen room in generatedRooms.Where(r => r != null))
         {
-            if (room == null)
-            {
-                continue;
-            }
-
             adjacency[room] = new List<(RoomGen Neighbor, float Weight)>();
         }
 
         foreach ((RoomOpening A, RoomOpening B) edge in edges)
         {
-            if (edge.A == null || edge.B == null)
-            {
-                continue;
-            }
+            if (!IsValidEdge(edge)) continue;
 
-            RoomGen ra = edge.A.GetComponentInParent<RoomGen>();
-            RoomGen rb = edge.B.GetComponentInParent<RoomGen>();
-            if (ra == null || rb == null)
-            {
-                continue;
-            }
+            RoomGen ra = GetRoomFromOpening(edge.A);
+            RoomGen rb = GetRoomFromOpening(edge.B);
+            if (ra == null || rb == null) continue;
 
             Vector3 delta = edge.B.transform.position - edge.A.transform.position;
             delta.y = 0f;
             float weight = delta.magnitude + Mathf.Max(0f, roomTraversalCost);
 
-            if (!adjacency.TryGetValue(ra, out List<(RoomGen Neighbor, float Weight)> aList))
-            {
-                aList = new List<(RoomGen Neighbor, float Weight)>();
-                adjacency[ra] = aList;
-            }
-
-            if (!adjacency.TryGetValue(rb, out List<(RoomGen Neighbor, float Weight)> bList))
-            {
-                bList = new List<(RoomGen Neighbor, float Weight)>();
-                adjacency[rb] = bList;
-            }
-
-            aList.Add((rb, weight));
-            bList.Add((ra, weight));
+            adjacency[ra].Add((rb, weight));
+            adjacency[rb].Add((ra, weight));
         }
 
         return adjacency;
@@ -412,7 +340,7 @@ public class MapGen : MonoBehaviour
             return null;
         }
 
-        // Dijkstra-like traversal (O(n^2) selection) - fine for small room counts.
+        // Dijkstra-like traversal (O(n^2) selection) - fine for small room counts
         Dictionary<RoomGen, float> dist = new();
         HashSet<RoomGen> visited = new();
 
@@ -575,22 +503,17 @@ public class MapGen : MonoBehaviour
 
             Vector3 localOpposite = instance.transform.InverseTransformPoint(opposite.transform.position);
 
-            float spacing = Mathf.Max(0f, corridorSpacing);
+            float spacing = Random.Range(minCorridorSpacing, maxCorridorSpacing);
             Vector3 targetWorld = fromOpening.transform.position + fromOpening.transform.forward * spacing;
-            Debug.Log($"From opening position: {targetWorld}, Local opposite: {localOpposite}");
             instance.transform.position = targetWorld - instance.transform.TransformVector(localOpposite);
-            Debug.Log($"New room positioned at: {instance.transform.position}");
 
-            // Important: Collider.bounds can lag behind Transform changes until the next physics step.
-            // Force the physics engine to sync transforms so bounds are correct for overlap checks.
+            // Force physics sync for accurate bounds after transform changes
             Physics.SyncTransforms();
 
             Bounds candidateBounds = CalculateRoomBounds(instance);
-            Debug.Log($"Candidate bounds: center={candidateBounds.center}, size={candidateBounds.size}");
 
             if (IsOverlappingExistingRoom(candidateBounds))
             {
-                Debug.Log($"Room overlap detected - destroying instance. Attempt {attempts}/{maxAttemptsPerOpening}");
                 Destroy(instance);
                 continue;
             }
@@ -625,7 +548,7 @@ public class MapGen : MonoBehaviour
             return openings;
         }
 
-        // Use world bounds extents (accounts for scaling) converted back into room-local space.
+        // Use world bounds extents converted to room-local space
         Bounds worldBounds = CalculateRoomBounds(room.gameObject);
         Vector3 localExtents = room.transform.InverseTransformVector(worldBounds.extents);
         Vector3 extents = new Vector3(Mathf.Abs(localExtents.x), Mathf.Abs(localExtents.y), Mathf.Abs(localExtents.z));
@@ -652,7 +575,7 @@ public class MapGen : MonoBehaviour
 
     private static Bounds CalculateRoomBounds(GameObject room)
     {
-        // Prefer renderer bounds: they update immediately when transforms move.
+        // Prefer renderer bounds: they update immediately when transforms move
         Renderer[] renderers = room.GetComponentsInChildren<Renderer>();
         if (renderers != null && renderers.Length > 0)
         {
@@ -662,40 +585,34 @@ public class MapGen : MonoBehaviour
                 bounds.Encapsulate(renderers[i].bounds);
             }
 
-            Debug.Log($"Renderer world bounds: center={bounds.center}, size={bounds.size}");
             return bounds;
         }
 
-        // Fall back to collider bounds if there are no renderers.
+        // Fall back to collider bounds if no renderers
         BoxCollider boxCollider = room.GetComponentInChildren<BoxCollider>();
         if (boxCollider != null)
         {
             Bounds worldBounds = boxCollider.bounds;
-            Debug.Log($"BoxCollider world bounds: center={worldBounds.center}, size={worldBounds.size}");
             return worldBounds;
         }
 
         Bounds fallback = new Bounds(room.transform.position, Vector3.one);
-        Debug.Log($"Fallback bounds: center={fallback.center}, size={fallback.size}");
         return fallback;
     }
 
     private bool IsOverlappingExistingRoom(Bounds candidate)
     {
-        // Add a larger buffer to prevent rooms that are just touching from being considered overlapping
+        // Add buffer to prevent rooms from getting too close to each other
         Bounds bufferedCandidate = candidate;
-        bufferedCandidate.Expand(-0.5f); // Increase buffer to 0.5 units
+        bufferedCandidate.Expand(0.5f); // Add 0.5 unit buffer around candidate room
         
         for (int i = 0; i < roomBounds.Count; i++)
         {
             Bounds bufferedExisting = roomBounds[i];
-            bufferedExisting.Expand(-0.5f); // Increase buffer to 0.5 units
-            
-            Debug.Log($"Checking against existing room {i}: center={bufferedExisting.center}, size={bufferedExisting.size}");
+            bufferedExisting.Expand(0.5f); // Add 0.5 unit buffer around existing room
             
             if (bufferedExisting.Intersects(bufferedCandidate))
             {
-                Debug.Log($"Overlap detected with room {i}");
                 return true;
             }
         }
