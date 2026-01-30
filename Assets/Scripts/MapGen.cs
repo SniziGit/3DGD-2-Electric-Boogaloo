@@ -96,23 +96,31 @@ public class MapGen : MonoBehaviour
 
             Debug.Log($"Processing opening {opening.FacingDirection}. Current rooms: {generatedRooms.Count}/{maxRooms}");
 
-            if (!TrySpawnConnectedRoom(opening, out RoomGen newRoom, out RoomOpening newRoomOpening))
+            // Decide whether to branch out with a corridor (50% chance)
+            if (Random.value < 0.5f)
+            {
+                if (TryCreateCorridorAndRoom(opening, out RoomGen newRoom, out RoomOpening newRoomOpening))
+                {
+                    opening.MarkConnected(newRoomOpening);
+                    newRoomOpening.MarkConnected(opening);
+                    treeOpenings.Add((opening, newRoomOpening));
+
+                    foreach (RoomOpening next in GetOrCreateOpenings(newRoom))
+                    {
+                        if (IsValidOpening(next))
+                        {
+                            pendingOpenings.Enqueue(next);
+                        }
+                    }
+                }
+                else
+                {
+                    opening.Seal(wallPrefab, transform);
+                }
+            }
+            else
             {
                 opening.Seal(wallPrefab, transform);
-                continue;
-            }
-
-            opening.MarkConnected(newRoomOpening);
-            newRoomOpening.MarkConnected(opening);
-
-            treeOpenings.Add((opening, newRoomOpening));
-
-            foreach (RoomOpening next in GetOrCreateOpenings(newRoom))
-            {
-                if (IsValidOpening(next))
-                {
-                    pendingOpenings.Enqueue(next);
-                }
             }
         }
 
@@ -123,14 +131,6 @@ public class MapGen : MonoBehaviour
     {
         if (generatedRooms.Count < 2)
         {
-            foreach ((RoomOpening A, RoomOpening B) edge in treeOpenings)
-            {
-                if (IsValidEdge(edge))
-                {
-                    CreateCorridor(edge.A.transform.position, edge.B.transform.position);
-                }
-            }
-
             return;
         }
 
@@ -164,27 +164,9 @@ public class MapGen : MonoBehaviour
             last.gameObject.name = "LastRoom";
         }
 
-        HashSet<(RoomGen, RoomGen)> mainPathEdges = new();
-        foreach ((RoomGen U, RoomGen V) in EnumeratePathEdges(first, last, parentFromFirst))
-        {
-            mainPathEdges.Add((U, V));
-            mainPathEdges.Add((V, U));
-        }
-
         AddExtraConnections();
 
-        // Create corridors: main path first, then remaining tree edges, then extra connections
-        foreach ((RoomOpening A, RoomOpening B) edge in treeOpenings)
-        {
-            if (!IsValidEdge(edge)) continue;
-
-            RoomGen ra = GetRoomFromOpening(edge.A);
-            RoomGen rb = GetRoomFromOpening(edge.B);
-            if (ra == null || rb == null) continue;
-
-            CreateCorridor(edge.A.transform.position, edge.B.transform.position);
-        }
-
+        // Create corridors for extra connections only (main path corridors already created)
         foreach ((RoomOpening A, RoomOpening B) edge in extraOpenings)
         {
             if (IsValidEdge(edge))
@@ -192,6 +174,9 @@ public class MapGen : MonoBehaviour
                 CreateCorridor(edge.A.transform.position, edge.B.transform.position);
             }
         }
+
+        // Check for and destroy rooms that are fully skewered by corridors
+        DestroySkeweredRooms();
     }
 
     private Dictionary<RoomGen, List<(RoomGen Neighbor, float Weight)>> BuildWeightedAdjacency(List<(RoomOpening A, RoomOpening B)> edges)
@@ -455,7 +440,7 @@ public class MapGen : MonoBehaviour
         return roomGen;
     }
 
-    private bool TrySpawnConnectedRoom(RoomOpening fromOpening, out RoomGen newRoom, out RoomOpening newRoomOpening)
+    private bool TryCreateCorridorAndRoom(RoomOpening fromOpening, out RoomGen newRoom, out RoomOpening newRoomOpening)
     {
         newRoom = null;
         newRoomOpening = null;
@@ -465,11 +450,78 @@ public class MapGen : MonoBehaviour
             return false;
         }
 
-        int attempts = 0;
-        while (attempts < maxAttemptsPerOpening)
+        // Try different corridor lengths with adjustment logic
+        for (int attempt = 0; attempt < maxAttemptsPerOpening; attempt++)
         {
-            attempts++;
+            float corridorLength = Random.Range(minCorridorSpacing, maxCorridorSpacing);
+            
+            // Try to place a room with the current corridor length
+            if (TryPlaceRoomWithCorridorAdjustment(fromOpening, corridorLength, out newRoom, out newRoomOpening))
+            {
+                return true;
+            }
+        }
 
+        return false;
+    }
+
+    private bool TryPlaceRoomWithCorridorAdjustment(RoomOpening fromOpening, float initialCorridorLength, out RoomGen newRoom, out RoomOpening newRoomOpening)
+    {
+        newRoom = null;
+        newRoomOpening = null;
+
+        float currentLength = initialCorridorLength;
+        float lengthAdjustmentStep = 0.5f;
+        int maxAdjustments = 10;
+
+        for (int adjustment = 0; adjustment < maxAdjustments; adjustment++)
+        {
+            Vector3 corridorEnd = fromOpening.transform.position + fromOpening.transform.forward * currentLength;
+
+            // Try to place a room at the end of the corridor
+            if (TryPlaceRoomAtPosition(corridorEnd, fromOpening, out newRoom, out newRoomOpening))
+            {
+                // Create the corridor with the adjusted length
+                CreateCorridor(fromOpening.transform.position, corridorEnd);
+                return true;
+            }
+
+            // If room placement failed, adjust corridor length
+            if (adjustment % 2 == 0)
+            {
+                // Try shortening the corridor
+                currentLength -= lengthAdjustmentStep;
+                if (currentLength < minCorridorSpacing)
+                {
+                    currentLength = minCorridorSpacing;
+                }
+            }
+            else
+            {
+                // Try lengthening the corridor
+                currentLength += lengthAdjustmentStep;
+                if (currentLength > maxCorridorSpacing * 2f)
+                {
+                    currentLength = maxCorridorSpacing * 2f;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private bool TryPlaceRoomAtPosition(Vector3 position, RoomOpening fromOpening, out RoomGen newRoom, out RoomOpening newRoomOpening)
+    {
+        newRoom = null;
+        newRoomOpening = null;
+
+        if (roomPrefabs == null || roomPrefabs.Length == 0)
+        {
+            return false;
+        }
+
+        for (int attempt = 0; attempt < maxAttemptsPerOpening; attempt++)
+        {
             GameObject prefab = roomPrefabs[Random.Range(0, roomPrefabs.Length)];
             if (prefab == null)
             {
@@ -502,17 +554,13 @@ public class MapGen : MonoBehaviour
             }
 
             Vector3 localOpposite = instance.transform.InverseTransformPoint(opposite.transform.position);
+            instance.transform.position = position - instance.transform.TransformVector(localOpposite);
 
-            float spacing = Random.Range(minCorridorSpacing, maxCorridorSpacing);
-            Vector3 targetWorld = fromOpening.transform.position + fromOpening.transform.forward * spacing;
-            instance.transform.position = targetWorld - instance.transform.TransformVector(localOpposite);
-
-            // Force physics sync for accurate bounds after transform changes
             Physics.SyncTransforms();
 
             Bounds candidateBounds = CalculateRoomBounds(instance);
 
-            if (IsOverlappingExistingRoom(candidateBounds))
+            if (IsRoomClipping(candidateBounds, instance))
             {
                 Destroy(instance);
                 continue;
@@ -529,6 +577,38 @@ public class MapGen : MonoBehaviour
         return false;
     }
 
+    private bool IsRoomClipping(Bounds candidateBounds, GameObject roomInstance)
+    {
+        // Check against existing rooms
+        for (int i = 0; i < roomBounds.Count; i++)
+        {
+            Bounds bufferedExisting = roomBounds[i];
+            bufferedExisting.Expand(0.1f);
+            
+            if (bufferedExisting.Intersects(candidateBounds))
+            {
+                return true;
+            }
+        }
+
+        // Check against existing corridors
+        foreach (Transform child in transform)
+        {
+            if (child.name.Contains("Corridor") || child.gameObject.name.Contains("corridor"))
+            {
+                Bounds corridorBounds = CalculateRoomBounds(child.gameObject);
+                Bounds bufferedCorridor = corridorBounds;
+                bufferedCorridor.Expand(0.1f);
+                
+                if (bufferedCorridor.Intersects(candidateBounds))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
     private static RoomOpening.Direction GetOpposite(RoomOpening.Direction dir)
     {
         return dir switch
@@ -643,5 +723,155 @@ public class MapGen : MonoBehaviour
         Vector3 scale = corridor.transform.localScale;
         scale.z = length;
         corridor.transform.localScale = scale;
+    }
+
+    private void DestroySkeweredRooms()
+    {
+        List<RoomGen> roomsToDestroy = new();
+        List<GameObject> corridors = new();
+
+        // Get all corridor objects
+        foreach (Transform child in transform)
+        {
+            if (child.name.Contains("Corridor") || child.gameObject.name.Contains("corridor"))
+            {
+                corridors.Add(child.gameObject);
+            }
+        }
+
+        // Check each room against all corridors
+        foreach (RoomGen room in generatedRooms.Where(r => r != null))
+        {
+            if (room == null || room.gameObject == null)
+                continue;
+
+            Bounds roomBounds = CalculateRoomBounds(room.gameObject);
+            
+            foreach (GameObject corridor in corridors)
+            {
+                if (corridor == null)
+                    continue;
+
+                if (IsRoomFullySkewered(roomBounds, corridor))
+                {
+                    roomsToDestroy.Add(room);
+                    break;
+                }
+            }
+        }
+
+        // Destroy skewered rooms and clean up references
+        foreach (RoomGen room in roomsToDestroy)
+        {
+            if (room != null && room.gameObject != null)
+            {
+                Debug.Log($"Destroying skewered room: {room.gameObject.name}");
+                
+                // Remove from collections
+                generatedRooms.Remove(room);
+                
+                // Find and remove corresponding bounds
+                int boundsIndex = -1;
+                for (int i = 0; i < roomBounds.Count; i++)
+                {
+                    Bounds bounds = roomBounds[i];
+                    Vector3 roomCenter = room.gameObject.transform.position;
+                    if (Vector3.Distance(bounds.center, roomCenter) < 0.1f)
+                    {
+                        boundsIndex = i;
+                        break;
+                    }
+                }
+                if (boundsIndex >= 0)
+                {
+                    roomBounds.RemoveAt(boundsIndex);
+                }
+
+                // Remove any connected openings from treeOpenings and extraOpenings
+                RemoveOpeningsForRoom(room, treeOpenings);
+                RemoveOpeningsForRoom(room, extraOpenings);
+
+                Destroy(room.gameObject);
+            }
+        }
+    }
+
+    private bool IsRoomFullySkewered(Bounds roomBounds, GameObject corridor)
+    {
+        if (corridor == null)
+            return false;
+
+        // Get corridor bounds
+        Bounds corridorBounds = CalculateRoomBounds(corridor);
+        
+        // Check if corridor intersects room bounds
+        if (!roomBounds.Intersects(corridorBounds))
+            return false;
+
+        // Check if corridor passes completely through the room
+        // This happens when the corridor extends beyond both opposite faces of the room
+        Vector3 roomSize = roomBounds.size;
+        Vector3 corridorSize = corridorBounds.size;
+        
+        // Check X-axis penetration
+        if (corridorSize.z > roomSize.x * 0.8f) // Corridor is long enough to potentially skewer
+        {
+            float corridorCenterX = corridorBounds.center.x;
+            float roomCenterX = roomBounds.center.x;
+            
+            // Check if corridor passes through room's X dimension
+            if (Mathf.Abs(corridorCenterX - roomCenterX) < roomSize.x * 0.3f)
+            {
+                // Check if corridor extends beyond both sides of room in Z direction
+                float corridorMinZ = corridorBounds.min.z;
+                float corridorMaxZ = corridorBounds.max.z;
+                float roomMinZ = roomBounds.min.z;
+                float roomMaxZ = roomBounds.max.z;
+                
+                if (corridorMinZ < roomMinZ && corridorMaxZ > roomMaxZ)
+                {
+                    return true;
+                }
+            }
+        }
+        
+        // Check Z-axis penetration
+        if (corridorSize.z > roomSize.z * 0.8f) // Corridor is long enough to potentially skewer
+        {
+            float corridorCenterZ = corridorBounds.center.z;
+            float roomCenterZ = roomBounds.center.z;
+            
+            // Check if corridor passes through room's Z dimension
+            if (Mathf.Abs(corridorCenterZ - roomCenterZ) < roomSize.z * 0.3f)
+            {
+                // Check if corridor extends beyond both sides of room in X direction
+                float corridorMinX = corridorBounds.min.x;
+                float corridorMaxX = corridorBounds.max.x;
+                float roomMinX = roomBounds.min.x;
+                float roomMaxX = roomBounds.max.x;
+                
+                if (corridorMinX < roomMinX && corridorMaxX > roomMaxX)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private void RemoveOpeningsForRoom(RoomGen room, List<(RoomOpening A, RoomOpening B)> openingsList)
+    {
+        for (int i = openingsList.Count - 1; i >= 0; i--)
+        {
+            (RoomOpening A, RoomOpening B) edge = openingsList[i];
+            RoomGen roomA = GetRoomFromOpening(edge.A);
+            RoomGen roomB = GetRoomFromOpening(edge.B);
+            
+            if (roomA == room || roomB == room)
+            {
+                openingsList.RemoveAt(i);
+            }
+        }
     }
 }
