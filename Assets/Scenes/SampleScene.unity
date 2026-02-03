@@ -543,6 +543,10 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
+      propertyPath: corridorConnectorPrefab
+      value: 
+      objectReference: {fileID: 8070488754040815914, guid: 24e3b242def6c844cb44478762bd1c30, type: 3}
+    - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: 'roomPrefabs.Array.data[0]'
       value: 
       objectReference: {fileID: 6084980925288509712, guid: b98f117152ffefc408eb5295a919424c, type: 3}
@@ -555,8 +559,12 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1726137987936626584, guid: 08943cbd58b4c8741b841909a0a41327, type: 3}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
+      propertyPath: maxExtraConnectionDistance
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: extraConnectionChancePerOpening
-      value: 0.67
+      value: 0.34
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
