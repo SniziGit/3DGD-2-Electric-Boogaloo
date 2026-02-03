@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3373008}
   - component: {fileID: 2373008}
   - component: {fileID: 6579498}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Coin_01_Small
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -117,7 +117,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 493604}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Floor_Coin_01_Small
   m_TagString: Untagged
   m_Icon: {fileID: 0}
