@@ -28,11 +28,11 @@ Transform:
   m_GameObject: {fileID: 1502290980363061392}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.613, z: -0.077}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 5971145063483213157}
+  m_Father: {fileID: 7014534694536743152}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!20 &8832272218536659907
 Camera:
@@ -148,7 +148,7 @@ GameObject:
   - component: {fileID: 980127169038363980}
   - component: {fileID: 440452838582080106}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: GroundCheck
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -227,8 +227,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 4620957322330219996}
   - {fileID: 980127169038363980}
+  - {fileID: 7014534694536743152}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &239103534645802994
@@ -332,7 +332,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 80
+  m_Constraints: 112
   m_CollisionDetection: 0
 --- !u!114 &9221916719213343178
 MonoBehaviour:
@@ -346,7 +346,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f06c29992495dea4ca8b995e34f7ff7d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 5
+  cameraHolder: {fileID: 7014534694536743152}
+  currentRotation: {x: 0, y: 0, z: 0}
+  speed: 150
+  jumpForce: 300
+  mouseSensitivity: 0.1
 --- !u!114 &6264620192484322656
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -372,8 +376,40 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_ActionEvents: []
-  m_NeverAutoSwitchControlSchemes: 1
+  m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: GamePlay
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 8832272218536659907}
+--- !u!1 &7855051429309518485
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7014534694536743152}
+  m_Layer: 0
+  m_Name: CameraHolder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7014534694536743152
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7855051429309518485}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.18, z: 0.29}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 4620957322330219996}
+  m_Father: {fileID: 5971145063483213157}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

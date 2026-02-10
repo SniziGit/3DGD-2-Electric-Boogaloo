@@ -7,19 +7,33 @@ public class FPSMovement : MonoBehaviour
     InputAction moveAction, jumpAction, lookAction;
 
     Rigidbody rb;
+    [SerializeField] Transform cameraHolder;
+    [SerializeField] Vector3 currentRotation;
 
     [SerializeField] float speed = 5f;
-    void OnMove(InputValue value)
+    [SerializeField] float jumpForce = 5f;
+    [SerializeField] float mouseSensitivity = 0.1f;
+
+    void Awake()
     {
         playerInput = GetComponent<PlayerInput>();
         moveAction = playerInput.actions.FindAction("Move");
         jumpAction = playerInput.actions.FindAction("Jump");
         lookAction = playerInput.actions.FindAction("Look");
+        rb = GetComponent<Rigidbody>();
+    }
+    
+    void Start()
+    {
+        currentRotation = transform.eulerAngles;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     void Update()
     {
         MovePlayer();
+        Look();
     }
 
     private void OnEnable()
@@ -35,13 +49,33 @@ public class FPSMovement : MonoBehaviour
     void MovePlayer()
     {
         Vector3 val = moveAction.ReadValue<Vector2>();
-        Vector3 direction = new Vector3(val.x, 0, val.y);
 
-        rb.linearVelocity = direction * speed * Time.deltaTime;
+        Vector3 direction = new Vector3(val.x, 0, val.y);
+        Vector3 velocity = direction * speed * Time.deltaTime;
+        velocity.y = rb.linearVelocity.y;
+
+        rb.linearVelocity = transform.TransformDirection(velocity);
     }
     void JumpPlayer(InputAction.CallbackContext context)
     {
-        //if (jumpAction.triggered)
-            //Vector2 jumpHeight = jumpAction.ReadValue<Vector2>();
+        rb.AddForce(Vector3.up * jumpForce);
+    }
+
+    void Look()
+    {
+        if (!lookAction.enabled)
+        {
+            Debug.Log("Look action is not enabled!");
+            return;
+        }
+        
+        Vector2 mouseDelta = lookAction.ReadValue<Vector2>();
+        Debug.Log("Raw mouse delta: " + mouseDelta);
+
+        currentRotation.x += mouseDelta.x * mouseSensitivity;
+        currentRotation.y -= mouseDelta.y * mouseSensitivity;
+
+        cameraHolder.rotation = Quaternion.Euler(new Vector3(currentRotation.y, currentRotation.x, 0));
+        rb.rotation = Quaternion.Euler(new Vector3(0, currentRotation.x, 0));
     }
 }
