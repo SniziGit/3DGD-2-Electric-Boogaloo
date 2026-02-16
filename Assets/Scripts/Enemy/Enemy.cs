@@ -3,7 +3,7 @@ using System.Collections;
 using UnityEngine.AI;
 using System.Linq;
 
-public class Enemy : MonoBehaviour
+public class Enemy : MonoBehaviour, IDamageable
 {
     public int health = 100;
 
@@ -58,15 +58,20 @@ public class Enemy : MonoBehaviour
     {
         if (collision.gameObject.tag == "Damage")
         {
-            health -= 10;
-            if (health <= 0)
-            {
-                Die();
-            }
-            else
-            {
-                StartCoroutine(Blink());
-            }
+            TakeDamage(10);
+        }
+    }
+
+    public void TakeDamage(int amount)
+    {
+        health -= amount;
+        if (health <= 0)
+        {
+            Die();
+        }
+        else
+        {
+            StartCoroutine(Blink());
         }
     }
 

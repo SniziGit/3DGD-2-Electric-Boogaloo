@@ -48,6 +48,8 @@ public class PlayerGun : MonoBehaviour
     private Vector3 initialPosition;
     private Vector3 reloadRotationOffset = new Vector3(66, 55, 55);
 
+    public AudioClip shootingSFX;
+
     void Start()
     {
         currentAmmo = magSize;
@@ -79,6 +81,8 @@ public class PlayerGun : MonoBehaviour
             StartCoroutine(Reload());
             return;
         }
+
+        AudioManager.Instance.PlaySFX(shootingSFX, 0.25f);
 
         Instantiate(weaponFlash, flashSpawnPoint.position, flashSpawnPoint.rotation);
 
@@ -242,6 +246,27 @@ public class PlayerGun : MonoBehaviour
                 recoilCrosshair.SetActive(false);
                 currentRecoilOffset = Vector3.zero;
             }
+        }
+    }
+    
+    private void OnDrawGizmos()
+    {
+        if (playerCamera != null)
+        {
+            // Draw shooting ray from camera center
+            Gizmos.color = Color.red;
+            Vector3 rayOrigin = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f)).origin;
+            Vector3 rayDirection = playerCamera.transform.forward * range;
+            
+            Gizmos.DrawRay(rayOrigin, rayDirection);
+            
+            // Draw a sphere at the end of the range
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(rayOrigin + rayDirection, 0.1f);
+            
+            // Draw crosshair position
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireSphere(rayOrigin, 0.05f);
         }
     }
 }

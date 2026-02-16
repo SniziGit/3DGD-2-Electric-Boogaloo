@@ -249,11 +249,12 @@ MonoBehaviour:
   playerCamera: {fileID: 8832272218536659907}
   shootableLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
   weaponFlash: {fileID: 3971537154403255433, guid: 0ca831b58ff9f364b94bcb456c0e7949, type: 3}
   flashSpawnPoint: {fileID: 3088957676150513634}
   recoilDistance: 0.1
   recoilSpeed: 15
+  shootingSFX: {fileID: 8300000, guid: 883153b4aadef934a8362985a404d082, type: 3}
 --- !u!1 &3716193842214143265
 GameObject:
   m_ObjectHideFlags: 0
