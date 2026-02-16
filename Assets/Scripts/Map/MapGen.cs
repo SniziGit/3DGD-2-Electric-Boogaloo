@@ -40,6 +40,16 @@ public class MapGen : MonoBehaviour
     private readonly List<(RoomOpening A, RoomOpening B)> extraOpenings = new();
     private readonly List<CorridorSegment> corridorSegments = new();
     private readonly List<Vector3> intersectionPoints = new();
+    
+    // Memory optimization: Object pools and caches
+    private readonly Dictionary<GameObject, Bounds> boundsCache = new();
+    private readonly Queue<GameObject> roomPool = new();
+    private readonly Queue<GameObject> corridorPool = new();
+    private readonly List<GameObject> objectsToDestroy = new();
+    
+    // Pre-allocated collections to reduce memory allocations
+    private readonly List<RoomOpening> tempOpeningsList = new();
+    private readonly List<Vector3> tempVectorList = new();
 
     private void Start()
     {
@@ -61,15 +71,11 @@ public class MapGen : MonoBehaviour
     {
         for (int i = transform.childCount - 1; i >= 0; i--)
         {
-            Destroy(transform.GetChild(i).gameObject);
+            objectsToDestroy.Add(transform.GetChild(i).gameObject);
         }
+        DestroyQueuedObjects();
 
-        generatedRooms.Clear();
-        roomBounds.Clear();
-        treeOpenings.Clear();
-        extraOpenings.Clear();
-        corridorSegments.Clear();
-        intersectionPoints.Clear();
+        ClearCollectionsAndCaches();
 
         if (roomPrefabs == null || roomPrefabs.Length == 0)
         {
@@ -160,6 +166,35 @@ public class MapGen : MonoBehaviour
         }
 
         NameAndConnectMainPath();
+        
+        // Final cleanup
+        DestroyQueuedObjects();
+        System.GC.Collect();
+    }
+    
+    private void ClearCollectionsAndCaches()
+    {
+        generatedRooms.Clear();
+        roomBounds.Clear();
+        treeOpenings.Clear();
+        extraOpenings.Clear();
+        corridorSegments.Clear();
+        intersectionPoints.Clear();
+        boundsCache.Clear();
+        tempOpeningsList.Clear();
+        tempVectorList.Clear();
+    }
+    
+    private void DestroyQueuedObjects()
+    {
+        foreach (GameObject obj in objectsToDestroy)
+        {
+            if (obj != null)
+            {
+                DestroyImmediate(obj);
+            }
+        }
+        objectsToDestroy.Clear();
     }
 
     private void NameAndConnectMainPath()
@@ -466,19 +501,61 @@ public class MapGen : MonoBehaviour
 
     private RoomGen SpawnRoom(GameObject prefab, Vector3 position)
     {
-        GameObject instance = Instantiate(prefab, position, Quaternion.identity, transform);
+        GameObject instance = GetPooledRoom(prefab);
+        if (instance == null)
+        {
+            instance = Instantiate(prefab, position, Quaternion.identity, transform);
+        }
+        else
+        {
+            instance.transform.position = position;
+            instance.transform.rotation = Quaternion.identity;
+            instance.transform.SetParent(transform);
+            instance.SetActive(true);
+        }
+        
         RoomGen roomGen = instance.GetComponent<RoomGen>();
         if (roomGen == null)
         {
             roomGen = instance.AddComponent<RoomGen>();
         }
 
-        Bounds bounds = CalculateRoomBounds(instance);
+        Bounds bounds = GetCachedBounds(instance);
 
         generatedRooms.Add(roomGen);
         roomBounds.Add(bounds);
 
         return roomGen;
+    }
+    
+    private GameObject GetPooledRoom(GameObject prefab)
+    {
+        if (roomPool.Count > 0)
+        {
+            GameObject pooled = roomPool.Dequeue();
+            if (pooled != null)
+            {
+                return pooled;
+            }
+        }
+        return null;
+    }
+    
+    private void ReturnToPool(GameObject obj)
+    {
+        if (obj == null) return;
+        
+        obj.SetActive(false);
+        obj.transform.SetParent(null);
+        
+        if (obj.name.Contains("Corridor"))
+        {
+            corridorPool.Enqueue(obj);
+        }
+        else
+        {
+            roomPool.Enqueue(obj);
+        }
     }
 
     private bool TryCreateCorridorAndRoom(RoomOpening fromOpening, out RoomGen newRoom, out RoomOpening newRoomOpening)
@@ -569,7 +646,18 @@ public class MapGen : MonoBehaviour
                 continue;
             }
 
-            GameObject instance = Instantiate(prefab, Vector3.zero, Quaternion.identity, transform);
+            GameObject instance = GetPooledRoom(prefab);
+            if (instance == null)
+            {
+                instance = Instantiate(prefab, Vector3.zero, Quaternion.identity, transform);
+            }
+            else
+            {
+                instance.transform.position = Vector3.zero;
+                instance.transform.rotation = Quaternion.identity;
+                instance.transform.SetParent(transform);
+                instance.SetActive(true);
+            }
             RoomGen roomGen = instance.GetComponent<RoomGen>();
             if (roomGen == null)
             {
@@ -590,7 +678,7 @@ public class MapGen : MonoBehaviour
 
             if (opposite == null)
             {
-                Destroy(instance);
+                objectsToDestroy.Add(instance);
                 continue;
             }
 
@@ -603,7 +691,7 @@ public class MapGen : MonoBehaviour
 
             if (IsRoomClipping(candidateBounds, instance))
             {
-                Destroy(instance);
+                objectsToDestroy.Add(instance);
                 continue;
             }
 
@@ -618,7 +706,7 @@ public class MapGen : MonoBehaviour
                 // Re-check clipping after adjustment
                 if (IsRoomClipping(candidateBounds, instance))
                 {
-                    Destroy(instance);
+                    objectsToDestroy.Add(instance);
                     continue;
                 }
             }
@@ -819,22 +907,25 @@ public class MapGen : MonoBehaviour
 
     private List<RoomOpening> GetOrCreateOpenings(RoomGen room)
     {
-        List<RoomOpening> openings = new(room.GetComponentsInChildren<RoomOpening>());
-        if (openings.Count > 0)
+        tempOpeningsList.Clear();
+        tempOpeningsList.AddRange(room.GetComponentsInChildren<RoomOpening>());
+        
+        if (tempOpeningsList.Count > 0)
         {
-            return openings;
+            return new List<RoomOpening>(tempOpeningsList);
         }
 
         // Use world bounds extents converted to room-local space
-        Bounds worldBounds = CalculateRoomBounds(room.gameObject);
+        Bounds worldBounds = GetCachedBounds(room.gameObject);
         Vector3 localExtents = room.transform.InverseTransformVector(worldBounds.extents);
         Vector3 extents = new Vector3(Mathf.Abs(localExtents.x), Mathf.Abs(localExtents.y), Mathf.Abs(localExtents.z));
 
-        openings.Add(CreateOpening(room.transform, RoomOpening.Direction.North, new Vector3(0f, 0f, extents.z), Quaternion.LookRotation(Vector3.forward)));
-        openings.Add(CreateOpening(room.transform, RoomOpening.Direction.East, new Vector3(extents.x, 0f, 0f), Quaternion.LookRotation(Vector3.right)));
-        openings.Add(CreateOpening(room.transform, RoomOpening.Direction.South, new Vector3(0f, 0f, -extents.z), Quaternion.LookRotation(Vector3.back)));
-        openings.Add(CreateOpening(room.transform, RoomOpening.Direction.West, new Vector3(-extents.x, 0f, 0f), Quaternion.LookRotation(Vector3.left)));
-        return openings;
+        tempOpeningsList.Add(CreateOpening(room.transform, RoomOpening.Direction.North, new Vector3(0f, 0f, extents.z), Quaternion.LookRotation(Vector3.forward)));
+        tempOpeningsList.Add(CreateOpening(room.transform, RoomOpening.Direction.East, new Vector3(extents.x, 0f, 0f), Quaternion.LookRotation(Vector3.right)));
+        tempOpeningsList.Add(CreateOpening(room.transform, RoomOpening.Direction.South, new Vector3(0f, 0f, -extents.z), Quaternion.LookRotation(Vector3.back)));
+        tempOpeningsList.Add(CreateOpening(room.transform, RoomOpening.Direction.West, new Vector3(-extents.x, 0f, 0f), Quaternion.LookRotation(Vector3.left)));
+        
+        return new List<RoomOpening>(tempOpeningsList);
     }
 
     private static RoomOpening CreateOpening(Transform roomTransform, RoomOpening.Direction direction, Vector3 localPos, Quaternion localRot)
@@ -848,6 +939,18 @@ public class MapGen : MonoBehaviour
         typeof(RoomOpening).GetField("direction", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
             ?.SetValue(opening, direction);
         return opening;
+    }
+
+    private Bounds GetCachedBounds(GameObject room)
+    {
+        if (boundsCache.TryGetValue(room, out Bounds cached))
+        {
+            return cached;
+        }
+        
+        Bounds bounds = CalculateRoomBounds(room);
+        boundsCache[room] = bounds;
+        return bounds;
     }
 
     private static Bounds CalculateRoomBounds(GameObject room)
@@ -938,7 +1041,19 @@ public class MapGen : MonoBehaviour
         Vector3 midPoint = start + direction * 0.5f;
         Quaternion rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
 
-        GameObject corridor = Instantiate(corridorPrefab, midPoint, rotation, transform);
+        GameObject corridor = GetPooledCorridor();
+        if (corridor == null)
+        {
+            corridor = Instantiate(corridorPrefab, midPoint, rotation, transform);
+        }
+        else
+        {
+            corridor.transform.position = midPoint;
+            corridor.transform.rotation = rotation;
+            corridor.transform.SetParent(transform);
+            corridor.SetActive(true);
+        }
+        
         Vector3 scale = corridor.transform.localScale;
         scale.z = length;
         corridor.transform.localScale = scale;
@@ -953,6 +1068,19 @@ public class MapGen : MonoBehaviour
             ToOpening = toOpening
         };
         corridorSegments.Add(segment);
+    }
+    
+    private GameObject GetPooledCorridor()
+    {
+        if (corridorPool.Count > 0)
+        {
+            GameObject pooled = corridorPool.Dequeue();
+            if (pooled != null)
+            {
+                return pooled;
+            }
+        }
+        return null;
     }
 
     private void CreateZShapedCorridor(Vector3 start, Vector3 end, RoomOpening fromOpening = null, RoomOpening toOpening = null)
@@ -1097,46 +1225,131 @@ public class MapGen : MonoBehaviour
             return;
         }
 
-        // Find all intersection points between corridor segments
+        // Optimize intersection detection with spatial hashing
+        Dictionary<Vector2Int, List<CorridorSegment>> spatialHash = new();
+        float cellSize = 5f;
+        
+        // Build spatial hash
+        for (int i = 0; i < corridorSegments.Count; i++)
+        {
+            CorridorSegment segment = corridorSegments[i];
+            Vector2Int startCell = GetCell(segment.Start, cellSize);
+            Vector2Int endCell = GetCell(segment.End, cellSize);
+            
+            // Add segment to all cells it passes through
+            List<Vector2Int> cells = GetCellsAlongLine(startCell, endCell);
+            foreach (Vector2Int cell in cells)
+            {
+                if (!spatialHash.ContainsKey(cell))
+                {
+                    spatialHash[cell] = new List<CorridorSegment>();
+                }
+                spatialHash[cell].Add(segment);
+            }
+        }
+
+        // Check intersections only within same cells
+        HashSet<(int, int)> checkedPairs = new();
         for (int i = 0; i < corridorSegments.Count; i++)
         {
             CorridorSegment segmentA = corridorSegments[i];
+            Vector2Int startCell = GetCell(segmentA.Start, cellSize);
+            Vector2Int endCell = GetCell(segmentA.End, cellSize);
+            List<Vector2Int> cells = GetCellsAlongLine(startCell, endCell);
             
-            for (int j = i + 1; j < corridorSegments.Count; j++)
+            foreach (Vector2Int cell in cells)
             {
-                CorridorSegment segmentB = corridorSegments[j];
-                
-                // Skip if segments share an opening (they're already connected)
-                if (segmentA.FromOpening == segmentB.FromOpening || 
-                    segmentA.FromOpening == segmentB.ToOpening ||
-                    segmentA.ToOpening == segmentB.FromOpening || 
-                    segmentA.ToOpening == segmentB.ToOpening)
-                {
+                if (!spatialHash.TryGetValue(cell, out List<CorridorSegment> cellSegments))
                     continue;
-                }
-
-                Vector3 intersectionPoint;
-                if (TryFindIntersection(segmentA, segmentB, out intersectionPoint))
+                    
+                foreach (CorridorSegment segmentB in cellSegments)
                 {
-                    // Check if we already have a connector at this intersection
-                    bool existingIntersection = false;
-                    foreach (Vector3 existing in intersectionPoints)
+                    if (ReferenceEquals(segmentA, segmentB)) continue;
+                    
+                    int pairKey = segmentA.GetHashCode() ^ segmentB.GetHashCode();
+                    if (checkedPairs.Contains((i, corridorSegments.IndexOf(segmentB)))) continue;
+                    checkedPairs.Add((i, corridorSegments.IndexOf(segmentB)));
+                    
+                    // Skip if segments share an opening (they're already connected)
+                    if (segmentA.FromOpening == segmentB.FromOpening || 
+                        segmentA.FromOpening == segmentB.ToOpening ||
+                        segmentA.ToOpening == segmentB.FromOpening || 
+                        segmentA.ToOpening == segmentB.ToOpening)
                     {
-                        if (Vector3.Distance(existing, intersectionPoint) < 0.5f)
-                        {
-                            existingIntersection = true;
-                            break;
-                        }
+                        continue;
                     }
 
-                    if (!existingIntersection)
+                    Vector3 intersectionPoint;
+                    if (TryFindIntersection(segmentA, segmentB, out intersectionPoint))
                     {
-                        intersectionPoints.Add(intersectionPoint);
-                        CreateCorridorConnector(intersectionPoint, segmentA, segmentB);
+                        // Check if we already have a connector at this intersection
+                        bool existingIntersection = false;
+                        foreach (Vector3 existing in intersectionPoints)
+                        {
+                            if (Vector3.Distance(existing, intersectionPoint) < 0.5f)
+                            {
+                                existingIntersection = true;
+                                break;
+                            }
+                        }
+
+                        if (!existingIntersection)
+                        {
+                            intersectionPoints.Add(intersectionPoint);
+                            CreateCorridorConnector(intersectionPoint, segmentA, segmentB);
+                        }
                     }
                 }
             }
         }
+    }
+    
+    private Vector2Int GetCell(Vector3 position, float cellSize)
+    {
+        return new Vector2Int(
+            Mathf.FloorToInt(position.x / cellSize),
+            Mathf.FloorToInt(position.z / cellSize)
+        );
+    }
+    
+    private List<Vector2Int> GetCellsAlongLine(Vector2Int start, Vector2Int end)
+    {
+        tempVectorList.Clear();
+        
+        int dx = Mathf.Abs(end.x - start.x);
+        int dy = Mathf.Abs(end.y - start.y);
+        int sx = start.x < end.x ? 1 : -1;
+        int sy = start.y < end.y ? 1 : -1;
+        int err = dx - dy;
+        
+        int x = start.x;
+        int y = start.y;
+        
+        while (true)
+        {
+            tempVectorList.Add(new Vector3(x, 0, y));
+            
+            if (x == end.x && y == end.y) break;
+            
+            int e2 = 2 * err;
+            if (e2 > -dy)
+            {
+                err -= dy;
+                x += sx;
+            }
+            if (e2 < dx)
+            {
+                err += dx;
+                y += sy;
+            }
+        }
+        
+        List<Vector2Int> result = new();
+        foreach (Vector3 v in tempVectorList)
+        {
+            result.Add(new Vector2Int((int)v.x, (int)v.z));
+        }
+        return result;
     }
 
     private bool TryFindIntersection(CorridorSegment segmentA, CorridorSegment segmentB, out Vector3 intersectionPoint)
@@ -1210,7 +1423,7 @@ public class MapGen : MonoBehaviour
         Vector3 adjustedIntersectionPoint2 = intersectionPoint + directionFromIntersection * connectorRadius;
 
         // Destroy the original corridor segment
-        Destroy(segment.CorridorObject);
+        ReturnToPool(segment.CorridorObject);
 
         // Create two new corridor segments that connect to the connector edges
         CreateCorridor(segment.Start, adjustedIntersectionPoint1, segment.FromOpening, null);
@@ -1499,6 +1712,9 @@ public class MapGen : MonoBehaviour
                 // Remove from collections
                 generatedRooms.Remove(room);
                 
+                // Remove from bounds cache
+                boundsCache.Remove(room.gameObject);
+                
                 // Find and remove corresponding bounds
                 int boundsIndex = -1;
                 for (int i = 0; i < roomBounds.Count; i++)
@@ -1520,7 +1736,7 @@ public class MapGen : MonoBehaviour
                 RemoveOpeningsForRoom(room, treeOpenings);
                 RemoveOpeningsForRoom(room, extraOpenings);
 
-                Destroy(room.gameObject);
+                ReturnToPool(room.gameObject);
             }
         }
         
