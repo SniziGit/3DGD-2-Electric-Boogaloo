@@ -156,6 +156,7 @@ public class Enemy : MonoBehaviour, IDamageable
     {
         if (Vector3.Distance(currentTarget, transform.position) < positionThreshold)
         {
+            canSeePlayer = false;
             float chance = Random.Range(0, 100);
             if (chance < 10)// 10% chance to idle at the patrol point
             {
