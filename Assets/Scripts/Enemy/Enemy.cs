@@ -73,13 +73,14 @@ public class Enemy : MonoBehaviour
     void Die()
     {
 
-        Destroy(gameObject);
+        //Destroy(gameObject);
 
-        //if (!this.enabled) return;
+        if (!this.enabled) return;
 
-        //rb.freezeRotation = false;
-        //transform.rotation = Quaternion.Euler(transform.rotation.x, transform.rotation.y, transform.rotation.z + 5);
-        //this.enabled = false; // Disable enemy behavior
+        rb.freezeRotation = false;
+        transform.rotation = Quaternion.Euler(transform.rotation.x, transform.rotation.y, transform.rotation.z + 5);
+        agent.enabled = false; // Disable NavMeshAgent to stop movement
+        this.enabled = false; // Disable enemy behavior
     }
 
     IEnumerator Blink()

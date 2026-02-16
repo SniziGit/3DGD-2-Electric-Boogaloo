@@ -13,8 +13,7 @@ GameObject:
   - component: {fileID: 3079821043334679341}
   - component: {fileID: 664279733742595531}
   - component: {fileID: 4594151622957600607}
-  - component: {fileID: 3299030238279384764}
-  - component: {fileID: 6615827086524935895}
+  - component: {fileID: 2611686615710593630}
   m_Layer: 0
   m_Name: Enemy (FlyingLazerEyes)
   m_TagString: Untagged
@@ -139,56 +138,11 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.46
-  m_Height: 2.3
+  m_Radius: 0.2
+  m_Height: 1.15
   m_Direction: 2
-  m_Center: {x: 0, y: 0.98, z: 0.05}
---- !u!23 &3299030238279384764
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3812826831972298582}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: e5247e9b6a1b77c4db62a8e996bbe713, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &6615827086524935895
+  m_Center: {x: 0, y: 0.49, z: 0.05}
+--- !u!114 &2611686615710593630
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -197,14 +151,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 3812826831972298582}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c7917fb210001034da6b19d577f1f829, type: 3}
+  m_Script: {fileID: 11500000, guid: 374454259dd62204f822f1ea1ab0b8d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hoverAmplitude: 0.3
-  hoverDuration: 2
-  hoverVisual: {fileID: 4770143476600161537}
-  hoverOffset: 2
-  spawnHeightOffset: 0.25
 --- !u!1 &4305765187690429617
 GameObject:
   m_ObjectHideFlags: 0
@@ -230,7 +179,7 @@ Transform:
   m_GameObject: {fileID: 4305765187690429617}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.075, z: 1.258}
+  m_LocalPosition: {x: 0, y: 0.531, z: 0.558}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -244,18 +193,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 7956160817549174911}
     m_Modifications:
-    - target: {fileID: 8156742887874493266, guid: d3a476cce1a9a6448a1d79e83d078bf5, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 8156742887874493266, guid: d3a476cce1a9a6448a1d79e83d078bf5, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 8156742887874493266, guid: d3a476cce1a9a6448a1d79e83d078bf5, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 2
-      objectReference: {fileID: 0}
     - target: {fileID: 8156742887874493266, guid: d3a476cce1a9a6448a1d79e83d078bf5, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -295,10 +232,6 @@ PrefabInstance:
     - target: {fileID: 8156742887874493266, guid: d3a476cce1a9a6448a1d79e83d078bf5, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8156742887874493266, guid: d3a476cce1a9a6448a1d79e83d078bf5, type: 3}
-      propertyPath: m_ConstrainProportionsScale
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8825158458161734120, guid: d3a476cce1a9a6448a1d79e83d078bf5, type: 3}
       propertyPath: m_Name

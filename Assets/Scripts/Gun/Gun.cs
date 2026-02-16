@@ -54,6 +54,15 @@ public class Gun : MonoBehaviour
         StopCoroutine(nameof(Recoil));
         StartCoroutine(nameof(Recoil));
     }
+    public void Aim()
+    {
+        transform.localPosition = Vector3.Lerp(transform.localPosition, initialPosition + new Vector3(0, -0.05f, -0.1f), Time.deltaTime * 5f);
+    }
+
+    public void StopAiming()
+    {
+        transform.localPosition = Vector3.Lerp(transform.localPosition, initialPosition, Time.deltaTime * 5f);
+    }
 
     IEnumerator Reload()
     {
