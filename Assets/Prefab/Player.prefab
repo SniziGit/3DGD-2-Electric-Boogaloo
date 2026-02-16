@@ -251,6 +251,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   weaponFlash: {fileID: 3971537154403255433, guid: 0ca831b58ff9f364b94bcb456c0e7949, type: 3}
+  weaponParticles: {fileID: 6604725421362112238, guid: 400d33116be7fc94c88fe139c9944c52, type: 3}
   flashSpawnPoint: {fileID: 3088957676150513634}
   recoilDistance: 0.1
   recoilSpeed: 15

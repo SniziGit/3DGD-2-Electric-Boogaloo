@@ -27,6 +27,7 @@ public class PlayerGun : MonoBehaviour
     public Camera playerCamera;
     public LayerMask shootableLayers;
     public GameObject weaponFlash;
+    public GameObject weaponParticles;
     public Transform flashSpawnPoint;
 
     // Crosshair recoil variables
@@ -85,6 +86,7 @@ public class PlayerGun : MonoBehaviour
         AudioManager.Instance.PlaySFX(shootingSFX, 0.25f);
 
         Instantiate(weaponFlash, flashSpawnPoint.position, flashSpawnPoint.rotation);
+        Instantiate(weaponParticles, flashSpawnPoint.position, flashSpawnPoint.rotation);
 
         nextTimeToFire = Time.time + fireRate;
         currentAmmo--;
