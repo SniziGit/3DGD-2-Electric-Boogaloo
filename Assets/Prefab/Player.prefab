@@ -413,8 +413,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cameraHolder: {fileID: 1587368938190385550}
+  playerCamera: {fileID: 8832272218536659907}
   currentRotation: {x: 0, y: 0, z: 0}
-  speed: 800
+  normalSpeed: 800
+  sprintSpeed: 2000
+  crouchSpeed: 550
+  normalFOV: 100
+  sprintFOV: 120
+  crouchFOV: 90
   jumpForce: 10
   mouseSensitivity: 50
   groundCheck: {fileID: 980127169038363980}
@@ -692,13 +698,43 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7816281502122227011, guid: 518c9b765867fbe43a5fd28ab08fe011, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8785141431804158397}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 518c9b765867fbe43a5fd28ab08fe011, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2420391980624251058}
   m_SourcePrefab: {fileID: 100100000, guid: 518c9b765867fbe43a5fd28ab08fe011, type: 3}
 --- !u!4 &1587368938190385550 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7816281502122227011, guid: 518c9b765867fbe43a5fd28ab08fe011, type: 3}
   m_PrefabInstance: {fileID: 8826621231091418317}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &8556589631497124252 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 518c9b765867fbe43a5fd28ab08fe011, type: 3}
+  m_PrefabInstance: {fileID: 8826621231091418317}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &2420391980624251058
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8556589631497124252}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: d5020fb88c2fe644fa599ae6b6e9d974, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!4 &9076103741364331302 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 518c9b765867fbe43a5fd28ab08fe011, type: 3}
