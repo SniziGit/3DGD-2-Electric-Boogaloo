@@ -149,7 +149,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_SerializedVersion: 0
-  m_AgentTypeID: 0
+  m_AgentTypeID: -1372625422
   m_CollectObjects: 0
   m_Size: {x: 10, y: 10, z: 10}
   m_Center: {x: 0, y: 2, z: 0}
@@ -901,6 +901,26 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 664279733742595531, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
+      propertyPath: m_AgentTypeID
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3079821043334679341, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
+      propertyPath: patrolPoints.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3079821043334679341, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
+      propertyPath: 'patrolPoints.Array.data[0]'
+      value: 
+      objectReference: {fileID: 732258412}
+    - target: {fileID: 3079821043334679341, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
+      propertyPath: 'patrolPoints.Array.data[1]'
+      value: 
+      objectReference: {fileID: 539443148}
+    - target: {fileID: 3079821043334679341, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
+      propertyPath: 'patrolPoints.Array.data[2]'
+      value: 
+      objectReference: {fileID: 1496707666}
     - target: {fileID: 3812826831972298582, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
       propertyPath: m_Name
       value: Enemy (FlyingLazerEyes)

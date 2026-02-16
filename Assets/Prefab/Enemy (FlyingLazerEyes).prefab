@@ -96,8 +96,6 @@ MonoBehaviour:
   minChasingHealth: 30
   patrolPoints:
   - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
   enemyState: 0
 --- !u!195 &664279733742595531
 NavMeshAgent:

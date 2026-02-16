@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6603696230117331910}
   - component: {fileID: 6418844085804502404}
   - component: {fileID: 6442894265509602506}
+  - component: {fileID: -2176078586734991229}
   m_Layer: 0
   m_Name: ElectricalSparksEffect
   m_TagString: Untagged
@@ -4594,3 +4595,16 @@ ParticleSystemRenderer:
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
   m_MaskInteraction: 0
+--- !u!114 &-2176078586734991229
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6604725421362112238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fed5a5ebc292d7e42a961a09277c1122, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  time: 2
