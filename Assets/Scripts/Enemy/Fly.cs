@@ -36,10 +36,12 @@ public class Fly : MonoBehaviour
         
         // Use Mathf.Sin to create smooth up/down movement
         float hoverValue = Mathf.Sin((hoverTime / hoverDuration) * 2f * Mathf.PI) * hoverAmplitude;
-        Vector3 newPosition = originalPosition;
-        newPosition.y = baseHeight + hoverValue;
+        
+        // Only modify the Y position, preserve X and Z from other movement systems
+        Vector3 currentPosition = transform.position;
+        currentPosition.y = baseHeight + hoverValue;
         
         // Move the entire GameObject including collider
-        transform.position = newPosition;
+        transform.position = currentPosition;
     }
 }
