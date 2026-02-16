@@ -952,6 +952,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Enemy (FlyingLazerEyes)
       objectReference: {fileID: 0}
+    - target: {fileID: 3812826831972298582, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7956160817549174911, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
       propertyPath: m_LocalPosition.x
       value: 4.621543
