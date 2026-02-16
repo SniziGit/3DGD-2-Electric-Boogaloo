@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 8fde71acfa2117a42bc66a1e22c69336
+guid: 234a5cadd05e1e44d80c48245db4fdb3
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,8 +7,33 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: blinn3
+    second: {fileID: 2100000, guid: c510729f225232d4e967d1c49b5fcafa, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: blinn4
+    second: {fileID: 2100000, guid: b063cf0ca1913f340bc527df3d59a379, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: lambert2
+    second: {fileID: 2100000, guid: e721deb61f1a4f24ba7f03cf53a2184a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: lambert3
+    second: {fileID: 2100000, guid: be2b756098f12014c8d752d0f312bd72, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: lambert4
+    second: {fileID: 2100000, guid: ec47f5f9f1de078409c261c6b11bf66a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: standardSurface1
-    second: {fileID: 2100000, guid: a546793a608bd2148ad4e66d2e939cc1, type: 2}
+    second: {fileID: 2100000, guid: e4eec384110192d46b1fad728497a7e0, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
