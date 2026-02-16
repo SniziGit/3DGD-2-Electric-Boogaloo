@@ -348,9 +348,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cameraHolder: {fileID: 7014534694536743152}
   currentRotation: {x: 0, y: 0, z: 0}
-  speed: 150
+  speed: 1000
   jumpForce: 300
-  mouseSensitivity: 0.1
+  mouseSensitivity: 50
 --- !u!114 &6264620192484322656
 MonoBehaviour:
   m_ObjectHideFlags: 0

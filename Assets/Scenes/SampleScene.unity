@@ -467,8 +467,16 @@ PrefabInstance:
       value: 120
       objectReference: {fileID: 0}
     - target: {fileID: 9221916719213343178, guid: b6e3502aa774e88488b655f85490c46b, type: 3}
+      propertyPath: speed
+      value: 1000
+      objectReference: {fileID: 0}
+    - target: {fileID: 9221916719213343178, guid: b6e3502aa774e88488b655f85490c46b, type: 3}
       propertyPath: jumpForce
       value: 300
+      objectReference: {fileID: 0}
+    - target: {fileID: 9221916719213343178, guid: b6e3502aa774e88488b655f85490c46b, type: 3}
+      propertyPath: mouseSensitivity
+      value: 50
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

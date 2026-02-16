@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 public class FPSMovement : MonoBehaviour
 {
     PlayerInput playerInput;
-    InputAction moveAction, jumpAction, lookAction;
+    InputAction moveAction, jumpAction;
 
     Rigidbody rb;
     [SerializeField] Transform cameraHolder;
@@ -12,17 +12,23 @@ public class FPSMovement : MonoBehaviour
 
     [SerializeField] float speed = 5f;
     [SerializeField] float jumpForce = 5f;
-    [SerializeField] float mouseSensitivity = 0.1f;
+    [SerializeField] float mouseSensitivity = 200f;
+
+    //Camera
+    private float xRotation = 0f;
+    private Vector2 lookInput;
 
     void Awake()
     {
         playerInput = GetComponent<PlayerInput>();
         moveAction = playerInput.actions.FindAction("Move");
         jumpAction = playerInput.actions.FindAction("Jump");
-        lookAction = playerInput.actions.FindAction("Look");
+        //lookAction = playerInput.actions.FindAction("Look");
         rb = GetComponent<Rigidbody>();
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
-    
+
     void Start()
     {
         currentRotation = transform.eulerAngles;
@@ -33,7 +39,8 @@ public class FPSMovement : MonoBehaviour
     void Update()
     {
         MovePlayer();
-        Look();
+        HandleMouseLook();
+        //Look();
     }
 
     private void OnEnable()
@@ -61,21 +68,41 @@ public class FPSMovement : MonoBehaviour
         rb.AddForce(Vector3.up * jumpForce);
     }
 
-    void Look()
+    public void OnLook(InputValue value)
     {
-        if (!lookAction.enabled)
-        {
-            Debug.Log("Look action is not enabled!");
-            return;
-        }
-        
-        Vector2 mouseDelta = lookAction.ReadValue<Vector2>();
-        Debug.Log("Raw mouse delta: " + mouseDelta);
-
-        currentRotation.x += mouseDelta.x * mouseSensitivity;
-        currentRotation.y -= mouseDelta.y * mouseSensitivity;
-
-        cameraHolder.rotation = Quaternion.Euler(new Vector3(currentRotation.y, currentRotation.x, 0));
-        rb.rotation = Quaternion.Euler(new Vector3(0, currentRotation.x, 0));
+        lookInput = value.Get<Vector2>();
     }
+
+    void HandleMouseLook()
+    {
+        float mouseX = lookInput.x * mouseSensitivity * Time.deltaTime;
+        float mouseY = lookInput.y * mouseSensitivity * Time.deltaTime;
+
+        xRotation -= mouseY;
+        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
+
+        cameraHolder.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+
+        transform.Rotate(Vector3.up * mouseX);
+    }
+
+    //void Look()
+    //{
+    //    if (!lookAction.enabled)
+    //    {
+    //        Debug.Log("Look action is not enabled!");
+    //        return;
+    //    }
+
+    //    Vector2 mouseDelta = lookAction.ReadValue<Vector2>();
+    //    Debug.Log("Raw mouse delta: " + mouseDelta);
+
+    //    currentRotation.x += mouseDelta.x * mouseSensitivity;
+    //    currentRotation.y -= mouseDelta.y * mouseSensitivity;
+
+    //    cameraHolder.rotation = Quaternion.Euler(new Vector3(currentRotation.y, currentRotation.x, 0));
+    //    rb.rotation = Quaternion.Euler(new Vector3(0, currentRotation.x, 0));
+    //}
+
+
 }
