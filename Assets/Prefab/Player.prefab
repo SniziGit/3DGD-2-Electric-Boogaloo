@@ -248,13 +248,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   reloadTime: 1
-  fireRate: 0.5
+  fireRate: 0.15
   magSize: 30
   bullet: {fileID: 8522927543607488731, guid: 63b6404fa8c3e154e9b2fd231d457894, type: 3}
   bulletSpawnPoint: {fileID: 3088957676150513634}
   weaponFlash: {fileID: 3971537154403255433, guid: 0ca831b58ff9f364b94bcb456c0e7949, type: 3}
   recoilDistance: 0.1
-  recoilSpeedd: 5
+  recoilSpeed: 15
 --- !u!1 &3716193842214143265
 GameObject:
   m_ObjectHideFlags: 0
