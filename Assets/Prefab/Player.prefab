@@ -179,6 +179,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3961105685603915420}
   - component: {fileID: 4707478982668545827}
+  - component: {fileID: 3747363845305458575}
   m_Layer: 6
   m_Name: AR
   m_TagString: Untagged
@@ -209,7 +210,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3091859144147869783}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 80edc6190d6a71a43b0e3ad66215b8fc, type: 3}
   m_Name: 
@@ -220,9 +221,39 @@ MonoBehaviour:
   shootingSFX: {fileID: 8300000, guid: 883153b4aadef934a8362985a404d082, type: 3}
   bullet: {fileID: 8522927543607488731, guid: 63b6404fa8c3e154e9b2fd231d457894, type: 3}
   bulletSpawnPoint: {fileID: 3088957676150513634}
+  cameraToUse: {fileID: 8832272218536659907}
   weaponFlash: {fileID: 3971537154403255433, guid: 0ca831b58ff9f364b94bcb456c0e7949, type: 3}
   recoilDistance: 0.1
   recoilSpeed: 30
+--- !u!114 &3747363845305458575
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3091859144147869783}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c32bb168f6949fc4f97e95a5dd1ca0d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fireRate: 0.1
+  range: 100
+  damage: 25
+  magSize: 30
+  reloadTime: 2
+  recoilCrosshair: {fileID: 0}
+  recoilAmount: 5
+  recoilDuration: 0.2
+  recoilRecoverySpeed: 5
+  playerCamera: {fileID: 8832272218536659907}
+  shootableLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  weaponFlash: {fileID: 3971537154403255433, guid: 0ca831b58ff9f364b94bcb456c0e7949, type: 3}
+  flashSpawnPoint: {fileID: 3088957676150513634}
+  recoilDistance: 0.1
+  recoilSpeed: 15
 --- !u!1 &3716193842214143265
 GameObject:
   m_ObjectHideFlags: 0
@@ -432,7 +463,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f40613f4191f310458ebaea45947d816, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gun: {fileID: 4707478982668545827}
+  gun: {fileID: 3747363845305458575}
 --- !u!114 &4072839419339953132
 MonoBehaviour:
   m_ObjectHideFlags: 0

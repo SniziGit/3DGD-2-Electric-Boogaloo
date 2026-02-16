@@ -4,13 +4,24 @@ public class Bullet : MonoBehaviour
 {
     public float speed = 15f;
     public float lifeTime = 3f;
+    public Vector3 direction;
 
     private Rigidbody rb;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        rb.linearVelocity = transform.forward * speed;
+        
+        // Use assigned direction or default to forward
+        if (direction != Vector3.zero)
+        {
+            rb.linearVelocity = direction.normalized * speed;
+        }
+        else
+        {
+            rb.linearVelocity = transform.forward * speed;
+        }
+        
         Destroy(gameObject, lifeTime);
     }
 
