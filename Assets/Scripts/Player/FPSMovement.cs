@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections;
 
 public class FPSMovement : MonoBehaviour
 {
@@ -15,6 +16,11 @@ public class FPSMovement : MonoBehaviour
     [SerializeField] float jumpForce = 5f;
     [SerializeField] float mouseSensitivity = 200f;
 
+    [SerializeField] Transform groundCheck;
+    [SerializeField] float groundDistance = 0.4f;
+    [SerializeField] LayerMask groundMask;
+    private bool isGrounded;
+
     //Camera
     private float xRotation = 0f;
     private Vector2 lookInput;
@@ -23,6 +29,8 @@ public class FPSMovement : MonoBehaviour
     private float shakeMagnitude = 0.1f;
     private float shakeFadeSpeed = 0.5f;
     private Vector3 initialCamPos;
+
+    public AudioClip footStepSFX;
 
     private void Awake()
     {
@@ -43,10 +51,13 @@ public class FPSMovement : MonoBehaviour
         Cursor.visible = false;
 
         initialCamPos = cameraHolder.localPosition;
+
+        StartCoroutine(PlayFootStep());
     }
 
     void Update()
     {
+        CheckGround();
         MovePlayer();
         HandleMouseLook();
         HandleShake();
@@ -75,7 +86,15 @@ public class FPSMovement : MonoBehaviour
     }
     void JumpPlayer(InputAction.CallbackContext context)
     {
-        rb.AddForce(Vector3.up * jumpForce);
+        if (isGrounded)
+        {
+            rb.AddForce(new Vector3(0, jumpForce, 0), ForceMode.Impulse);
+        }
+    }
+
+    void CheckGround()
+    {
+        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
     }
 
     public void OnLook(InputValue value)
@@ -113,6 +132,18 @@ public class FPSMovement : MonoBehaviour
     {
         shakeDuration = duration;
         shakeMagnitude = magnitude;
+    }
+
+    IEnumerator PlayFootStep()
+    {
+        while (true)
+        {
+            if (rb.linearVelocity.magnitude > 0.1f && isGrounded)
+            {
+               AudioManager.Instance.PlaySFX(footStepSFX);
+            }
+            yield return new WaitForSeconds(0.5f);
+        }
     }
 
     //void Look()

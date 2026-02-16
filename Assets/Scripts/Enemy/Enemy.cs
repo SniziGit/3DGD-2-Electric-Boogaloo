@@ -16,6 +16,8 @@ public class Enemy : MonoBehaviour
 
     public Material hitMat;
 
+    public AudioClip shootingSFX;
+
     private Rigidbody rb;
     private Renderer rend;
     private Material originalMaterial;
@@ -70,11 +72,14 @@ public class Enemy : MonoBehaviour
 
     void Die()
     {
-        if (!this.enabled) return;
 
-        rb.freezeRotation = false;
-        transform.rotation = Quaternion.Euler(transform.rotation.x, transform.rotation.y, transform.rotation.z + 5);
-        this.enabled = false; // Disable enemy behavior
+        Destroy(gameObject);
+
+        //if (!this.enabled) return;
+
+        //rb.freezeRotation = false;
+        //transform.rotation = Quaternion.Euler(transform.rotation.x, transform.rotation.y, transform.rotation.z + 5);
+        //this.enabled = false; // Disable enemy behavior
     }
 
     IEnumerator Blink()
@@ -228,6 +233,8 @@ public class Enemy : MonoBehaviour
             float randomPitch = Random.Range(-currentInaccuracy, currentInaccuracy);
 
             bulletRotation *= Quaternion.Euler(randomPitch, randomYaw, 0f);
+
+            AudioManager.Instance.PlaySFX(shootingSFX, 0.25f);
 
             Instantiate(bulletPrefab, bulletSpawnPoint.position, bulletRotation);
             Instantiate(muzzleFlash, bulletSpawnPoint.position, bulletRotation);
