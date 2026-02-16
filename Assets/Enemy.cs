@@ -7,6 +7,13 @@ public class Enemy : MonoBehaviour
 {
     public int health = 100;
 
+    public GameObject bulletPrefab;
+    public Transform bulletSpawnPoint;
+    public GameObject muzzleFlash;
+    public float bloom;
+    public float fireRate;
+    private float lastshotTime;
+
     public Material hitMat;
 
     private Rigidbody rb;
@@ -174,9 +181,10 @@ public class Enemy : MonoBehaviour
     {
         idleTimeCounter = idleTime; // Reset idle timer when attacking
         agent.ResetPath();
-        //Shoot();  
 
-        if(Vector3.Distance(transform.position, PlayerTransform.position) > attackDistance || !canSeePlayer)
+        Shoot();
+
+        if (Vector3.Distance(transform.position, PlayerTransform.position) > attackDistance || !canSeePlayer)
         {
             if(health < minChasingHealth)
             {
@@ -202,6 +210,28 @@ public class Enemy : MonoBehaviour
         if (canSeePlayer)
         {
             lastKnownPlayerPosition = PlayerTransform.position;
+        }
+    }
+
+    private void Shoot()
+    {
+        if(Time.time > lastshotTime + fireRate)
+        {
+            Vector3 shootDirection = (PlayerTransform.position - bulletSpawnPoint.position).normalized;
+            shootDirection.Normalize();
+
+            Quaternion bulletRotation = Quaternion.LookRotation(shootDirection);
+
+            float maxInaccuracy = 10f;
+            float currentInaccuracy = bloom * maxInaccuracy;
+            float randomYaw = Random.Range(-currentInaccuracy, currentInaccuracy);
+            float randomPitch = Random.Range(-currentInaccuracy, currentInaccuracy);
+
+            bulletRotation *= Quaternion.Euler(randomPitch, randomYaw, 0f);
+
+            Instantiate(bulletPrefab, bulletSpawnPoint.position, bulletRotation);
+            Instantiate(muzzleFlash, bulletSpawnPoint.position, bulletRotation);
+            lastshotTime = Time.time;
         }
     }
 }
