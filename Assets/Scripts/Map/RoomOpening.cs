@@ -17,6 +17,11 @@ public class RoomOpening : MonoBehaviour
 
     public Direction FacingDirection => direction;
 
+    public void Initialize(Direction dir)
+    {
+        direction = dir;
+    }
+
     public void MarkConnected(RoomOpening other)
     {
         IsConnected = true;
