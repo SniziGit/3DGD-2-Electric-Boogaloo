@@ -59,6 +59,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Aim",
+                    "type": "Button",
+                    "id": "ee81b24b-9f7f-4518-9a77-559334c2da87",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "AimRelease",
+                    "type": "Button",
+                    "id": "9dbeb7e3-7770-4d95-912c-25eb12410e9f",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -185,11 +203,33 @@
                 },
                 {
                     "name": "",
+                    "id": "70e2903b-7b25-40a8-ac94-9490f18db7b3",
+                    "path": "<Gamepad>/rightShoulder",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Shoot",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "317b41de-4e6d-4c34-b8b2-67ae3eefd1d1",
                     "path": "<Mouse>/leftButton",
                     "interactions": "Press(behavior=1)",
                     "processors": "",
                     "groups": ";Keyboard Mouse",
+                    "action": "ShootRelease",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d2502ca0-29e2-4118-a2e4-c1c40db3dcac",
+                    "path": "<Gamepad>/rightShoulder",
+                    "interactions": "Press(behavior=1)",
+                    "processors": "",
+                    "groups": ";Gamepad",
                     "action": "ShootRelease",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -202,6 +242,61 @@
                     "processors": "",
                     "groups": ";Keyboard Mouse",
                     "action": "Reload",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "1d6cc695-7052-4e3a-8bbc-9d91f7788a9e",
+                    "path": "<Gamepad>/buttonWest",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Reload",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "bb96326f-ed25-40fb-aa29-a57b8d36f598",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard Mouse",
+                    "action": "Aim",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "14086c0c-996e-4a36-9164-812faa55fc4a",
+                    "path": "<Gamepad>/leftTrigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Aim",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "122bff7e-95fb-47b9-b625-41d8d7aebe6b",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "Press(behavior=1)",
+                    "processors": "",
+                    "groups": ";Keyboard Mouse",
+                    "action": "AimRelease",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "6813e1ab-e5c4-49f7-9412-6b13d29a7159",
+                    "path": "<Gamepad>/leftTrigger",
+                    "interactions": "Press(behavior=1)",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "AimRelease",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
