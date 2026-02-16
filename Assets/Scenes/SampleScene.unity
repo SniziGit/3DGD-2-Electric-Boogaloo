@@ -195,7 +195,7 @@ GameObject:
   m_Layer: 0
   m_Name: Point 2
   m_TagString: Untagged
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 5132851093641282708, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -381,7 +381,7 @@ GameObject:
   m_Layer: 0
   m_Name: Point 1
   m_TagString: Untagged
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 5132851093641282708, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -670,7 +670,7 @@ GameObject:
   m_Layer: 0
   m_Name: Point 3
   m_TagString: Untagged
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 5132851093641282708, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -897,6 +897,10 @@ PrefabInstance:
       propertyPath: 'patrolPoints.Array.data[2]'
       value: 
       objectReference: {fileID: 1496707666}
+    - target: {fileID: 3088281621118345542, guid: 7cb58ae6c54126c46b92143ea8812ff7, type: 3}
+      propertyPath: m_Constraints
+      value: 48
+      objectReference: {fileID: 0}
     - target: {fileID: 3812826831972298582, guid: 7cb58ae6c54126c46b92143ea8812ff7, type: 3}
       propertyPath: m_Name
       value: Enemy
@@ -941,8 +945,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedComponents:
+    - {fileID: 3962897613473999195, guid: 7cb58ae6c54126c46b92143ea8812ff7, type: 3}
+    - {fileID: 2611422274675346791, guid: 7cb58ae6c54126c46b92143ea8812ff7, type: 3}
+    m_RemovedGameObjects:
+    - {fileID: 3435571898948641938, guid: 7cb58ae6c54126c46b92143ea8812ff7, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 3812826831972298582, guid: 7cb58ae6c54126c46b92143ea8812ff7, type: 3}
