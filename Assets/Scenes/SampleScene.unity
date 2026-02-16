@@ -1311,6 +1311,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2331955831869693421, guid: 7519ec4af7b11d44f8142fac794f786f, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6222487978565273276, guid: 7519ec4af7b11d44f8142fac794f786f, type: 3}
       propertyPath: m_Name
       value: Enemy (Pistoleer)
