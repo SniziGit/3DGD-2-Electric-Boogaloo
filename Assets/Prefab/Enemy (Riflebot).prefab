@@ -102,7 +102,7 @@ GameObject:
   - component: {fileID: 3079821043334679341}
   - component: {fileID: 664279733742595531}
   m_Layer: 0
-  m_Name: Enemy
+  m_Name: Enemy (Riflebot)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -242,16 +242,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   health: 100
   bulletPrefab: {fileID: 8522927543607488731, guid: 63b6404fa8c3e154e9b2fd231d457894, type: 3}
-  bulletSpawnPoint: {fileID: 0}
-  muzzleFlash: {fileID: 0}
-  bloom: 0
-  fireRate: 0
+  bulletSpawnPoint: {fileID: 5483826314052340955}
+  muzzleFlash: {fileID: 3971537154403255433, guid: 0ca831b58ff9f364b94bcb456c0e7949, type: 3}
+  bloom: 0.75
+  fireRate: 0.5
   hitMat: {fileID: 2100000, guid: 912dfede47b42c6429b544046fd1e497, type: 2}
   currentPointIndex: 0
   currentTarget: {x: 0, y: 0, z: 0}
   positionThreshold: 10
   idleTime: 5
-  attackDistance: 5
+  attackDistance: 10
   maxVisionDistance: 20
   minChasingHealth: 30
   patrolPoints:
@@ -295,7 +295,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2436492927453145532, guid: 07fc1fd3fb72992419f65e147911fd20, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.30099988
+      value: 0.08
       objectReference: {fileID: 0}
     - target: {fileID: 2436492927453145532, guid: 07fc1fd3fb72992419f65e147911fd20, type: 3}
       propertyPath: m_LocalPosition.z
@@ -338,6 +338,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 07fc1fd3fb72992419f65e147911fd20, type: 3}
+--- !u!4 &5483826314052340955 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1373319566804596099, guid: 07fc1fd3fb72992419f65e147911fd20, type: 3}
+  m_PrefabInstance: {fileID: 6851510109529225560}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &9134810001328836836 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2436492927453145532, guid: 07fc1fd3fb72992419f65e147911fd20, type: 3}
