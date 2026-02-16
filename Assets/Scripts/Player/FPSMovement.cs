@@ -5,17 +5,30 @@ using System.Collections;
 public class FPSMovement : MonoBehaviour
 {
     PlayerInput playerInput;
-    InputAction moveAction, jumpAction;
+    InputAction moveAction, jumpAction, sprintAction, crouchAction;
     public static FPSMovement Instance;
 
+    [Header("CameraSettings")]
     Rigidbody rb;
     [SerializeField] Transform cameraHolder;
+    [SerializeField] Camera playerCamera;
     [SerializeField] Vector3 currentRotation;
 
-    [SerializeField] float speed = 5f;
+    [Header("Movement")]
+    [SerializeField] float normalSpeed = 800f;
+    [SerializeField] float sprintSpeed = 2000f;
+    [SerializeField] float crouchSpeed = 550f;
+    private float speed;
+    [SerializeField] float normalFOV = 100f;
+    [SerializeField] float sprintFOV = 120f;
+    [SerializeField] float crouchFOV = 90f;
+    private float targetFOV;
     [SerializeField] float jumpForce = 5f;
     [SerializeField] float mouseSensitivity = 200f;
+    private bool isPressed;
 
+
+    [Header("GroundCheck")]
     [SerializeField] Transform groundCheck;
     [SerializeField] float groundDistance = 0.4f;
     [SerializeField] LayerMask groundMask;
@@ -37,6 +50,8 @@ public class FPSMovement : MonoBehaviour
         playerInput = GetComponent<PlayerInput>();
         moveAction = playerInput.actions.FindAction("Move");
         jumpAction = playerInput.actions.FindAction("Jump");
+        sprintAction = playerInput.actions.FindAction("Sprint");
+        crouchAction = playerInput.actions.FindAction("Crouch");
         //lookAction = playerInput.actions.FindAction("Look");
         rb = GetComponent<Rigidbody>();
 
@@ -51,6 +66,11 @@ public class FPSMovement : MonoBehaviour
         Cursor.visible = false;
 
         initialCamPos = cameraHolder.localPosition;
+        speed = normalSpeed;
+        targetFOV = normalFOV;
+        
+        if (playerCamera == null)
+            playerCamera = Camera.main;
 
         StartCoroutine(PlayFootStep());
     }
@@ -61,17 +81,26 @@ public class FPSMovement : MonoBehaviour
         MovePlayer();
         HandleMouseLook();
         HandleShake();
+        HandleFOV();
         //Look();
     }
 
     private void OnEnable()
     {
         jumpAction.performed += JumpPlayer;
+        sprintAction.started += OnSprintStarted;
+        sprintAction.canceled += OnSprintCanceled;
+        crouchAction.started += OnCrouchStarted;
+        crouchAction.canceled += OnCrouchCanceled;
     }
 
     private void OnDisable()
     {
         jumpAction.performed -= JumpPlayer;
+        sprintAction.started -= OnSprintStarted;
+        sprintAction.canceled -= OnSprintCanceled;
+        crouchAction.started -= OnCrouchStarted;
+        crouchAction.canceled -= OnCrouchCanceled;
     }
 
     void MovePlayer()
@@ -84,6 +113,35 @@ public class FPSMovement : MonoBehaviour
 
         rb.linearVelocity = transform.TransformDirection(velocity);
     }
+
+    void OnSprintStarted(InputAction.CallbackContext context)
+    {
+        isPressed = true;
+        speed = sprintSpeed;
+        targetFOV = sprintFOV;
+    }
+
+    void OnSprintCanceled(InputAction.CallbackContext context)
+    {
+        isPressed = false;
+        speed = normalSpeed;
+        targetFOV = normalFOV;
+    }
+
+    void OnCrouchStarted(InputAction.CallbackContext context)
+    {
+        isPressed = true;
+        speed = crouchSpeed;
+        targetFOV = crouchFOV;
+    }
+
+    void OnCrouchCanceled(InputAction.CallbackContext context)
+    {
+        isPressed = false;
+        speed = normalSpeed;
+        targetFOV = normalFOV;
+    }
+
     void JumpPlayer(InputAction.CallbackContext context)
     {
         if (isGrounded)
@@ -113,6 +171,14 @@ public class FPSMovement : MonoBehaviour
         cameraHolder.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
 
         transform.Rotate(Vector3.up * mouseX);
+    }
+
+    void HandleFOV()
+    {
+        if (playerCamera != null)
+        {
+            playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, targetFOV, Time.deltaTime * 10f);
+        }
     }
 
     void HandleShake()

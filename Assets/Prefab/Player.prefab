@@ -413,10 +413,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cameraHolder: {fileID: 1587368938190385550}
+  playerCamera: {fileID: 8832272218536659907}
   currentRotation: {x: 0, y: 0, z: 0}
-  speed: 800
+  normalSpeed: 800
+  sprintSpeed: 2000
+  crouchSpeed: 550
+  normalFOV: 100
+  sprintFOV: 120
+  crouchFOV: 90
   jumpForce: 10
   mouseSensitivity: 50
+  mainBody: {fileID: 1509045191569180502}
+  playerHead: {fileID: 1587368938190385550}
+  playerNeck: {fileID: 5162760914997006324}
   groundCheck: {fileID: 980127169038363980}
   groundDistance: 0.4
   groundMask:
@@ -694,9 +703,19 @@ PrefabInstance:
       addedObject: {fileID: 8785141431804158397}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 518c9b765867fbe43a5fd28ab08fe011, type: 3}
+--- !u!4 &1509045191569180502 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -1256713590742842469, guid: 518c9b765867fbe43a5fd28ab08fe011, type: 3}
+  m_PrefabInstance: {fileID: 8826621231091418317}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1587368938190385550 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7816281502122227011, guid: 518c9b765867fbe43a5fd28ab08fe011, type: 3}
+  m_PrefabInstance: {fileID: 8826621231091418317}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &5162760914997006324 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -4766010668697859271, guid: 518c9b765867fbe43a5fd28ab08fe011, type: 3}
   m_PrefabInstance: {fileID: 8826621231091418317}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &9076103741364331302 stripped
