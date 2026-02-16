@@ -218,6 +218,7 @@ MonoBehaviour:
   reloadTime: 1
   fireRate: 0.15
   magSize: 30
+  shootingSFX: {fileID: 8300000, guid: 883153b4aadef934a8362985a404d082, type: 3}
   bullet: {fileID: 8522927543607488731, guid: 63b6404fa8c3e154e9b2fd231d457894, type: 3}
   bulletSpawnPoint: {fileID: 3088957676150513634}
   weaponFlash: {fileID: 3971537154403255433, guid: 0ca831b58ff9f364b94bcb456c0e7949, type: 3}
@@ -437,8 +438,14 @@ MonoBehaviour:
   cameraHolder: {fileID: 4620957322330219996}
   currentRotation: {x: 0, y: 0, z: 0}
   speed: 1000
-  jumpForce: 300
+  jumpForce: 10
   mouseSensitivity: 50
+  groundCheck: {fileID: 980127169038363980}
+  groundDistance: 0.4
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 8
+  footStepSFX: {fileID: 8300000, guid: 7798e2773194ec34781f6e7df1a052c9, type: 3}
 --- !u!114 &6264620192484322656
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -495,6 +502,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   health: 100
+  hitSFX: {fileID: 8300000, guid: e624922ccb78d934c9a4519926b8015d, type: 3}
 --- !u!1001 &4166160047209048673
 PrefabInstance:
   m_ObjectHideFlags: 0

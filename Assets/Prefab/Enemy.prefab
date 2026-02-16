@@ -247,6 +247,7 @@ MonoBehaviour:
   bloom: 0
   fireRate: 0
   hitMat: {fileID: 2100000, guid: 912dfede47b42c6429b544046fd1e497, type: 2}
+  shootingSFX: {fileID: 8300000, guid: 883153b4aadef934a8362985a404d082, type: 3}
   currentPointIndex: 0
   currentTarget: {x: 0, y: 0, z: 0}
   positionThreshold: 10
