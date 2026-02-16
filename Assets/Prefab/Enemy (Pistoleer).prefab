@@ -190,9 +190,10 @@ MonoBehaviour:
   bulletPrefab: {fileID: 8522927543607488731, guid: 63b6404fa8c3e154e9b2fd231d457894, type: 3}
   bulletSpawnPoint: {fileID: 6122529718637082173}
   muzzleFlash: {fileID: 3971537154403255433, guid: 0ca831b58ff9f364b94bcb456c0e7949, type: 3}
-  bloom: 75
+  bloom: 0.75
   fireRate: 0.3
   hitMat: {fileID: 2100000, guid: 912dfede47b42c6429b544046fd1e497, type: 2}
+  shootingSFX: {fileID: 8300000, guid: 883153b4aadef934a8362985a404d082, type: 3}
   currentPointIndex: 0
   currentTarget: {x: 0, y: 0, z: 0}
   positionThreshold: 10

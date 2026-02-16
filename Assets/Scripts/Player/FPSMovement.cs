@@ -108,7 +108,7 @@ public class FPSMovement : MonoBehaviour
         float mouseY = lookInput.y * mouseSensitivity * Time.deltaTime;
 
         xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
+        xRotation = Mathf.Clamp(xRotation, -90f, 60f);
 
         cameraHolder.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
 
