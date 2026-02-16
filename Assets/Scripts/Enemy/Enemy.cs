@@ -80,6 +80,11 @@ public class Enemy : MonoBehaviour
         rb.freezeRotation = false;
         transform.rotation = Quaternion.Euler(transform.rotation.x, transform.rotation.y, transform.rotation.z + 5);
         agent.enabled = false; // Disable NavMeshAgent to stop movement
+        if (GetComponent<Fly>() != null)
+        {
+            GetComponent<Fly>().enabled = false; // Disable Fly script to stop hovering
+        }
+        
         this.enabled = false; // Disable enemy behavior
     }
 
