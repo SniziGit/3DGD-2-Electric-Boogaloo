@@ -5,6 +5,7 @@ public class FPSMovement : MonoBehaviour
 {
     PlayerInput playerInput;
     InputAction moveAction, jumpAction;
+    public static FPSMovement Instance;
 
     Rigidbody rb;
     [SerializeField] Transform cameraHolder;
@@ -18,15 +19,21 @@ public class FPSMovement : MonoBehaviour
     private float xRotation = 0f;
     private Vector2 lookInput;
 
-    void Awake()
+    private float shakeDuration = 0f;
+    private float shakeMagnitude = 0.1f;
+    private float shakeFadeSpeed = 0.5f;
+    private Vector3 initialCamPos;
+
+    private void Awake()
     {
         playerInput = GetComponent<PlayerInput>();
         moveAction = playerInput.actions.FindAction("Move");
         jumpAction = playerInput.actions.FindAction("Jump");
         //lookAction = playerInput.actions.FindAction("Look");
         rb = GetComponent<Rigidbody>();
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+
+        //Take dmg visual
+        Instance = this;
     }
 
     void Start()
@@ -34,12 +41,15 @@ public class FPSMovement : MonoBehaviour
         currentRotation = transform.eulerAngles;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        initialCamPos = cameraHolder.localPosition;
     }
 
     void Update()
     {
         MovePlayer();
         HandleMouseLook();
+        HandleShake();
         //Look();
     }
 
@@ -84,6 +94,25 @@ public class FPSMovement : MonoBehaviour
         cameraHolder.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
 
         transform.Rotate(Vector3.up * mouseX);
+    }
+
+    void HandleShake()
+    {
+        if (shakeDuration > 0)
+        {
+            cameraHolder.localPosition = initialCamPos + Random.insideUnitSphere * shakeMagnitude;
+            shakeDuration -= Time.deltaTime * shakeFadeSpeed;
+        }
+        else
+        {
+            cameraHolder.localPosition = initialCamPos;
+        }
+    }
+
+    public void AddShake(float duration, float magnitude)
+    {
+        shakeDuration = duration;
+        shakeMagnitude = magnitude;
     }
 
     //void Look()
