@@ -11,6 +11,7 @@ public class Gun : MonoBehaviour
 
     public GameObject bullet;
     public Transform bulletSpawnPoint;
+    public Camera cameraToUse;
 
     public GameObject weaponFlash;
 
@@ -48,11 +49,38 @@ public class Gun : MonoBehaviour
 
         AudioManager.Instance.PlaySFX(shootingSFX, 0.25f);
 
-        Instantiate(bullet, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
+        // Calculate shooting direction
+        Vector3 shootDirection = CalculateShootDirection();
+        
+        GameObject bulletObj = Instantiate(bullet, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
+        Bullet bulletScript = bulletObj.GetComponent<Bullet>();
+        if (bulletScript != null)
+        {
+            bulletScript.direction = shootDirection;
+        }
+        
         Instantiate(weaponFlash, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
 
         StopCoroutine(nameof(Recoil));
         StartCoroutine(nameof(Recoil));
+    }
+
+    private Vector3 CalculateShootDirection()
+    {
+        // If camera is assigned, shoot from gun position through screen center
+        if (cameraToUse != null)
+        {
+            // Get a point far along camera forward direction (screen center line)
+            Vector3 cameraPosition = cameraToUse.transform.position;
+            Vector3 cameraForward = cameraToUse.transform.forward;
+            Vector3 targetPoint = cameraPosition + cameraForward * 100f; // Far point along center line
+            
+            // Direction from gun spawn point to that center line
+            return (targetPoint - bulletSpawnPoint.position).normalized;
+        }
+        
+        // If no camera, shoot forward
+        return bulletSpawnPoint.forward;
     }
     public void Aim()
     {

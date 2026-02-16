@@ -1,0 +1,247 @@
+using System.Collections;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using static UnityEngine.InputSystem.LowLevel.InputStateHistory;
+
+public interface IDamageable
+{
+    void TakeDamage(int amount);
+}
+
+public class PlayerGun : MonoBehaviour
+{
+    [Header("Shooting Settings")]
+    public float fireRate = 0.1f;
+    public float range = 100f;
+    public int damage = 25;
+    public int magSize = 30;
+    public float reloadTime = 2f;
+    
+    [Header("Crosshair Recoil")]
+    public GameObject recoilCrosshair;
+    public float recoilAmount = 5f;
+    public float recoilDuration = 0.2f;
+    public float recoilRecoverySpeed = 5f;
+    
+    [Header("Effects")]
+    public Camera playerCamera;
+    public LayerMask shootableLayers;
+    public GameObject weaponFlash;
+    public Transform flashSpawnPoint;
+
+    // Crosshair recoil variables
+    private float nextTimeToFire;
+    private Vector3 originalCrosshairPosition;
+    private Vector3 currentRecoilOffset;
+    private bool isHoldingShoot = false;
+
+    // Physical+Crosshair recoil variables
+    private int currentAmmo;
+    private bool isReloading = false;
+    private float recoilTimer;
+
+    // Physical recoil variables
+    public float recoilDistance = 0.1f;
+    public float recoilSpeed = 15f;
+
+    private Quaternion initialRotation;
+    private Vector3 initialPosition;
+    private Vector3 reloadRotationOffset = new Vector3(66, 55, 55);
+
+    void Start()
+    {
+        currentAmmo = magSize;
+        initialRotation = transform.localRotation;
+        initialPosition = transform.localPosition;
+        
+        if (recoilCrosshair != null)
+        {
+            originalCrosshairPosition = recoilCrosshair.transform.localPosition;
+            recoilCrosshair.SetActive(false); // Start hidden
+        }
+    }
+
+    void Update()
+    {
+        HandleShooting();
+        UpdateCrosshairRecoil();
+    }
+   
+    
+    // Methods expected by PlayerShooting.cs
+    public void Shoot()
+    {
+        if (isReloading) return;
+        if (Time.time < nextTimeToFire) return;
+        
+        if (currentAmmo <= 0)
+        {
+            StartCoroutine(Reload());
+            return;
+        }
+
+        Instantiate(weaponFlash, flashSpawnPoint.position, flashSpawnPoint.rotation);
+
+        nextTimeToFire = Time.time + fireRate;
+        currentAmmo--;
+        ShootFromCrosshair();
+        StopCoroutine(nameof(PhysicalRecoil));
+        StartCoroutine(nameof(PhysicalRecoil));
+    }
+    
+    public void Aim()
+    {
+        // Could add aim-specific behavior here if needed
+    }
+    
+    public void StopAiming()
+    {
+        // Could add stop-aim behavior here if needed
+    }
+    
+    public void TryReload()
+    {
+        if (!isReloading && currentAmmo < magSize)
+        {
+            StartCoroutine(Reload());
+        }
+    }
+    
+    private IEnumerator Reload()
+    {
+        isReloading = true;
+        Debug.Log("Reloading...");
+
+        Quaternion targetRotation = Quaternion.Euler(initialRotation.eulerAngles + reloadRotationOffset);
+        float halfReload = reloadTime / 2f;
+        float t = 0f;
+
+        while (t < halfReload)
+        {
+            t += Time.deltaTime;
+            transform.localRotation = Quaternion.Slerp(initialRotation, targetRotation, t / halfReload);
+            yield return null;
+        }
+
+        t = 0f;
+
+        while (t < halfReload)
+        {
+            t += Time.deltaTime;
+            transform.localRotation = Quaternion.Slerp(targetRotation, initialRotation, t / halfReload);
+            yield return null;
+
+        }
+
+        currentAmmo = magSize;
+        isReloading = false;
+        Debug.Log("Reload complete!");
+    }
+    
+    void HandleShooting()
+    {
+        if (isHoldingShoot && !isReloading && Time.time >= nextTimeToFire)
+        {
+            if (currentAmmo <= 0)
+            {
+                StartCoroutine(Reload());
+                return;
+            }
+            
+            nextTimeToFire = Time.time + fireRate;
+            currentAmmo--;
+            ShootFromCrosshair();
+        }
+    }
+    
+    void ShootFromCrosshair()
+    {
+        // Raycast from camera center (crosshair position)
+        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+        
+        if (Physics.Raycast(ray, out RaycastHit hit, range, shootableLayers))
+        {
+            // Apply damage to hit target
+            IDamageable damageable = hit.collider.GetComponent<IDamageable>();
+            if (damageable != null)
+            {
+                damageable.TakeDamage(damage);
+            }
+            
+            Debug.Log($"Hit {hit.collider.name} at distance {hit.distance}");
+        }
+        else
+        {
+            Debug.Log("Shot missed - no target in range");
+        }
+        
+        // Apply crosshair recoil
+        ApplyRecoil();
+    }
+    
+    void ApplyRecoil()
+    {
+        if (recoilCrosshair != null)
+        {
+            // Show the recoil crosshair
+            recoilCrosshair.SetActive(true);
+            
+            // Add random recoil offset
+            Vector3 randomRecoil = new Vector3(
+                Random.Range(-recoilAmount, recoilAmount),
+                Random.Range(-recoilAmount, recoilAmount),
+                0f
+            );
+            currentRecoilOffset += randomRecoil;
+            
+            // Reset recoil timer
+            recoilTimer = recoilDuration;
+        }
+    }
+
+    private IEnumerator PhysicalRecoil()
+    {
+        Vector3 recoilTarget = initialPosition + new Vector3(0, 0, -recoilDistance);
+        float t = 0f;
+
+        while (t < 1f)
+        {
+            t += Time.deltaTime * recoilSpeed;
+            transform.localPosition = Vector3.Lerp(initialPosition, recoilTarget, t);
+            yield return null;
+        }
+
+        t = 0f;
+
+        while (t < 1f)
+        {
+            t += Time.deltaTime * recoilSpeed;
+            transform.localPosition = Vector3.Lerp(recoilTarget, initialPosition, t);
+            yield return null;
+        }
+
+        transform.localPosition = initialPosition;
+    }
+
+    void UpdateCrosshairRecoil()
+    {
+        if (recoilCrosshair != null)
+        {
+            // Update recoil timer
+            if (recoilTimer > 0)
+            {
+                recoilTimer -= Time.deltaTime;
+                
+                // Smoothly return to original position
+                currentRecoilOffset = Vector3.Lerp(currentRecoilOffset, Vector3.zero, Time.deltaTime * recoilRecoverySpeed);
+                recoilCrosshair.transform.localPosition = originalCrosshairPosition + currentRecoilOffset;
+            }
+            else
+            {
+                // Hide the recoil crosshair when timer is done
+                recoilCrosshair.SetActive(false);
+                currentRecoilOffset = Vector3.zero;
+            }
+        }
+    }
+}
