@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using UnityEngine.AI;
 using System.Linq;
+using System.Collections.Generic;
 
 public class Enemy : MonoBehaviour, IDamageable
 {
@@ -26,6 +27,7 @@ public class Enemy : MonoBehaviour, IDamageable
 
     //AI Settings
     public int currentPointIndex = 0;
+    public int previousPointIndex = -1;
     public Vector3 currentTarget;
     public float positionThreshold;
     public float idleTime = 5f;
@@ -50,8 +52,107 @@ public class Enemy : MonoBehaviour, IDamageable
         agent = GetComponent<NavMeshAgent>();
         PlayerTransform = GameObject.FindWithTag("Player").GetComponent<Transform>();
 
-        GameObject patrolPointParent = GameObject.FindWithTag("PatrolPoint");
-        patrolPoints = patrolPointParent.GetComponentsInChildren<Transform>().Where(t => t != patrolPointParent.transform).ToArray();
+        // Find patrol points only within the current room
+        FindPatrolPointsInCurrentRoom();
+    }
+    
+    private void FindPatrolPointsInCurrentRoom()
+    {
+        // Find the GameObject tagged "PatrolPoint" that is a child of the room the enemy spawned in
+        RoomGen currentRoom = GetComponentInParent<RoomGen>();
+        if (currentRoom != null)
+        {
+            // Search for the PatrolPoint tagged GameObject within this room's children
+            Transform[] roomChildren = currentRoom.GetComponentsInChildren<Transform>();
+            GameObject patrolPointParent = null;
+            
+            foreach (Transform child in roomChildren)
+            {
+                if (child.gameObject.CompareTag("PatrolPoint"))
+                {
+                    patrolPointParent = child.gameObject;
+                    break;
+                }
+            }
+            
+            if (patrolPointParent != null)
+            {
+                // Get all children of the PatrolPoint GameObject as patrol points
+                Transform[] childTransforms = patrolPointParent.GetComponentsInChildren<Transform>();
+                List<Transform> validPatrolPoints = new List<Transform>();
+                
+                foreach (Transform child in childTransforms)
+                {
+                    // Exclude the parent object itself, only include the children
+                    if (child != patrolPointParent.transform)
+                    {
+                        validPatrolPoints.Add(child);
+                    }
+                }
+                
+                patrolPoints = validPatrolPoints.ToArray();
+                Debug.Log($"[Enemy] Found {patrolPoints.Length} patrol points from '{patrolPointParent.name}' in current room");
+                
+                if (patrolPoints.Length > 0)
+                {
+                    currentTarget = patrolPoints[0].position;
+                    return;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[Enemy] No GameObject with 'PatrolPoint' tag found in current room");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("[Enemy] Enemy is not a child of a RoomGen object");
+        }
+        
+        // Fallback: Get patrol points from ALL rooms for corridor navigation
+        Debug.Log("[Enemy] Getting patrol points from all rooms for corridor navigation");
+        var allPatrolPoints = new List<Transform>();
+        
+        RoomGen[] allRooms = FindObjectsOfType<RoomGen>();
+        foreach (RoomGen room in allRooms)
+        {
+            // Search for PatrolPoint tagged GameObjects in each room
+            Transform[] roomChildren = room.GetComponentsInChildren<Transform>();
+            GameObject patrolPointParent = null;
+            
+            foreach (Transform child in roomChildren)
+            {
+                if (child.gameObject.CompareTag("PatrolPoint"))
+                {
+                    patrolPointParent = child.gameObject;
+                    break;
+                }
+            }
+            
+            if (patrolPointParent != null)
+            {
+                Transform[] childTransforms = patrolPointParent.GetComponentsInChildren<Transform>();
+                foreach (Transform child in childTransforms)
+                {
+                    if (child != patrolPointParent.transform)
+                    {
+                        allPatrolPoints.Add(child);
+                    }
+                }
+            }
+        }
+        
+        patrolPoints = allPatrolPoints.ToArray();
+        Debug.Log($"[Enemy] Found {patrolPoints.Length} total patrol points from all rooms");
+        
+        if (patrolPoints.Length > 0)
+        {
+            currentTarget = patrolPoints[0].position;
+        }
+        else
+        {
+            Debug.LogWarning("[Enemy] No patrol points found anywhere");
+        }
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -154,6 +255,19 @@ public class Enemy : MonoBehaviour, IDamageable
 
     private void PatrolBehavior()
     {
+        if (patrolPoints == null || patrolPoints.Length == 0)
+        {
+            // No patrol points available, try to find them again or go idle
+            FindPatrolPointsInCurrentRoom();
+            
+            if (patrolPoints == null || patrolPoints.Length == 0)
+            {
+                // Still no patrol points, just idle for a bit then try again
+                enemyState = EnemyState.Idle;
+                return;
+            }
+        }
+        
         if (Vector3.Distance(currentTarget, transform.position) < positionThreshold)
         {
             canSeePlayer = false;
@@ -163,19 +277,54 @@ public class Enemy : MonoBehaviour, IDamageable
                 enemyState = EnemyState.Idle;
                 return;
             }
-            currentPointIndex++;
-            currentTarget = patrolPoints[currentPointIndex % patrolPoints.Length].position;
+            
+            // Select next patrol point randomly, avoiding the immediately previous point
+            SelectNextPatrolPoint();
         }
         else
         {
             agent.SetDestination(currentTarget);
         }
     }
+    
+    private void SelectNextPatrolPoint()
+    {
+        if (patrolPoints.Length <= 1)
+        {
+            // If there's only one patrol point, just use it
+            currentPointIndex = 0;
+            currentTarget = patrolPoints[0].position;
+            return;
+        }
+        
+        // Create a list of available patrol points (excluding the previous point)
+        List<int> availableIndices = new List<int>();
+        for (int i = 0; i < patrolPoints.Length; i++)
+        {
+            if (i != previousPointIndex)
+            {
+                availableIndices.Add(i);
+            }
+        }
+        
+        // Randomly select from available indices
+        int nextIndex = availableIndices[Random.Range(0, availableIndices.Count)];
+        
+        // Update indices and target
+        previousPointIndex = currentPointIndex;
+        currentPointIndex = nextIndex;
+        currentTarget = patrolPoints[currentPointIndex].position;
+        
+        Debug.Log($"[Enemy] Selected patrol point {currentPointIndex}, avoiding previous point {previousPointIndex}");
+    }
 
     private void ChaseBehavior()
     {
         idleTimeCounter = idleTime; // Reset idle timer when switching to chasing
-        agent.SetDestination(lastKnownPlayerPosition);
+        
+        // Check if enemy has reached the last known player position
+        float distanceToLastKnown = Vector3.Distance(transform.position, lastKnownPlayerPosition);
+        
         if(health < minChasingHealth)
         {
             enemyState = EnemyState.Patrolling; //cautious
@@ -184,13 +333,20 @@ public class Enemy : MonoBehaviour, IDamageable
         {
             enemyState = EnemyState.Attacking;
         }
-        else if (Vector3.Distance(transform.position, PlayerTransform.position) > maxVisionDistance)
+        else if (canSeePlayer && Vector3.Distance(transform.position, PlayerTransform.position) <= maxVisionDistance)
         {
-            enemyState = EnemyState.Patrolling; // Lost sight of player, return to patrolling
+            // Still can see player, continue chasing
+            agent.SetDestination(PlayerTransform.position);
         }
-        else if (Vector3.Distance(transform.position, PlayerTransform.position) < positionThreshold && !canSeePlayer)
+        else if (distanceToLastKnown < positionThreshold)
         {
+            // Reached last known position but player not found, return to patrol
             enemyState = EnemyState.Patrolling;
+        }
+        else
+        {
+            // Continue to last known position
+            agent.SetDestination(lastKnownPlayerPosition);
         }
     }
 
@@ -234,6 +390,13 @@ public class Enemy : MonoBehaviour, IDamageable
     {
         if(Time.time > lastshotTime + fireRate)
         {
+            // Check for required components
+            if (PlayerTransform == null || bulletSpawnPoint == null)
+            {
+                Debug.LogWarning("[Enemy] Missing PlayerTransform or bulletSpawnPoint");
+                return;
+            }
+            
             Vector3 shootDirection = (PlayerTransform.position - bulletSpawnPoint.position).normalized;
             shootDirection.Normalize();
 
@@ -246,10 +409,23 @@ public class Enemy : MonoBehaviour, IDamageable
 
             bulletRotation *= Quaternion.Euler(randomPitch, randomYaw, 0f);
 
-            AudioManager.Instance.PlaySFX(shootingSFX, 0.25f);
+            // Play shooting sound if AudioManager and audio clip are available
+            if (AudioManager.Instance != null && shootingSFX != null)
+            {
+                AudioManager.Instance.PlaySFX(shootingSFX, 0.25f);
+            }
 
-            Instantiate(bulletPrefab, bulletSpawnPoint.position, bulletRotation);
-            Instantiate(muzzleFlash, bulletSpawnPoint.position, bulletRotation);
+            // Instantiate bullet and muzzle flash if prefabs are available
+            if (bulletPrefab != null)
+            {
+                Instantiate(bulletPrefab, bulletSpawnPoint.position, bulletRotation);
+            }
+            
+            if (muzzleFlash != null)
+            {
+                Instantiate(muzzleFlash, bulletSpawnPoint.position, bulletRotation);
+            }
+
             lastshotTime = Time.time;
         }
     }

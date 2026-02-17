@@ -250,17 +250,15 @@ MonoBehaviour:
   hitMat: {fileID: 2100000, guid: 912dfede47b42c6429b544046fd1e497, type: 2}
   shootingSFX: {fileID: 8300000, guid: 883153b4aadef934a8362985a404d082, type: 3}
   currentPointIndex: 0
+  previousPointIndex: -1
   currentTarget: {x: 0, y: 0, z: 0}
-  positionThreshold: 10
+  positionThreshold: 15
   idleTime: 5
   attackDistance: 10
   maxVisionDistance: 20
   minChasingHealth: 30
-  patrolPoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  enemyState: 0
+  patrolPoints: []
+  enemyState: 1
 --- !u!195 &664279733742595531
 NavMeshAgent:
   m_ObjectHideFlags: 0
