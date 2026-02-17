@@ -13,6 +13,31 @@ public class FPSMovement : MonoBehaviour
     [SerializeField] Transform cameraHolder;
     [SerializeField] Camera playerCamera;
     [SerializeField] Vector3 currentRotation;
+    
+    [Header("Animation")]
+    [SerializeField] Animator playerAnimator;
+    
+    [Header("Effects")]
+    [SerializeField] GameObject runEffect;
+    [SerializeField] Transform runEffectSpawnPoint;
+    [SerializeField] float effectLifetime = 0.05f;
+    [SerializeField] float effectSpawnRate = 0.1f;
+    private float effectSpawnTimer;
+    
+    [Header("Stamina")]
+    [SerializeField] UnityEngine.UI.Image staminaFillImage;
+    [SerializeField] float maxStamina = 100f;
+    [SerializeField] float staminaDrainRate = 20f;
+    [SerializeField] float staminaRegenRate = 10f;
+    [SerializeField] float fillSmoothSpeed = 5f;
+    private float currentStamina;
+    private float currentStaminaFill;
+    private float targetStaminaFill;
+    
+    [Header("Pickup System")]
+    [SerializeField] float pickupRange = 3f;
+    [SerializeField] LayerMask pickupLayerMask;
+    private InputAction pickupAction;
 
     [Header("Movement")]
     [SerializeField] float normalSpeed = 800f;
@@ -26,6 +51,9 @@ public class FPSMovement : MonoBehaviour
     [SerializeField] float jumpForce = 5f;
     [SerializeField] float mouseSensitivity = 200f;
     private bool isPressed;
+    private bool isCrouching;
+    private bool isShooting;
+    private bool isRunning;
 
 
     [Header("GroundCheck")]
@@ -52,11 +80,17 @@ public class FPSMovement : MonoBehaviour
         jumpAction = playerInput.actions.FindAction("Jump");
         sprintAction = playerInput.actions.FindAction("Sprint");
         crouchAction = playerInput.actions.FindAction("Crouch");
+        pickupAction = playerInput.actions.FindAction("Interact"); // Add pickup action
         //lookAction = playerInput.actions.FindAction("Look");
         rb = GetComponent<Rigidbody>();
-
+        playerAnimator = GetComponent<Animator>();
+        
         //Take dmg visual
         Instance = this;
+        
+        // Find camera if not assigned
+        if (playerCamera == null)
+            playerCamera = Camera.main;
     }
 
     void Start()
@@ -69,8 +103,16 @@ public class FPSMovement : MonoBehaviour
         speed = normalSpeed;
         targetFOV = normalFOV;
         
+        // Initialize stamina
+        currentStamina = maxStamina;
+        currentStaminaFill = 1f;
+        targetStaminaFill = 1f;
+        
         if (playerCamera == null)
             playerCamera = Camera.main;
+        
+        if (staminaFillImage != null)
+            staminaFillImage.fillAmount = currentStaminaFill;
 
         StartCoroutine(PlayFootStep());
     }
@@ -82,6 +124,16 @@ public class FPSMovement : MonoBehaviour
         HandleMouseLook();
         HandleShake();
         HandleFOV();
+        UpdateAnimations();
+        HandleRunEffect();
+        HandleStamina();
+        CheckHealthPickups();
+        
+        // Cancel sprint if out of stamina
+        if (isRunning && currentStamina <= 0)
+        {
+            OnSprintCanceled(new InputAction.CallbackContext());
+        }
         //Look();
     }
 
@@ -92,6 +144,8 @@ public class FPSMovement : MonoBehaviour
         sprintAction.canceled += OnSprintCanceled;
         crouchAction.started += OnCrouchStarted;
         crouchAction.canceled += OnCrouchCanceled;
+        if (pickupAction != null)
+            pickupAction.performed += OnPickupPerformed;
     }
 
     private void OnDisable()
@@ -101,6 +155,8 @@ public class FPSMovement : MonoBehaviour
         sprintAction.canceled -= OnSprintCanceled;
         crouchAction.started -= OnCrouchStarted;
         crouchAction.canceled -= OnCrouchCanceled;
+        if (pickupAction != null)
+            pickupAction.performed -= OnPickupPerformed;
     }
 
     void MovePlayer()
@@ -116,30 +172,52 @@ public class FPSMovement : MonoBehaviour
 
     void OnSprintStarted(InputAction.CallbackContext context)
     {
-        isPressed = true;
-        speed = sprintSpeed;
-        targetFOV = sprintFOV;
+        if (isCrouching)
+        {
+            // Cancel crouch if sprint is pressed
+            OnCrouchCanceled(context);
+        }
+        
+        // Only allow sprinting if we have stamina
+        if (currentStamina > 0)
+        {
+            isPressed = true;
+            isRunning = true;
+            speed = sprintSpeed;
+            targetFOV = sprintFOV;
+        }
     }
 
     void OnSprintCanceled(InputAction.CallbackContext context)
     {
         isPressed = false;
+        isRunning = false;
         speed = normalSpeed;
         targetFOV = normalFOV;
     }
 
     void OnCrouchStarted(InputAction.CallbackContext context)
     {
+        if (isRunning)
+        {
+            // Cancel sprint if crouch is pressed
+            OnSprintCanceled(context);
+        }
         isPressed = true;
+        isCrouching = true;
         speed = crouchSpeed;
         targetFOV = crouchFOV;
+        playerAnimator.SetBool("PlayerCrouch", true);
+        playerAnimator.SetBool("PlayerIdle", false);
     }
 
     void OnCrouchCanceled(InputAction.CallbackContext context)
     {
         isPressed = false;
+        isCrouching = false;
         speed = normalSpeed;
         targetFOV = normalFOV;
+        playerAnimator.SetBool("PlayerCrouch", false);
     }
 
     void JumpPlayer(InputAction.CallbackContext context)
@@ -210,6 +288,147 @@ public class FPSMovement : MonoBehaviour
             }
             yield return new WaitForSeconds(0.5f);
         }
+    }
+    
+    void UpdateAnimations()
+    {
+        // Handle idle animation when not moving and not crouching
+        if (rb.linearVelocity.magnitude < 0.1f && !isCrouching && !isShooting)
+        {
+            playerAnimator.SetBool("PlayerIdle", true);
+        }
+        else if (rb.linearVelocity.magnitude > 0.1f)
+        {
+            playerAnimator.SetBool("PlayerIdle", false);
+        }
+        
+        // Handle shooting animation (this would be called from the gun script)
+        if (isShooting && !isCrouching)
+        {
+            playerAnimator.SetBool("PlayerShooting", true);
+            playerAnimator.SetBool("PlayerIdle", false);
+        }
+        else
+        {
+            playerAnimator.SetBool("PlayerShooting", false);
+        }
+    }
+    
+    public void SetShooting(bool shooting)
+    {
+        isShooting = shooting;
+    }
+    
+    void HandleRunEffect()
+    {
+        if (isRunning && isGrounded && rb.linearVelocity.magnitude > 0.1f && moveAction.ReadValue<Vector2>().magnitude > 0.1f && currentStamina > 0)
+        {
+            effectSpawnTimer -= Time.deltaTime;
+            if (effectSpawnTimer <= 0f)
+            {
+                InstantiateRunEffect();
+                effectSpawnTimer = effectSpawnRate;
+            }
+        }
+    }
+    
+    void InstantiateRunEffect()
+    {
+        if (runEffect != null && runEffectSpawnPoint != null)
+        {
+            GameObject effect = Instantiate(runEffect, runEffectSpawnPoint.position, runEffectSpawnPoint.rotation);
+            Destroy(effect, effectLifetime);
+        }
+    }
+    
+    void HandleStamina()
+    {
+        if (isRunning && isGrounded && rb.linearVelocity.magnitude > 0.1f && moveAction.ReadValue<Vector2>().magnitude > 0.1f)
+        {
+            // Drain stamina while running
+            currentStamina = Mathf.Max(0, currentStamina - staminaDrainRate * Time.deltaTime);
+        }
+        else if (!isCrouching)
+        {
+            // Regenerate stamina when not running or crouching
+            currentStamina = Mathf.Min(maxStamina, currentStamina + staminaRegenRate * Time.deltaTime);
+        }
+        
+        // Update stamina fill
+        UpdateStaminaFill();
+    }
+    
+    void UpdateStaminaFill()
+    {
+        if (staminaFillImage != null)
+        {
+            targetStaminaFill = currentStamina / maxStamina;
+            currentStaminaFill = Mathf.Lerp(currentStaminaFill, targetStaminaFill, Time.deltaTime * fillSmoothSpeed);
+            staminaFillImage.fillAmount = currentStaminaFill;
+        }
+    }
+    
+    void OnPickupPerformed(InputAction.CallbackContext context)
+    {
+        TryPickupHealth();
+    }
+    
+    void CheckHealthPickups()
+    {
+        if (pickupAction == null || playerCamera == null) return;
+        
+        // Raycast from camera center to check for health pickups
+        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+        
+        if (Physics.Raycast(ray, out RaycastHit hit, pickupRange, pickupLayerMask))
+        {
+            // Check if hit object has HealthPickup component
+            HealthPickup healthPickup = hit.collider.GetComponent<HealthPickup>();
+            if (healthPickup != null)
+            {
+                // Show pickup prompt or auto-pickup
+                // For now, we'll auto-pickup when F is pressed
+            }
+        }
+    }
+    
+    void TryPickupHealth()
+    {
+        if (pickupAction == null || playerCamera == null) return;
+        
+        // Raycast from camera center to pickup health
+        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+        
+        if (Physics.Raycast(ray, out RaycastHit hit, pickupRange, pickupLayerMask))
+        {
+            HealthPickup healthPickup = hit.collider.GetComponent<HealthPickup>();
+            if (healthPickup != null)
+            {
+                // Check if player is at full health
+                if (PlayerHealth.Instance != null && PlayerHealth.Instance.IsFullHealth())
+                {
+                    Debug.Log("Already at full health!");
+                    return;
+                }
+                
+                // Pickup the health item
+                PickupHealthItem(healthPickup);
+            }
+        }
+    }
+    
+    void PickupHealthItem(HealthPickup healthPickup)
+    {
+        // Add health to player using the pickup's own amount
+        if (PlayerHealth.Instance != null)
+        {
+            PlayerHealth.Instance.Heal(healthPickup.GetHealthAmount());
+        }
+        
+        // Destroy the pickup object
+        Destroy(healthPickup.gameObject);
+        
+        Debug.Log($"Picked up health: +{healthPickup.GetHealthAmount()} HP");
     }
 
     //void Look()
