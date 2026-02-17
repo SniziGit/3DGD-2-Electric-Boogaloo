@@ -19,6 +19,8 @@ public class PlayerGun : MonoBehaviour
     
     [Header("Crosshair Recoil")]
     public GameObject recoilCrosshair;
+    public GameObject persistentRecoilObject;
+    public GameObject hitCrosshair;
     public float recoilAmount = 5f;
     public float recoilDuration = 0.2f;
     public float recoilRecoverySpeed = 5f;
@@ -38,7 +40,14 @@ public class PlayerGun : MonoBehaviour
     private float nextTimeToFire;
     private Vector3 originalCrosshairPosition;
     private Vector3 currentRecoilOffset;
+    private Vector3 originalPersistentPosition;
+    private Vector3 currentPersistentOffset;
+    private Vector3 originalHitCrosshairPosition;
+    private Vector3 currentHitRecoilOffset;
     private bool isHoldingShoot = false;
+    private bool showingHitCrosshair = false;
+    private UnityEngine.UI.Image persistentImage;
+    private Color originalPersistentColor;
 
     // Physical+Crosshair recoil variables
     private int currentAmmo;
@@ -72,10 +81,25 @@ public class PlayerGun : MonoBehaviour
             ammoFillImage.fillAmount = currentFillAmount;
         }
         
+        // Initialize crosshair positions
         if (recoilCrosshair != null)
         {
             originalCrosshairPosition = recoilCrosshair.transform.localPosition;
             recoilCrosshair.SetActive(false); // Start hidden
+        }
+        
+        if (persistentRecoilObject != null)
+        {
+            originalPersistentPosition = persistentRecoilObject.transform.localPosition;
+            persistentImage = persistentRecoilObject.GetComponent<UnityEngine.UI.Image>();
+            if (persistentImage != null)
+                originalPersistentColor = persistentImage.color;
+        }
+        
+        if (hitCrosshair != null)
+        {
+            originalHitCrosshairPosition = hitCrosshair.transform.localPosition;
+            hitCrosshair.SetActive(false); // Start hidden
         }
     }
 
@@ -83,7 +107,10 @@ public class PlayerGun : MonoBehaviour
     {
         HandleShooting();
         UpdateCrosshairRecoil();
+        UpdatePersistentRecoil();
+        UpdateHitCrosshair();
         UpdateAmmoFill();
+        CheckEnemyAim();
     }
    
     
@@ -191,6 +218,7 @@ public class PlayerGun : MonoBehaviour
             if (damageable != null)
             {
                 damageable.TakeDamage(damage);
+                ShowHitCrosshair(); // Show hit crosshair when hitting enemy
             }
             
             Debug.Log($"Hit {hit.collider.name} at distance {hit.distance}");
@@ -206,21 +234,36 @@ public class PlayerGun : MonoBehaviour
     
     void ApplyRecoil()
     {
-        if (recoilCrosshair != null)
+        // Calculate recoil offset once for all objects
+        Vector3 recoilOffset = new Vector3(
+            Random.Range(-recoilAmount, recoilAmount),
+            Random.Range(-recoilAmount, recoilAmount),
+            0f
+        );
+        
+        if (recoilCrosshair != null && !showingHitCrosshair)
         {
-            // Show the recoil crosshair
+            // Show recoil crosshair
             recoilCrosshair.SetActive(true);
-            
-            // Add random recoil offset
-            Vector3 randomRecoil = new Vector3(
-                Random.Range(-recoilAmount, recoilAmount),
-                Random.Range(-recoilAmount, recoilAmount),
-                0f
-            );
-            currentRecoilOffset += randomRecoil;
+            currentRecoilOffset += recoilOffset;
             
             // Reset recoil timer
             recoilTimer = recoilDuration;
+        }
+        
+        // Apply reduced recoil to persistent object
+        if (persistentRecoilObject != null)
+        {
+            Vector3 reducedRecoil = recoilOffset * 0.3f; // 30% of normal recoil
+            currentPersistentOffset += reducedRecoil;
+        }
+        
+        // Apply recoil to hit crosshair if it's active
+        if (hitCrosshair != null && showingHitCrosshair)
+        {
+            Vector3 hitRecoilOffset = hitCrosshair.transform.localPosition - GetOriginalHitCrosshairPosition();
+            hitRecoilOffset += recoilOffset * 0.7f; // 70% of normal recoil
+            hitCrosshair.transform.localPosition = GetOriginalHitCrosshairPosition() + hitRecoilOffset;
         }
     }
 
@@ -250,7 +293,7 @@ public class PlayerGun : MonoBehaviour
 
     void UpdateCrosshairRecoil()
     {
-        if (recoilCrosshair != null)
+        if (recoilCrosshair != null && !showingHitCrosshair)
         {
             // Update recoil timer
             if (recoilTimer > 0)
@@ -263,10 +306,89 @@ public class PlayerGun : MonoBehaviour
             }
             else
             {
-                // Hide the recoil crosshair when timer is done
+                // Hide recoil crosshair when timer is done
                 recoilCrosshair.SetActive(false);
                 currentRecoilOffset = Vector3.zero;
             }
+        }
+    }
+    
+    void UpdatePersistentRecoil()
+    {
+        if (persistentRecoilObject != null)
+        {
+            // Smoothly return to original position
+            currentPersistentOffset = Vector3.Lerp(currentPersistentOffset, Vector3.zero, Time.deltaTime * recoilRecoverySpeed * 0.5f);
+            persistentRecoilObject.transform.localPosition = originalPersistentPosition + currentPersistentOffset;
+        }
+    }
+    
+    void ShowHitCrosshair()
+    {
+        if (hitCrosshair != null && !showingHitCrosshair)
+        {
+            showingHitCrosshair = true;
+            hitCrosshair.SetActive(true);
+            
+            // Hide regular recoil crosshair when hit crosshair shows
+            if (recoilCrosshair != null)
+                recoilCrosshair.SetActive(false);
+            
+            // Start coroutine to hide hit crosshair after a short duration
+            StartCoroutine(HideHitCrosshairAfterDelay(0.3f));
+        }
+    }
+    
+    IEnumerator HideHitCrosshairAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        
+        showingHitCrosshair = false;
+        if (hitCrosshair != null)
+            hitCrosshair.SetActive(false);
+    }
+    
+    void UpdateHitCrosshair()
+    {
+        if (hitCrosshair != null && showingHitCrosshair)
+        {
+            // Smoothly return hit crosshair to original position
+            currentHitRecoilOffset = Vector3.Lerp(currentHitRecoilOffset, Vector3.zero, Time.deltaTime * recoilRecoverySpeed * 0.8f);
+            hitCrosshair.transform.localPosition = originalHitCrosshairPosition + currentHitRecoilOffset;
+        }
+    }
+    
+    Vector3 GetOriginalHitCrosshairPosition()
+    {
+        return originalHitCrosshairPosition;
+    }
+    
+    void CheckEnemyAim()
+    {
+        if (persistentImage == null) return;
+        
+        // Raycast from camera center to check for enemies
+        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+        
+        if (Physics.Raycast(ray, out RaycastHit hit, range, shootableLayers))
+        {
+            // Check if hit object has IDamageable (enemy)
+            IDamageable damageable = hit.collider.GetComponent<IDamageable>();
+            if (damageable != null)
+            {
+                // Change to red when aiming at enemy
+                persistentImage.color = Color.red;
+            }
+            else
+            {
+                // Return to original color when not aiming at enemy
+                persistentImage.color = originalPersistentColor;
+            }
+        }
+        else
+        {
+            // Return to original color when no target
+            persistentImage.color = originalPersistentColor;
         }
     }
     
