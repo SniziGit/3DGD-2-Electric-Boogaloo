@@ -224,6 +224,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4072839419339953132, guid: b6e3502aa774e88488b655f85490c46b, type: 3}
+      propertyPath: maxHealth
+      value: 2147483647
+      objectReference: {fileID: 0}
     - target: {fileID: 5971145063483213157, guid: b6e3502aa774e88488b655f85490c46b, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2.436
@@ -468,7 +472,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: maxRooms
-      value: 30
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: wallPrefab
