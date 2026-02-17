@@ -4,7 +4,8 @@ public class DoorAnimTrigger : MonoBehaviour
 {
     private Animator doorAnimator;
     private Collider doorCollider;
-    [SerializeField] private float closeDelay = 2.0f;
+    [SerializeField] private float closeDelay = 1.0f;
+    [SerializeField] private bool isLocked = false;
     private bool isPlayerInside = false;
     private Coroutine closeCoroutine;
 
@@ -16,7 +17,7 @@ public class DoorAnimTrigger : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") && !isLocked)
         {
             isPlayerInside = true;
             doorAnimator.SetBool("isOpen", true);
@@ -47,5 +48,15 @@ public class DoorAnimTrigger : MonoBehaviour
             doorAnimator.SetBool("isOpen", false);
         }
         closeCoroutine = null;
+    }
+
+    public void UnlockDoor()
+    {
+        isLocked = false;
+    }
+
+    public void LockDoor()
+    {
+        isLocked = true;
     }
 }
