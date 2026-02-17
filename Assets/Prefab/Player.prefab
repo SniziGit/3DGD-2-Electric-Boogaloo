@@ -447,14 +447,14 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 0
   reviveInteraction: {fileID: 7644335928159998134}
-  normalSpeed: 800
-  sprintSpeed: 2000
-  crouchSpeed: 550
+  normalSpeed: 100
+  sprintSpeed: 150
+  crouchSpeed: 50
   normalFOV: 100
   sprintFOV: 120
   crouchFOV: 90
-  jumpForce: 10
-  mouseSensitivity: 50
+  jumpForce: 5
+  mouseSensitivity: 35
   groundCheck: {fileID: 980127169038363980}
   groundDistance: 0.4
   groundMask:
