@@ -94,7 +94,7 @@ LightmapSettings:
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 20201, guid: 0000000000000000f000000000000000, type: 0}
-  m_LightingSettings: {fileID: 0}
+  m_LightingSettings: {fileID: 4890085278179872738, guid: 929aac676e1bcfd4aa558b6e2b48b059, type: 2}
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -178,6 +178,18 @@ PrefabInstance:
     - target: {fileID: 9221916719213343178, guid: b6e3502aa774e88488b655f85490c46b, type: 3}
       propertyPath: jumpForce
       value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 9221916719213343178, guid: b6e3502aa774e88488b655f85490c46b, type: 3}
+      propertyPath: crouchSpeed
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 9221916719213343178, guid: b6e3502aa774e88488b655f85490c46b, type: 3}
+      propertyPath: normalSpeed
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 9221916719213343178, guid: b6e3502aa774e88488b655f85490c46b, type: 3}
+      propertyPath: sprintSpeed
+      value: 150
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -359,27 +371,51 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: maxRooms
-      value: 20
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: wallPrefab
       value: 
       objectReference: {fileID: 4434480023597636553, guid: ddd09e405c5f25040999e9c3c0037efe, type: 3}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
+      propertyPath: maxTreeDepth
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: corridorPrefab
       value: 
       objectReference: {fileID: 7864143128494020873, guid: ca5860ee6687fd0429fe4304dab6ee4e, type: 3}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
+      propertyPath: branchProbability
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: roomTraversalCost
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
+      propertyPath: maxAttemptsPerRoom
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
+      propertyPath: maxBranchesPerNode
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: maxCorridorSpacing
       value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
+      propertyPath: minBranchesPerNode
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: minCorridorSpacing
       value: 22
+      objectReference: {fileID: 0}
+    - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
+      propertyPath: corridorClipThreshold
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: corridorSegmentLength
@@ -393,6 +429,14 @@ PrefabInstance:
       propertyPath: corridorConnectorPrefab
       value: 
       objectReference: {fileID: 8070488754040815914, guid: 24e3b242def6c844cb44478762bd1c30, type: 3}
+    - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
+      propertyPath: fullIntersectionThreshold
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
+      propertyPath: openingProximityThreshold
+      value: 22
+      objectReference: {fileID: 0}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: 'roomPrefabs.Array.data[0]'
       value: 

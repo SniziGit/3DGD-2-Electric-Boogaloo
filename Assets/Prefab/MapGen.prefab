@@ -44,9 +44,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6a3836317be6df458954833fbe3afeb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  roomPrefabs: []
-  roomCount: 10
-  roomSize: 10
-  mapSize: {x: 100, y: 100}
-  maxPlacementAttemptsPerRoom: 10
-  corridorPrefab: {fileID: 0}
+  roomPrefabs:
+  - {fileID: 6084980925288509712, guid: b98f117152ffefc408eb5295a919424c, type: 3}
+  - {fileID: 4019064880462606059, guid: 9b1d869da0ae6f14e924f5ae61f622e6, type: 3}
+  - {fileID: 1726137987936626584, guid: 0293ef1117edac640a3ce44492944f12, type: 3}
+  - {fileID: 1726137987936626584, guid: d4ebb1ff59eb4d44d8111bf229b0834c, type: 3}
+  corridorPrefab: {fileID: 7864143128494020873, guid: ca5860ee6687fd0429fe4304dab6ee4e, type: 3}
+  corridorSpacing: 22
+  generateOnStart: 1
+  maxRooms: 30
+  maxAttemptsPerRoom: 20
+  wallPrefab: {fileID: 4434480023597636553, guid: ddd09e405c5f25040999e9c3c0037efe, type: 3}
+  rotationVariety: 0.8
+  fullIntersectionThreshold: 0.2
+  openingProximityThreshold: 22
+  branchProbability: 1
+  maxTreeDepth: 5
+  minBranchesPerNode: 5
+  maxBranchesPerNode: 5
