@@ -8,6 +8,7 @@ public class PlayerHealth : MonoBehaviour
     [Header("Health Settings")]
     [SerializeField] private int maxHealth = 100;
     [SerializeField] private int currentHealth;
+    [SerializeField] private bool isDowned = false;
     
     [Header("UI References")]
     [SerializeField] private Image healthFillImage;
@@ -17,7 +18,8 @@ public class PlayerHealth : MonoBehaviour
     private float currentHealthFill;
     private float targetHealthFill;
     
-    public static PlayerHealth Instance;
+    // Remove singleton pattern to support multiple players
+    // public static PlayerHealth Instance;
     
     [Header("Effects")]
     public AudioClip hitSFX;
@@ -28,14 +30,12 @@ public class PlayerHealth : MonoBehaviour
     public float GetHealthPercentage() => (float)currentHealth / maxHealth;
     public bool IsFullHealth() => currentHealth >= maxHealth;
     public bool IsDead() => currentHealth <= 0;
+    public bool IsDowned() => isDowned;
 
     void Awake()
     {
-        // Singleton pattern for easy access
-        if (Instance == null)
-            Instance = this;
-        else
-            Destroy(gameObject);
+        // Remove singleton pattern to support multiple players
+        // This allows multiple players in the scene
     }
     
     void Start()
@@ -65,9 +65,22 @@ public class PlayerHealth : MonoBehaviour
         currentHealth = Mathf.Max(0, currentHealth - decreaseAmount);
         UpdateHealthFillTarget();
         
-        FPSMovement.Instance.AddShake(0.1f, 0.25f); // Shake the camera when taking damage
-        UIManager.Instance.InstantiateHitUI(); // Show hit UI when taking damage
-        AudioManager.Instance.PlaySFX(hitSFX); // Play hit sound effect when taking damage
+        // Get the FPSMovement component from this GameObject
+        FPSMovement movement = GetComponent<FPSMovement>();
+        if (movement != null)
+        {
+            movement.AddShake(0.1f, 0.25f); // Shake the camera when taking damage
+        }
+        
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.InstantiateHitUI(); // Show hit UI when taking damage
+        }
+        
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(hitSFX); // Play hit sound effect when taking damage
+        }
 
         if (currentHealth <= 0)
         {
@@ -77,7 +90,18 @@ public class PlayerHealth : MonoBehaviour
 
     private void Die()
     {
-        Time.timeScale = 0f;
+        // Instead of dying, enter downed state
+        isDowned = true;
+        currentHealth = 0;
+        UpdateHealthFillTarget();
+        
+        // Notify GameManager to check if all players are downed
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.CheckPlayerDowned(this);
+        }
+        
+        Debug.Log("Player is downed! Can be revived.");
     }
     
     public void TakeDamage(int damageAmount)
@@ -134,6 +158,28 @@ public class PlayerHealth : MonoBehaviour
     {
         UpdateHealthFillTarget();
         UpdateHealthFill();
+    }
+    
+    public void Revive(int reviveHealth)
+    {
+        isDowned = false;
+        currentHealth = reviveHealth;
+        UpdateHealthFillTarget();
+        
+        // Notify GameManager that player was revived
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.PlayerRevived(this);
+        }
+        
+        Debug.Log($"Player revived with {reviveHealth} health!");
+    }
+    
+    public void ForceDeath()
+    {
+        // Called by GameManager when game should end
+        Time.timeScale = 0f;
+        Debug.Log("Game Over - All players are downed!");
     }
     
 }

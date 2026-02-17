@@ -6,7 +6,8 @@ public class FPSMovement : MonoBehaviour
 {
     PlayerInput playerInput;
     InputAction moveAction, jumpAction, sprintAction, crouchAction;
-    public static FPSMovement Instance;
+    // Remove singleton pattern to support multiple players
+    // public static FPSMovement Instance;
 
     [Header("CameraSettings")]
     Rigidbody rb;
@@ -38,6 +39,10 @@ public class FPSMovement : MonoBehaviour
     [SerializeField] float pickupRange = 3f;
     [SerializeField] LayerMask pickupLayerMask; // Keep for compatibility but not used
     private InputAction pickupAction;
+    
+    [Header("Revive System")]
+    [SerializeField] private ReviveInteraction reviveInteraction;
+    private PlayerHealth playerHealth;
 
     [Header("Movement")]
     [SerializeField] float normalSpeed = 800f;
@@ -76,6 +81,14 @@ public class FPSMovement : MonoBehaviour
     private void Awake()
     {
         playerInput = GetComponent<PlayerInput>();
+        
+        // Try to force keyboard and mouse control scheme (remove if causing issues)
+        if (playerInput != null)
+        {
+            // Don't force control scheme - let Unity handle it automatically
+            // playerInput.SwitchCurrentControlScheme("Keyboard&Mouse");
+        }
+        
         moveAction = playerInput.actions.FindAction("Move");
         jumpAction = playerInput.actions.FindAction("Jump");
         sprintAction = playerInput.actions.FindAction("Sprint");
@@ -84,9 +97,10 @@ public class FPSMovement : MonoBehaviour
         //lookAction = playerInput.actions.FindAction("Look");
         rb = GetComponent<Rigidbody>();
         playerAnimator = GetComponent<Animator>();
+        playerHealth = GetComponent<PlayerHealth>(); // Get PlayerHealth from same GameObject
         
-        //Take dmg visual
-        Instance = this;
+        //Take dmg visual - remove singleton to support multiple players
+        // Instance = this;
         
         // Find camera if not assigned
         if (playerCamera == null)
@@ -119,6 +133,14 @@ public class FPSMovement : MonoBehaviour
 
     void Update()
     {
+        // Check if player is downed - if so, disable movement
+        if (playerHealth != null && playerHealth.IsDowned())
+        {
+            // Disable all movement when downed
+            rb.linearVelocity = Vector3.zero;
+            return;
+        }
+        
         CheckGround();
         MovePlayer();
         HandleMouseLook();
@@ -128,6 +150,7 @@ public class FPSMovement : MonoBehaviour
         HandleRunEffect();
         HandleStamina();
         CheckHealthPickups();
+        CheckReviveTargets();
         
         // Cancel sprint if out of stamina
         if (isRunning && currentStamina <= 0)
@@ -150,11 +173,18 @@ public class FPSMovement : MonoBehaviour
 
     private void OnDisable()
     {
-        jumpAction.performed -= JumpPlayer;
-        sprintAction.started -= OnSprintStarted;
-        sprintAction.canceled -= OnSprintCanceled;
-        crouchAction.started -= OnCrouchStarted;
-        crouchAction.canceled -= OnCrouchCanceled;
+        if (jumpAction != null)
+            jumpAction.performed -= JumpPlayer;
+        if (sprintAction != null)
+        {
+            sprintAction.started -= OnSprintStarted;
+            sprintAction.canceled -= OnSprintCanceled;
+        }
+        if (crouchAction != null)
+        {
+            crouchAction.started -= OnCrouchStarted;
+            crouchAction.canceled -= OnCrouchCanceled;
+        }
         if (pickupAction != null)
             pickupAction.performed -= OnPickupPerformed;
     }
@@ -370,6 +400,12 @@ public class FPSMovement : MonoBehaviour
     
     void OnPickupPerformed(InputAction.CallbackContext context)
     {
+        // Check for revive first
+        if (TryRevivePlayer())
+        {
+            return;
+        }
+        
         TryPickupHealth();
     }
     
@@ -377,38 +413,25 @@ public class FPSMovement : MonoBehaviour
     {
         if (pickupAction == null || playerCamera == null) return;
         
-        // Find all pickups in range using distance (no collider needed)
-        GameObject[] allPickups = GameObject.FindGameObjectsWithTag("Pickup");
+        // Raycast from camera center to check for pickups
+        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
         
-        foreach (GameObject pickup in allPickups)
+        if (Physics.Raycast(ray, out RaycastHit hit, pickupRange, pickupLayerMask))
         {
-            float distance = Vector3.Distance(transform.position, pickup.transform.position);
-            
-            if (distance <= pickupRange)
+            // Check for health pickups
+            HealthPickup healthPickup = hit.collider.GetComponent<HealthPickup>();
+            if (healthPickup != null)
             {
-                // Check if player is looking at pickup (roughly)
-                Vector3 directionToPickup = (pickup.transform.position - transform.position).normalized;
-                float dotProduct = Vector3.Dot(playerCamera.transform.forward, directionToPickup);
-                
-                // Only show if looking roughly in the direction (within 60 degrees)
-                if (dotProduct > 0.5f)
-                {
-                    // Check for health pickups
-                    HealthPickup healthPickup = pickup.GetComponent<HealthPickup>();
-                    if (healthPickup != null)
-                    {
-                        // Could show pickup prompt here
-                        continue;
-                    }
-                    
-                    // Check for stamina pickups
-                    StaminaPickup staminaPickup = pickup.GetComponent<StaminaPickup>();
-                    if (staminaPickup != null)
-                    {
-                        // Could show pickup prompt here
-                        continue;
-                    }
-                }
+                // Show pickup prompt or auto-pickup
+                // For now, we'll auto-pickup when F is pressed
+            }
+            
+            // Check for stamina pickups
+            StaminaPickup staminaPickup = hit.collider.GetComponent<StaminaPickup>();
+            if (staminaPickup != null)
+            {
+                // Show pickup prompt or auto-pickup
+                // For now, we'll auto-pickup when F is pressed
             }
         }
     }
@@ -417,54 +440,41 @@ public class FPSMovement : MonoBehaviour
     {
         if (pickupAction == null || playerCamera == null) return;
         
-        // Find all pickups in range using distance (no collider needed)
-        GameObject[] allPickups = GameObject.FindGameObjectsWithTag("Pickup");
+        // Raycast from camera center to pickup items
+        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
         
-        foreach (GameObject pickup in allPickups)
+        if (Physics.Raycast(ray, out RaycastHit hit, pickupRange, pickupLayerMask))
         {
-            float distance = Vector3.Distance(transform.position, pickup.transform.position);
-            
-            if (distance <= pickupRange)
+            // Check for health pickups
+            HealthPickup healthPickup = hit.collider.GetComponent<HealthPickup>();
+            if (healthPickup != null)
             {
-                // Check if player is looking at pickup (roughly)
-                Vector3 directionToPickup = (pickup.transform.position - transform.position).normalized;
-                float dotProduct = Vector3.Dot(playerCamera.transform.forward, directionToPickup);
-                
-                // Only pickup if looking roughly in the direction (within 60 degrees)
-                if (dotProduct > 0.5f)
+                // Check if player is at full health
+                if (playerHealth != null && playerHealth.IsFullHealth())
                 {
-                    // Check for health pickups
-                    HealthPickup healthPickup = pickup.GetComponent<HealthPickup>();
-                    if (healthPickup != null)
-                    {
-                        // Check if player is at full health
-                        if (PlayerHealth.Instance != null && PlayerHealth.Instance.IsFullHealth())
-                        {
-                            Debug.Log("Already at full health!");
-                            return;
-                        }
-                        
-                        // Pickup the health item
-                        PickupHealthItem(healthPickup);
-                        return;
-                    }
-                    
-                    // Check for stamina pickups
-                    StaminaPickup staminaPickup = pickup.GetComponent<StaminaPickup>();
-                    if (staminaPickup != null)
-                    {
-                        // Check if player is at full stamina
-                        if (currentStamina >= maxStamina)
-                        {
-                            Debug.Log("Already at full stamina!");
-                            return;
-                        }
-                        
-                        // Pickup the stamina item
-                        PickupStaminaItem(staminaPickup);
-                        return;
-                    }
+                    Debug.Log("Already at full health!");
+                    return;
                 }
+                
+                // Pickup the health item
+                PickupHealthItem(healthPickup);
+                return;
+            }
+            
+            // Check for stamina pickups
+            StaminaPickup staminaPickup = hit.collider.GetComponent<StaminaPickup>();
+            if (staminaPickup != null)
+            {
+                // Check if player is at full stamina
+                if (currentStamina >= maxStamina)
+                {
+                    Debug.Log("Already at full stamina!");
+                    return;
+                }
+                
+                // Pickup the stamina item
+                PickupStaminaItem(staminaPickup);
+                return;
             }
         }
     }
@@ -472,9 +482,9 @@ public class FPSMovement : MonoBehaviour
     void PickupHealthItem(HealthPickup healthPickup)
     {
         // Add health to player using the pickup's own amount
-        if (PlayerHealth.Instance != null)
+        if (playerHealth != null)
         {
-            PlayerHealth.Instance.Heal(healthPickup.GetHealthAmount());
+            playerHealth.Heal(healthPickup.GetHealthAmount());
         }
         
         // Destroy the pickup object
@@ -505,6 +515,34 @@ public class FPSMovement : MonoBehaviour
         
         // Destroy the pickup object
         Destroy(staminaPickup.gameObject);
+    }
+    
+    void CheckReviveTargets()
+    {
+        if (reviveInteraction == null || playerHealth == null || playerHealth.IsDowned())
+            return;
+        
+        // Check if there are downed players in range
+        if (reviveInteraction.CanRevive())
+        {
+            // Show revive prompt (you could add UI here)
+            // For now, we'll just log it
+            // Debug.Log("Press F to revive nearby player");
+        }
+    }
+    
+    bool TryRevivePlayer()
+    {
+        if (reviveInteraction == null || playerHealth == null || playerHealth.IsDowned())
+            return false;
+        
+        if (reviveInteraction.CanRevive())
+        {
+            reviveInteraction.StartRevive();
+            return true;
+        }
+        
+        return false;
     }
 
     //void Look()
