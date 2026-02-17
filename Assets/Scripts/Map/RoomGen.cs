@@ -62,8 +62,17 @@ public class RoomGen : MonoBehaviour
         }
     }
 
+    public void SetDifficulty(int distance)
+    {
+        // Example: spawn more enemies the further away the room is
+        spawnCount = Mathf.Clamp(5 + distance * 2, 5, 50);
 
-    #if UNITY_EDITOR
+        // Optionally: pick tougher prefabs based on distance
+        // e.g., index into spawnPrefabs array by difficulty tier
+    }
+
+
+#if UNITY_EDITOR
     /// <summary>
     /// Draws gizmos in the Unity editor for visualization
     /// </summary>

@@ -16,6 +16,15 @@ public class MapGen : MonoBehaviour
     [SerializeField] private int maxRooms = 25;
     [SerializeField] private int maxAttemptsPerRoom = 10;
     [SerializeField] private GameObject wallPrefab;
+    [SerializeField] private float rotationVariety = 0.8f; // Probability to try different rotations
+    [SerializeField] private float fullIntersectionThreshold = 0.7f; // 70% of room volume must be intersected to remove
+    [SerializeField] private float openingProximityThreshold = 22f; // Minimum distance from openings to corridors/other rooms
+    
+    [Header("Tree Generation Settings")]
+    [SerializeField] private float branchProbability = 0.7f;
+    [SerializeField] private int maxTreeDepth = 5;
+    [SerializeField] private int minBranchesPerNode = 1;
+    [SerializeField] private int maxBranchesPerNode = 3;
     
     private readonly List<RoomGen> generatedRooms = new();
     private readonly List<Bounds> roomBounds = new();
@@ -40,7 +49,7 @@ public class MapGen : MonoBehaviour
             roomPrefabs = FindRoomPrefabs();
         }
         
-        Debug.Log($"[MapGen] Starting dungeon generation. Room prefabs: {(roomPrefabs?.Length ?? 0)}");
+        Debug.Log($"[MapGen] Starting tree-based dungeon generation. Room prefabs: {(roomPrefabs?.Length ?? 0)}");
         
         if (roomPrefabs == null || roomPrefabs.Length == 0)
         {
@@ -48,79 +57,103 @@ public class MapGen : MonoBehaviour
             return;
         }
             
-        // Place starting room at origin
-        GameObject startPrefab = roomPrefabs[Random.Range(0, roomPrefabs.Length)];
-        Debug.Log($"[MapGen] Placing start room: {startPrefab.name}");
-        RoomGen startRoom = SpawnRoom(startPrefab, Vector3.zero);
+        // Place root room at origin with random 90-degree rotation
+        GameObject rootPrefab = roomPrefabs[Random.Range(0, roomPrefabs.Length)];
+        Quaternion rootRotation = Quaternion.Euler(0, Random.Range(0, 4) * 90, 0);
+        Debug.Log($"[MapGen] Placing root room: {rootPrefab.name} with rotation {rootRotation.eulerAngles.y} degrees (Variety: {rotationVariety})");
+        RoomGen rootRoom = SpawnRoom(rootPrefab, Vector3.zero, rootRotation);
         
-        if (startRoom == null) 
+        if (rootRoom == null) 
         {
-            Debug.LogError("[MapGen] Failed to spawn start room!");
+            Debug.LogError("[MapGen] Failed to spawn root room!");
             return;
         }
         
-        Debug.Log($"[MapGen] Start room spawned successfully. Openings: {GetRoomOpenings(startRoom).Count}");
+        // Check root room openings for proximity issues (though there are no corridors yet)
+        List<RoomOpening> rootOpenings = GetRoomOpenings(rootRoom);
+        Debug.Log($"[MapGen] Root room spawned successfully. Openings: {rootOpenings.Count}");
         
-        Queue<RoomOpening> pendingOpenings = new();
-        foreach (RoomOpening opening in GetRoomOpenings(startRoom))
-        {
-            if (!opening.IsConnected)
-            {
-                pendingOpenings.Enqueue(opening);
-                Debug.Log($"[MapGen] Added opening to queue: {opening.FacingDirection}");
-            }
-        }
+        // Start tree growth from root
+        GrowTreeFromRoom(rootRoom, 0);
         
-        Debug.Log($"[MapGen] Starting generation loop. Pending openings: {pendingOpenings.Count}, Max rooms: {maxRooms}");
-        
-        // Generate dungeon
-        int attempts = 0;
-        while (pendingOpenings.Count > 0 && generatedRooms.Count < maxRooms)
-        {
-            RoomOpening currentOpening = pendingOpenings.Dequeue();
-            if (currentOpening.IsConnected) continue;
-            
-            Debug.Log($"[MapGen] Attempting to connect from opening {currentOpening.FacingDirection}. Room count: {generatedRooms.Count}");
-            
-            if (TryConnectRoom(currentOpening, out RoomGen newRoom, out RoomOpening newOpening))
-            {
-                Debug.Log($"[MapGen] Successfully connected new room!");
-                // Mark connections
-                currentOpening.MarkConnected(newOpening);
-                newOpening.MarkConnected(currentOpening);
-                connections.Add((currentOpening, newOpening));
-                
-                // Add new room's openings to queue
-                var newOpenings = GetRoomOpenings(newRoom);
-                Debug.Log($"[MapGen] New room has {newOpenings.Count} openings");
-                foreach (RoomOpening opening in newOpenings)
-                {
-                    if (!opening.IsConnected)
-                    {
-                        pendingOpenings.Enqueue(opening);
-                        Debug.Log($"[MapGen] Added new opening: {opening.FacingDirection}");
-                    }
-                }
-            }
-            else
-            {
-                Debug.Log($"[MapGen] Failed to connect room, sealing opening");
-                // Seal failed opening
-                currentOpening.Seal(wallPrefab, transform);
-            }
-            
-            attempts++;
-            if (attempts > 100) // Prevent infinite loops
-            {
-                Debug.LogWarning("[MapGen] Generation loop exceeded 100 attempts, stopping");
-                break;
-            }
-        }
-        
-        Debug.Log($"[MapGen] Generation complete. Rooms generated: {generatedRooms.Count}, Connections: {connections.Count}");
+        Debug.Log($"[MapGen] Tree generation complete. Rooms generated: {generatedRooms.Count}, Connections: {connections.Count}");
         
         // Create corridors for all connections
         CreateCorridors();
+        
+        // Remove rooms that are fully intersected by corridors
+        RemoveFullyIntersectedRooms();
+        
+        // Check and handle rooms with openings too close to corridors
+        ValidateRoomOpeningProximity();
+        
+        // Find and rename rooms with furthest traversal distance
+        RenameFurthestRooms();
+    }
+    
+    private void GrowTreeFromRoom(RoomGen parentRoom, int currentDepth)
+    {
+        if (currentDepth >= maxTreeDepth || generatedRooms.Count >= maxRooms)
+        {
+            Debug.Log($"[MapGen] Tree growth stopped at depth {currentDepth}. Max depth: {maxTreeDepth}, Max rooms: {maxRooms}");
+            return;
+        }
+        
+        Debug.Log($"[MapGen] Growing tree from room at depth {currentDepth}");
+        
+        // Get available openings from parent room
+        var parentOpenings = GetRoomOpenings(parentRoom).Where(o => !o.IsConnected).ToList();
+        
+        if (parentOpenings.Count == 0)
+        {
+            Debug.Log($"[MapGen] No available openings in parent room at depth {currentDepth}");
+            return;
+        }
+        
+        // Determine number of branches to create
+        int maxPossibleBranches = Mathf.Min(parentOpenings.Count, maxBranchesPerNode);
+        int numBranches = Random.Range(minBranchesPerNode, maxPossibleBranches + 1);
+        
+        // Randomly select openings to branch from
+        var selectedOpenings = parentOpenings.OrderBy(x => Random.value).Take(numBranches).ToList();
+        
+        foreach (var opening in selectedOpenings)
+        {
+            // Check if we should branch based on probability
+            if (Random.value > branchProbability && currentDepth > 0)
+            {
+                Debug.Log($"[MapGen] Skipping branch at depth {currentDepth} due to probability");
+                opening.Seal(wallPrefab, transform);
+                continue;
+            }
+            
+            Debug.Log($"[MapGen] Attempting to grow branch from opening {opening.FacingDirection} at depth {currentDepth}");
+            
+            if (TryConnectRoom(opening, out RoomGen newRoom, out RoomOpening newOpening))
+            {
+                Debug.Log($"[MapGen] Successfully grew branch to new room at depth {currentDepth + 1}");
+                
+                // Mark connections
+                opening.MarkConnected(newOpening);
+                newOpening.MarkConnected(opening);
+                connections.Add((opening, newOpening));
+                
+                // Recursively grow from the new room
+                GrowTreeFromRoom(newRoom, currentDepth + 1);
+            }
+            else
+            {
+                Debug.Log($"[MapGen] Failed to grow branch, sealing opening at depth {currentDepth}");
+                opening.Seal(wallPrefab, transform);
+            }
+        }
+        
+        // Seal any remaining unused openings
+        var unusedOpenings = GetRoomOpenings(parentRoom).Where(o => !o.IsConnected);
+        foreach (var unusedOpening in unusedOpenings)
+        {
+            unusedOpening.Seal(wallPrefab, transform);
+        }
     }
     
     private bool TryConnectRoom(RoomOpening fromOpening, out RoomGen newRoom, out RoomOpening newOpening)
@@ -139,11 +172,11 @@ public class MapGen : MonoBehaviour
             float distance = multiplier * corridorSpacing;
             Vector3 targetPosition = fromOpening.transform.position + fromOpening.transform.forward * distance;
             
-            Debug.Log($"[MapGen] Trying multiplier {multiplier} at distance {distance}");
+            Debug.Log($"[MapGen] Trying multiplier {multiplier} at exact distance {distance}");
             
             if (TryPlaceRoomAtPosition(targetPosition, targetDirection, fromOpening, out newRoom, out newOpening))
             {
-                Debug.Log($"[MapGen] Successfully placed room with multiplier {multiplier}");
+                Debug.Log($"[MapGen] Successfully placed room with multiplier {multiplier} at exact {distance} units");
                 return true;
             }
         }
@@ -165,55 +198,111 @@ public class MapGen : MonoBehaviour
             
             Debug.Log($"[MapGen] TryPlaceRoomAtPosition: Attempt {attempt + 1}/{maxAttemptsPerRoom} with prefab {prefab.name}");
             
-            // Create temporary room instance
-            GameObject tempRoom = Instantiate(prefab, Vector3.zero, Quaternion.identity, transform);
-            RoomGen roomGen = tempRoom.GetComponent<RoomGen>() ?? tempRoom.AddComponent<RoomGen>();
+            // Determine rotation strategy based on rotationVariety
+            Quaternion[] rotationOptions;
             
-            // Find required opening
-            List<RoomOpening> openings = GetRoomOpenings(roomGen);
-            RoomOpening targetOpening = openings.FirstOrDefault(o => o.FacingDirection == requiredDirection);
-            
-            Debug.Log($"[MapGen] Room has {openings.Count} openings, looking for {requiredDirection}");
-            
-            if (targetOpening == null)
+            if (Random.value < rotationVariety)
             {
-                Debug.Log($"[MapGen] No opening found for direction {requiredDirection}");
-                DestroyImmediate(tempRoom);
-                continue;
+                // High variety: try all 4 rotations in random order
+                Quaternion[] allRotations = { 
+                    Quaternion.identity, 
+                    Quaternion.Euler(0, 90, 0), 
+                    Quaternion.Euler(0, 180, 0), 
+                    Quaternion.Euler(0, 270, 0) 
+                };
+                rotationOptions = allRotations.OrderBy(x => Random.value).ToArray();
+                Debug.Log($"[MapGen] Using high rotation variety (all 4 rotations)");
+            }
+            else
+            {
+                // Low variety: try 1-2 random rotations
+                Quaternion[] allRotations = { 
+                    Quaternion.identity, 
+                    Quaternion.Euler(0, 90, 0), 
+                    Quaternion.Euler(0, 180, 0), 
+                    Quaternion.Euler(0, 270, 0) 
+                };
+                int numRotations = Random.Range(1, 3); // 1 or 2 rotations
+                rotationOptions = allRotations.OrderBy(x => Random.value).Take(numRotations).ToArray();
+                Debug.Log($"[MapGen] Using low rotation variety ({numRotations} rotations)");
             }
             
-            // Position room so target opening is at the desired position
-            Vector3 localTargetPos = tempRoom.transform.InverseTransformPoint(targetOpening.transform.position);
-            tempRoom.transform.position = position - tempRoom.transform.TransformVector(localTargetPos);
-            
-            // Verify corridor direction alignment (relaxed check)
-            Vector3 actualOpeningPos = targetOpening.transform.position;
-            Vector3 corridorDirection = (actualOpeningPos - fromOpening.transform.position).normalized;
-            
-            if (Vector3.Dot(corridorDirection, fromOpening.transform.forward) < 0.5f)
+            // Try each rotation for this prefab
+            foreach (Quaternion rotation in rotationOptions)
             {
-                Debug.Log($"[MapGen] Corridor direction alignment failed: dot={Vector3.Dot(corridorDirection, fromOpening.transform.forward)}");
-                DestroyImmediate(tempRoom);
-                continue;
+                // Create temporary room instance with rotation
+                GameObject tempRoom = Instantiate(prefab, Vector3.zero, rotation, transform);
+                RoomGen roomGen = tempRoom.GetComponent<RoomGen>() ?? tempRoom.AddComponent<RoomGen>();
+                
+                // Find required opening
+                List<RoomOpening> openings = GetRoomOpenings(roomGen);
+                RoomOpening targetOpening = openings.FirstOrDefault(o => o.FacingDirection == requiredDirection);
+                
+                Debug.Log($"[MapGen] Room has {openings.Count} openings, looking for {requiredDirection} with rotation {rotation.eulerAngles.y}");
+                
+                if (targetOpening == null)
+                {
+                    Debug.Log($"[MapGen] No opening found for direction {requiredDirection} with rotation {rotation.eulerAngles.y}");
+                    DestroyImmediate(tempRoom);
+                    continue;
+                }
+                
+                // Position room so target opening is at the desired position
+                Vector3 localTargetPos = tempRoom.transform.InverseTransformPoint(targetOpening.transform.position);
+                tempRoom.transform.position = position - tempRoom.transform.TransformVector(localTargetPos);
+                
+                // Verify corridor direction alignment (relaxed check)
+                Vector3 actualOpeningPos = targetOpening.transform.position;
+                Vector3 corridorDirection = (actualOpeningPos - fromOpening.transform.position).normalized;
+                
+                // Validate exact distance
+                float actualDistance = Vector3.Distance(actualOpeningPos, fromOpening.transform.position);
+                float expectedDistance = Vector3.Distance(position, fromOpening.transform.position);
+                bool isExactDistance = Mathf.Abs(actualDistance - expectedDistance) < 0.1f;
+                
+                Debug.Log($"[MapGen] Distance validation: expected={expectedDistance:F2}, actual={actualDistance:F2}, exact={isExactDistance}");
+                
+                if (!isExactDistance)
+                {
+                    Debug.Log($"[MapGen] Distance mismatch, rejecting placement");
+                    DestroyImmediate(tempRoom);
+                    continue;
+                }
+                
+                if (Vector3.Dot(corridorDirection, fromOpening.transform.forward) < 0.5f)
+                {
+                    Debug.Log($"[MapGen] Corridor direction alignment failed: dot={Vector3.Dot(corridorDirection, fromOpening.transform.forward)}");
+                    DestroyImmediate(tempRoom);
+                    continue;
+                }
+                
+                // Check for clipping
+                Bounds roomBounds = GetRoomBounds(tempRoom);
+                Debug.Log($"[MapGen] Room bounds: {roomBounds.center}, size: {roomBounds.size}");
+                
+                if (WouldRoomClip(roomBounds))
+                {
+                    Debug.Log($"[MapGen] Room would clip, rejecting");
+                    DestroyImmediate(tempRoom);
+                    continue;
+                }
+                
+                // Check opening proximity to corridors and other rooms
+                if (AreOpeningsTooClose(openings, tempRoom, targetOpening))
+                {
+                    Debug.Log($"[MapGen] Room openings too close to corridors/rooms, rejecting");
+                    DestroyImmediate(tempRoom);
+                    continue;
+                }
+                
+                // Success!
+                generatedRooms.Add(roomGen);
+                this.roomBounds.Add(roomBounds);
+                newRoom = roomGen;
+                newOpening = targetOpening;
+                Debug.Log($"[MapGen] Successfully placed room with rotation {rotation.eulerAngles.y} degrees");
+                return true;
             }
-            
-            // Check for clipping
-            Bounds roomBounds = GetRoomBounds(tempRoom);
-            Debug.Log($"[MapGen] Room bounds: {roomBounds.center}, size: {roomBounds.size}");
-            
-            if (WouldRoomClip(roomBounds))
-            {
-                Debug.Log($"[MapGen] Room would clip, rejecting");
-                DestroyImmediate(tempRoom);
-                continue;
-            }
-            
-            // Success!
-            generatedRooms.Add(roomGen);
-            this.roomBounds.Add(roomBounds);
-            newRoom = roomGen;
-            newOpening = targetOpening;
-            return true;
         }
         
         return false;
@@ -240,26 +329,23 @@ public class MapGen : MonoBehaviour
         Vector3 normalizedDirection = direction.normalized;
         Quaternion rotation = Quaternion.LookRotation(normalizedDirection, Vector3.up) * Quaternion.Euler(0, 90, 0);
         
-        // Calculate number of segments needed
-        int segmentCount = Mathf.CeilToInt(length / corridorSpacing);
-        float actualSegmentLength = corridorSpacing;
+        // Ensure we use exact multiples of corridorSpacing
+        int segmentCount = Mathf.RoundToInt(length / corridorSpacing);
         
-        // Adjust positioning to center segments
-        float totalLength = segmentCount * actualSegmentLength;
-        float startOffset = (totalLength - length) * 0.5f;
-        Vector3 adjustedStart = start + normalizedDirection * startOffset;
+        Debug.Log($"[MapGen] Creating corridor: length={length:F2}, segments={segmentCount}, spacing={corridorSpacing}");
         
+        // Place segments starting exactly from the opening position
         for (int i = 0; i < segmentCount; i++)
         {
-            float segmentStart = i * actualSegmentLength;
-            float segmentEnd = segmentStart + actualSegmentLength;
-            
-            Vector3 segmentStartPos = adjustedStart + normalizedDirection * segmentStart;
-            Vector3 segmentEndPos = adjustedStart + normalizedDirection * segmentEnd;
-            Vector3 segmentCenter = (segmentStartPos + segmentEndPos) * 0.5f;
+            // Each segment is exactly corridorSpacing long
+            Vector3 segmentStart = start + normalizedDirection * (i * corridorSpacing);
+            Vector3 segmentEnd = start + normalizedDirection * ((i + 1) * corridorSpacing);
+            Vector3 segmentCenter = (segmentStart + segmentEnd) * 0.5f;
             
             GameObject corridor = Instantiate(corridorPrefab, segmentCenter, rotation, transform);
             corridor.name = $"Corridor_Segment_{i}";
+            
+            Debug.Log($"[MapGen] Placed segment {i} at {segmentCenter}");
         }
     }
     
@@ -302,9 +388,245 @@ public class MapGen : MonoBehaviour
         return false;
     }
     
-    private RoomGen SpawnRoom(GameObject prefab, Vector3 position)
+    private bool AreOpeningsTooClose(List<RoomOpening> openings, GameObject tempRoom, RoomOpening excludedOpening)
     {
-        GameObject roomObj = Instantiate(prefab, position, Quaternion.identity, transform);
+        // Check each opening against corridors and other rooms
+        foreach (RoomOpening opening in openings)
+        {
+            // Skip the opening that's being used for connection
+            if (opening == excludedOpening) continue;
+            
+            Vector3 openingPos = opening.transform.position;
+            
+            // Check proximity to existing corridors
+            foreach (Transform child in transform)
+            {
+                if (child.name.Contains("Corridor"))
+                {
+                    Bounds corridorBounds = GetRoomBounds(child.gameObject);
+                    
+                    // Check if opening is too close to this corridor
+                    if (IsPointNearBounds(openingPos, corridorBounds, openingProximityThreshold))
+                    {
+                        Debug.Log($"[MapGen] Opening at {openingPos} too close to corridor {child.name}");
+                        return true;
+                    }
+                }
+            }
+            
+            // Check proximity to existing rooms (excluding the temp room itself)
+            foreach (RoomGen existingRoom in generatedRooms)
+            {
+                if (existingRoom.gameObject == tempRoom) continue;
+                
+                Bounds existingRoomBounds = GetRoomBounds(existingRoom.gameObject);
+                
+                // Check if opening is too close to this room
+                if (IsPointNearBounds(openingPos, existingRoomBounds, openingProximityThreshold))
+                {
+                    Debug.Log($"[MapGen] Opening at {openingPos} too close to room {existingRoom.gameObject.name}");
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    private bool IsPointNearBounds(Vector3 point, Bounds bounds, float threshold)
+    {
+        // Expand the bounds by the threshold
+        Bounds expandedBounds = new Bounds(bounds.center, bounds.size + Vector3.one * threshold * 2);
+        
+        // Check if point is inside the expanded bounds
+        return expandedBounds.Contains(point);
+    }
+    
+    private void RemoveFullyIntersectedRooms()
+    {
+        List<RoomGen> roomsToRemove = new List<RoomGen>();
+        
+        foreach (RoomGen room in generatedRooms)
+        {
+            // Skip if room is already destroyed
+            if (room == null || room.gameObject == null) continue;
+            
+            if (IsRoomFullyIntersected(room))
+            {
+                roomsToRemove.Add(room);
+                Debug.Log($"[MapGen] Marking room '{room.gameObject.name}' for removal due to full corridor intersection");
+            }
+        }
+        
+        // Remove the identified rooms
+        foreach (RoomGen room in roomsToRemove)
+        {
+            // Double-check room still exists before removing
+            if (room != null && room.gameObject != null)
+            {
+                RemoveRoom(room);
+            }
+        }
+        
+        if (roomsToRemove.Count > 0)
+        {
+            Debug.Log($"[MapGen] Removed {roomsToRemove.Count} rooms that were fully intersected by corridors");
+        }
+    }
+    
+    private bool IsRoomFullyIntersected(RoomGen room)
+    {
+        // Check if room is still valid
+        if (room == null || room.gameObject == null) return false;
+        
+        Bounds roomBounds = GetRoomBounds(room.gameObject);
+        float roomVolume = roomBounds.size.x * roomBounds.size.y * roomBounds.size.z;
+        float totalIntersectionVolume = 0f;
+        
+        // Check intersection with all corridors
+        foreach (Transform child in transform)
+        {
+            if (child.name.Contains("Corridor"))
+            {
+                Bounds corridorBounds = GetRoomBounds(child.gameObject);
+                
+                if (roomBounds.Intersects(corridorBounds))
+                {
+                    // Calculate intersection volume
+                    Bounds intersection = roomBounds;
+                    intersection.min = Vector3.Max(roomBounds.min, corridorBounds.min);
+                    intersection.max = Vector3.Min(roomBounds.max, corridorBounds.max);
+                    
+                    Vector3 intersectionSize = intersection.size;
+                    float intersectionVolume = intersectionSize.x * intersectionSize.y * intersectionSize.z;
+                    totalIntersectionVolume += intersectionVolume;
+                }
+            }
+        }
+        
+        // Check if total intersection exceeds threshold
+        float intersectionRatio = totalIntersectionVolume / roomVolume;
+        bool isFullyIntersected = intersectionRatio >= fullIntersectionThreshold;
+        
+        Debug.Log($"[MapGen] Room '{room.gameObject.name}' intersection ratio: {intersectionRatio:P2} (threshold: {fullIntersectionThreshold:P2})");
+        
+        return isFullyIntersected;
+    }
+    
+    private void RemoveRoom(RoomGen room)
+    {
+        // Check if room is still valid
+        if (room == null || room.gameObject == null) return;
+        
+        string roomName = room.gameObject.name; // Store name before destruction
+        
+        // Remove from generated rooms list
+        generatedRooms.Remove(room);
+        
+        // Remove from room bounds list
+        Bounds roomBounds = GetRoomBounds(room.gameObject);
+        this.roomBounds.Remove(roomBounds);
+        
+        // Remove any connections involving this room
+        connections.RemoveAll(connection => 
+            connection.from.GetComponentInParent<RoomGen>() == room || 
+            connection.to.GetComponentInParent<RoomGen>() == room);
+        
+        // Destroy the room object
+        DestroyImmediate(room.gameObject);
+        
+        Debug.Log($"[MapGen] Removed room '{roomName}' and cleaned up connections");
+    }
+    
+    private void ValidateRoomOpeningProximity()
+    {
+        List<RoomGen> roomsToSeal = new List<RoomGen>();
+        int totalProblematicOpenings = 0;
+        
+        foreach (RoomGen room in generatedRooms)
+        {
+            // Skip if room is already destroyed
+            if (room == null || room.gameObject == null) continue;
+            
+            List<RoomOpening> openings = GetRoomOpenings(room);
+            List<RoomOpening> problematicOpenings = new List<RoomOpening>();
+            
+            foreach (RoomOpening opening in openings)
+            {
+                // Skip connected openings
+                if (opening.IsConnected) continue;
+                
+                // Check if this opening is too close to any corridor
+                if (IsOpeningTooCloseToCorridors(opening))
+                {
+                    problematicOpenings.Add(opening);
+                    Debug.Log($"[MapGen] Found problematic opening in room '{room.gameObject.name}' too close to corridors");
+                }
+            }
+            
+            // Seal problematic openings
+            foreach (RoomOpening opening in problematicOpenings)
+            {
+                opening.Seal(wallPrefab, transform);
+                Debug.Log($"[MapGen] Sealed problematic opening in room '{room.gameObject.name}'");
+            }
+            
+            totalProblematicOpenings += problematicOpenings.Count;
+            
+            // If all openings are sealed, consider removing the room
+            List<RoomOpening> allOpenings = GetRoomOpenings(room);
+            bool allSealed = allOpenings.TrueForAll(o => o.IsConnected);
+            
+            if (allSealed && allOpenings.Count > 0)
+            {
+                roomsToSeal.Add(room);
+                Debug.Log($"[MapGen] Room '{room.gameObject.name}' has all openings sealed, marking for potential removal");
+            }
+        }
+        
+        // Optionally remove rooms with all sealed openings (uncomment if desired)
+        /*
+        foreach (RoomGen room in roomsToSeal)
+        {
+            if (room != rootRoom) // Don't remove the root room
+            {
+                RemoveRoom(room);
+                Debug.Log($"[MapGen] Removed room '{room.gameObject.name}' with all openings sealed");
+            }
+        }
+        */
+        
+        if (totalProblematicOpenings > 0)
+        {
+            Debug.Log($"[MapGen] Sealed {totalProblematicOpenings} problematic openings due to corridor proximity");
+        }
+    }
+    
+    private bool IsOpeningTooCloseToCorridors(RoomOpening opening)
+    {
+        Vector3 openingPos = opening.transform.position;
+        
+        // Check proximity to all corridors
+        foreach (Transform child in transform)
+        {
+            if (child.name.Contains("Corridor"))
+            {
+                Bounds corridorBounds = GetRoomBounds(child.gameObject);
+                
+                // Check if opening is too close to this corridor
+                if (IsPointNearBounds(openingPos, corridorBounds, openingProximityThreshold))
+                {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    private RoomGen SpawnRoom(GameObject prefab, Vector3 position, Quaternion rotation)
+    {
+        GameObject roomObj = Instantiate(prefab, position, rotation, transform);
         RoomGen roomGen = roomObj.GetComponent<RoomGen>() ?? roomObj.AddComponent<RoomGen>();
         
         generatedRooms.Add(roomGen);
@@ -428,5 +750,123 @@ public class MapGen : MonoBehaviour
         
         Debug.Log($"[MapGen] Auto-found {foundPrefabs.Count} room prefabs");
         return foundPrefabs.ToArray();
+    }
+    
+    private void RenameFurthestRooms()
+    {
+        if (generatedRooms.Count < 2)
+        {
+            Debug.LogWarning("[MapGen] Not enough rooms to find furthest traversal distance");
+            return;
+        }
+        
+        // Build adjacency list for the dungeon graph
+        var adjacencyList = BuildAdjacencyList();
+        
+        // Find the pair of rooms with the maximum shortest path distance
+        var (firstRoom, lastRoom, maxDistance) = FindFurthestRooms(adjacencyList);
+        
+        if (firstRoom != null && lastRoom != null)
+        {
+            firstRoom.gameObject.name = "First Room";
+            lastRoom.gameObject.name = "Last Room";
+            
+            Debug.Log($"[MapGen] Renamed rooms: '{firstRoom.gameObject.name}' and '{lastRoom.gameObject.name}' with traversal distance {maxDistance}");
+        }
+        else
+        {
+            Debug.LogWarning("[MapGen] Could not find furthest rooms");
+        }
+    }
+    
+    private Dictionary<RoomGen, List<RoomGen>> BuildAdjacencyList()
+    {
+        var adjacencyList = new Dictionary<RoomGen, List<RoomGen>>();
+        
+        // Initialize all rooms with empty lists
+        foreach (var room in generatedRooms)
+        {
+            adjacencyList[room] = new List<RoomGen>();
+        }
+        
+        // Add connections based on room openings
+        foreach (var (fromOpening, toOpening) in connections)
+        {
+            var fromRoom = fromOpening.GetComponentInParent<RoomGen>();
+            var toRoom = toOpening.GetComponentInParent<RoomGen>();
+            
+            if (fromRoom != null && toRoom != null && fromRoom != toRoom)
+            {
+                if (!adjacencyList[fromRoom].Contains(toRoom))
+                {
+                    adjacencyList[fromRoom].Add(toRoom);
+                }
+                if (!adjacencyList[toRoom].Contains(fromRoom))
+                {
+                    adjacencyList[toRoom].Add(fromRoom);
+                }
+            }
+        }
+        
+        return adjacencyList;
+    }
+    
+    private (RoomGen firstRoom, RoomGen lastRoom, int maxDistance) FindFurthestRooms(Dictionary<RoomGen, List<RoomGen>> adjacencyList)
+    {
+        RoomGen firstRoom = null;
+        RoomGen lastRoom = null;
+        int maxDistance = -1;
+        
+        // Calculate shortest paths between all pairs of rooms using BFS
+        foreach (var startRoom in generatedRooms)
+        {
+            var distances = BFS(startRoom, adjacencyList);
+            
+            foreach (var kvp in distances)
+            {
+                var endRoom = kvp.Key;
+                var distance = kvp.Value;
+                
+                if (distance > maxDistance)
+                {
+                    maxDistance = distance;
+                    firstRoom = startRoom;
+                    lastRoom = endRoom;
+                }
+            }
+        }
+        
+        return (firstRoom, lastRoom, maxDistance);
+    }
+    
+    private Dictionary<RoomGen, int> BFS(RoomGen startRoom, Dictionary<RoomGen, List<RoomGen>> adjacencyList)
+    {
+        var distances = new Dictionary<RoomGen, int>();
+        var queue = new Queue<RoomGen>();
+        
+        // Initialize distances
+        foreach (var room in generatedRooms)
+        {
+            distances[room] = -1; // -1 means unreachable
+        }
+        
+        distances[startRoom] = 0;
+        queue.Enqueue(startRoom);
+        
+        while (queue.Count > 0)
+        {
+            var currentRoom = queue.Dequeue();
+            
+            foreach (var neighbor in adjacencyList[currentRoom])
+            {
+                if (distances[neighbor] == -1) // Not visited yet
+                {
+                    distances[neighbor] = distances[currentRoom] + 1;
+                    queue.Enqueue(neighbor);
+                }
+            }
+        }
+        
+        return distances;
     }
 }
