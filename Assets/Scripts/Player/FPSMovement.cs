@@ -13,6 +13,16 @@ public class FPSMovement : MonoBehaviour
     [SerializeField] Transform cameraHolder;
     [SerializeField] Camera playerCamera;
     [SerializeField] Vector3 currentRotation;
+    
+    [Header("Animation")]
+    [SerializeField] Animator playerAnimator;
+    
+    [Header("Effects")]
+    [SerializeField] GameObject runEffect;
+    [SerializeField] Transform runEffectSpawnPoint;
+    [SerializeField] float effectLifetime = 0.05f;
+    [SerializeField] float effectSpawnRate = 0.1f;
+    private float effectSpawnTimer;
 
     [Header("Movement")]
     [SerializeField] float normalSpeed = 800f;
@@ -26,6 +36,9 @@ public class FPSMovement : MonoBehaviour
     [SerializeField] float jumpForce = 5f;
     [SerializeField] float mouseSensitivity = 200f;
     private bool isPressed;
+    private bool isCrouching;
+    private bool isShooting;
+    private bool isRunning;
 
 
     [Header("GroundCheck")]
@@ -54,7 +67,8 @@ public class FPSMovement : MonoBehaviour
         crouchAction = playerInput.actions.FindAction("Crouch");
         //lookAction = playerInput.actions.FindAction("Look");
         rb = GetComponent<Rigidbody>();
-
+        playerAnimator = GetComponent<Animator>();
+        
         //Take dmg visual
         Instance = this;
     }
@@ -82,6 +96,8 @@ public class FPSMovement : MonoBehaviour
         HandleMouseLook();
         HandleShake();
         HandleFOV();
+        UpdateAnimations();
+        HandleRunEffect();
         //Look();
     }
 
@@ -116,7 +132,13 @@ public class FPSMovement : MonoBehaviour
 
     void OnSprintStarted(InputAction.CallbackContext context)
     {
+        if (isCrouching)
+        {
+            // Cancel crouch if sprint is pressed
+            OnCrouchCanceled(context);
+        }
         isPressed = true;
+        isRunning = true;
         speed = sprintSpeed;
         targetFOV = sprintFOV;
     }
@@ -124,22 +146,33 @@ public class FPSMovement : MonoBehaviour
     void OnSprintCanceled(InputAction.CallbackContext context)
     {
         isPressed = false;
+        isRunning = false;
         speed = normalSpeed;
         targetFOV = normalFOV;
     }
 
     void OnCrouchStarted(InputAction.CallbackContext context)
     {
+        if (isRunning)
+        {
+            // Cancel sprint if crouch is pressed
+            OnSprintCanceled(context);
+        }
         isPressed = true;
+        isCrouching = true;
         speed = crouchSpeed;
         targetFOV = crouchFOV;
+        playerAnimator.SetBool("PlayerCrouch", true);
+        playerAnimator.SetBool("PlayerIdle", false);
     }
 
     void OnCrouchCanceled(InputAction.CallbackContext context)
     {
         isPressed = false;
+        isCrouching = false;
         speed = normalSpeed;
         targetFOV = normalFOV;
+        playerAnimator.SetBool("PlayerCrouch", false);
     }
 
     void JumpPlayer(InputAction.CallbackContext context)
@@ -210,6 +243,62 @@ public class FPSMovement : MonoBehaviour
             }
             yield return new WaitForSeconds(0.5f);
         }
+    }
+    
+    void UpdateAnimations()
+    {
+        // Handle idle animation when not moving and not crouching
+        if (rb.linearVelocity.magnitude < 0.1f && !isCrouching && !isShooting)
+        {
+            playerAnimator.SetBool("PlayerIdle", true);
+        }
+        else if (rb.linearVelocity.magnitude > 0.1f)
+        {
+            playerAnimator.SetBool("PlayerIdle", false);
+        }
+        
+        // Handle shooting animation (this would be called from the gun script)
+        if (isShooting && !isCrouching)
+        {
+            playerAnimator.SetBool("PlayerShooting", true);
+            playerAnimator.SetBool("PlayerIdle", false);
+        }
+        else
+        {
+            playerAnimator.SetBool("PlayerShooting", false);
+        }
+    }
+    
+    public void SetShooting(bool shooting)
+    {
+        isShooting = shooting;
+    }
+    
+    void HandleRunEffect()
+    {
+        if (isRunning && isGrounded && rb.linearVelocity.magnitude > 0.1f && moveAction.ReadValue<Vector2>().magnitude > 0.1f)
+        {
+            effectSpawnTimer -= Time.deltaTime;
+            if (effectSpawnTimer <= 0f)
+            {
+                InstantiateRunEffect();
+                effectSpawnTimer = effectSpawnRate;
+            }
+        }
+    }
+    
+    void InstantiateRunEffect()
+    {
+        if (runEffect != null && runEffectSpawnPoint != null)
+        {
+            GameObject effect = Instantiate(runEffect, runEffectSpawnPoint.position, runEffectSpawnPoint.rotation);
+            Destroy(effect, effectLifetime);
+        }
+    }
+    
+    void DestroyRunEffect()
+    {
+        // No longer needed since effects auto-destroy after lifetime
     }
 
     //void Look()
