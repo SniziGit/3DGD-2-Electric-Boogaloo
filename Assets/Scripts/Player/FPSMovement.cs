@@ -33,6 +33,11 @@ public class FPSMovement : MonoBehaviour
     private float currentStamina;
     private float currentStaminaFill;
     private float targetStaminaFill;
+    
+    [Header("Pickup System")]
+    [SerializeField] float pickupRange = 3f;
+    [SerializeField] LayerMask pickupLayerMask;
+    private InputAction pickupAction;
 
     [Header("Movement")]
     [SerializeField] float normalSpeed = 800f;
@@ -75,12 +80,17 @@ public class FPSMovement : MonoBehaviour
         jumpAction = playerInput.actions.FindAction("Jump");
         sprintAction = playerInput.actions.FindAction("Sprint");
         crouchAction = playerInput.actions.FindAction("Crouch");
+        pickupAction = playerInput.actions.FindAction("Interact"); // Add pickup action
         //lookAction = playerInput.actions.FindAction("Look");
         rb = GetComponent<Rigidbody>();
         playerAnimator = GetComponent<Animator>();
         
         //Take dmg visual
         Instance = this;
+        
+        // Find camera if not assigned
+        if (playerCamera == null)
+            playerCamera = Camera.main;
     }
 
     void Start()
@@ -117,6 +127,7 @@ public class FPSMovement : MonoBehaviour
         UpdateAnimations();
         HandleRunEffect();
         HandleStamina();
+        CheckHealthPickups();
         
         // Cancel sprint if out of stamina
         if (isRunning && currentStamina <= 0)
@@ -133,6 +144,8 @@ public class FPSMovement : MonoBehaviour
         sprintAction.canceled += OnSprintCanceled;
         crouchAction.started += OnCrouchStarted;
         crouchAction.canceled += OnCrouchCanceled;
+        if (pickupAction != null)
+            pickupAction.performed += OnPickupPerformed;
     }
 
     private void OnDisable()
@@ -142,6 +155,8 @@ public class FPSMovement : MonoBehaviour
         sprintAction.canceled -= OnSprintCanceled;
         crouchAction.started -= OnCrouchStarted;
         crouchAction.canceled -= OnCrouchCanceled;
+        if (pickupAction != null)
+            pickupAction.performed -= OnPickupPerformed;
     }
 
     void MovePlayer()
@@ -326,11 +341,6 @@ public class FPSMovement : MonoBehaviour
         }
     }
     
-    void DestroyRunEffect()
-    {
-        // No longer needed since effects auto-destroy after lifetime
-    }
-    
     void HandleStamina()
     {
         if (isRunning && isGrounded && rb.linearVelocity.magnitude > 0.1f && moveAction.ReadValue<Vector2>().magnitude > 0.1f)
@@ -356,6 +366,69 @@ public class FPSMovement : MonoBehaviour
             currentStaminaFill = Mathf.Lerp(currentStaminaFill, targetStaminaFill, Time.deltaTime * fillSmoothSpeed);
             staminaFillImage.fillAmount = currentStaminaFill;
         }
+    }
+    
+    void OnPickupPerformed(InputAction.CallbackContext context)
+    {
+        TryPickupHealth();
+    }
+    
+    void CheckHealthPickups()
+    {
+        if (pickupAction == null || playerCamera == null) return;
+        
+        // Raycast from camera center to check for health pickups
+        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+        
+        if (Physics.Raycast(ray, out RaycastHit hit, pickupRange, pickupLayerMask))
+        {
+            // Check if hit object has HealthPickup component
+            HealthPickup healthPickup = hit.collider.GetComponent<HealthPickup>();
+            if (healthPickup != null)
+            {
+                // Show pickup prompt or auto-pickup
+                // For now, we'll auto-pickup when F is pressed
+            }
+        }
+    }
+    
+    void TryPickupHealth()
+    {
+        if (pickupAction == null || playerCamera == null) return;
+        
+        // Raycast from camera center to pickup health
+        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+        
+        if (Physics.Raycast(ray, out RaycastHit hit, pickupRange, pickupLayerMask))
+        {
+            HealthPickup healthPickup = hit.collider.GetComponent<HealthPickup>();
+            if (healthPickup != null)
+            {
+                // Check if player is at full health
+                if (PlayerHealth.Instance != null && PlayerHealth.Instance.IsFullHealth())
+                {
+                    Debug.Log("Already at full health!");
+                    return;
+                }
+                
+                // Pickup the health item
+                PickupHealthItem(healthPickup);
+            }
+        }
+    }
+    
+    void PickupHealthItem(HealthPickup healthPickup)
+    {
+        // Add health to player using the pickup's own amount
+        if (PlayerHealth.Instance != null)
+        {
+            PlayerHealth.Instance.Heal(healthPickup.GetHealthAmount());
+        }
+        
+        // Destroy the pickup object
+        Destroy(healthPickup.gameObject);
+        
+        Debug.Log($"Picked up health: +{healthPickup.GetHealthAmount()} HP");
     }
 
     //void Look()

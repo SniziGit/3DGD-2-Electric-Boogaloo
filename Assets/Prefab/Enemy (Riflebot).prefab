@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 3106626949482856195}
   - component: {fileID: 2445403591427711850}
   - component: {fileID: 7166679114039029604}
-  m_Layer: 6
+  m_Layer: 8
   m_Name: f
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -102,7 +102,7 @@ GameObject:
   - component: {fileID: 3079821043334679341}
   - component: {fileID: 664279733742595531}
   - component: {fileID: 8899455266843687169}
-  m_Layer: 6
+  m_Layer: 8
   m_Name: Enemy (Riflebot)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -305,7 +305,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 834307215999192879, guid: 07fc1fd3fb72992419f65e147911fd20, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 2436492927453145532, guid: 07fc1fd3fb72992419f65e147911fd20, type: 3}
       propertyPath: m_LocalPosition.x
@@ -353,31 +353,35 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3070322191530259206, guid: 07fc1fd3fb72992419f65e147911fd20, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 3353909790730267199, guid: 07fc1fd3fb72992419f65e147911fd20, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 3927556599041804512, guid: 07fc1fd3fb72992419f65e147911fd20, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4468046107918683107, guid: 07fc1fd3fb72992419f65e147911fd20, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 5167979280847454105, guid: 07fc1fd3fb72992419f65e147911fd20, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 5865039612828973826, guid: 07fc1fd3fb72992419f65e147911fd20, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 7681574610338723625, guid: 07fc1fd3fb72992419f65e147911fd20, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 9045100191292630289, guid: 07fc1fd3fb72992419f65e147911fd20, type: 3}
       propertyPath: m_Layer
-      value: 6
+      value: 8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -28,6 +28,7 @@ public class PlayerGun : MonoBehaviour
     [Header("Effects")]
     public Camera playerCamera;
     public LayerMask shootableLayers;
+    public LayerMask wallLayers; // For walls that block enemy detection
     public GameObject weaponFlash;
     public GameObject weaponParticles;
     public Transform flashSpawnPoint;
@@ -211,6 +212,15 @@ public class PlayerGun : MonoBehaviour
         // Raycast from camera center (crosshair position)
         Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
         
+        // First raycast to check for walls
+        if (Physics.Raycast(ray, out RaycastHit wallHit, range, wallLayers))
+        {
+            // Wall is blocking, hit the wall instead
+            Debug.Log($"Shot hit wall: {wallHit.collider.name} at distance {wallHit.distance}");
+            return;
+        }
+        
+        // Second raycast to check for enemies (ignoring walls)
         if (Physics.Raycast(ray, out RaycastHit hit, range, shootableLayers))
         {
             // Apply damage to hit target
@@ -370,10 +380,19 @@ public class PlayerGun : MonoBehaviour
         // Raycast from camera center to check for enemies
         Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
         
-        if (Physics.Raycast(ray, out RaycastHit hit, range, shootableLayers))
+        // First raycast to check for walls
+        if (Physics.Raycast(ray, out RaycastHit wallHit, range, wallLayers))
+        {
+            // Wall is blocking, return to original color
+            persistentImage.color = originalPersistentColor;
+            return;
+        }
+        
+        // Second raycast to check for enemies (ignoring walls)
+        if (Physics.Raycast(ray, out RaycastHit enemyHit, range, shootableLayers))
         {
             // Check if hit object has IDamageable (enemy)
-            IDamageable damageable = hit.collider.GetComponent<IDamageable>();
+            IDamageable damageable = enemyHit.collider.GetComponent<IDamageable>();
             if (damageable != null)
             {
                 // Change to red when aiming at enemy
