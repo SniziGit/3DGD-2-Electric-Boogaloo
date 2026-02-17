@@ -444,7 +444,7 @@ MonoBehaviour:
   pickupRange: 3
   pickupLayerMask:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 0
   normalSpeed: 800
   sprintSpeed: 2000
   crouchSpeed: 550

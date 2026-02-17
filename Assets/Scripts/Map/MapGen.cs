@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class MapGen : MonoBehaviour
 {
@@ -25,6 +26,14 @@ public class MapGen : MonoBehaviour
     [SerializeField] private int maxTreeDepth = 5;
     [SerializeField] private int minBranchesPerNode = 1;
     [SerializeField] private int maxBranchesPerNode = 3;
+    
+    [Header("NavMesh Settings")]
+    [SerializeField] private bool bakeNavMeshAfterGeneration = true;
+    [SerializeField] private float navMeshCellSize = 0.3f;
+    [SerializeField] private float navMeshAgentHeight = 2f;
+    [SerializeField] private float navMeshAgentRadius = 0.5f;
+    [SerializeField] private float navMeshMaxSlope = 45f;
+    [SerializeField] private LayerMask navMeshLayerMask = -1;
     
     private readonly List<RoomGen> generatedRooms = new();
     private readonly List<Bounds> roomBounds = new();
@@ -89,6 +98,15 @@ public class MapGen : MonoBehaviour
         
         // Find and rename rooms with furthest traversal distance
         RenameFurthestRooms();
+        
+        // Set difficulty for all rooms based on distance from Last Room
+        SetRoomDifficulties();
+        
+        // Bake NavMesh for the entire generated dungeon
+        if (bakeNavMeshAfterGeneration)
+        {
+            BakeNavMesh();
+        }
     }
     
     private void GrowTreeFromRoom(RoomGen parentRoom, int currentDepth)
@@ -779,6 +797,57 @@ public class MapGen : MonoBehaviour
         }
     }
     
+    private void SetRoomDifficulties()
+    {
+        // Find the Last Room
+        RoomGen lastRoom = generatedRooms.FirstOrDefault(room => room.gameObject.name == "Last Room");
+        
+        if (lastRoom == null)
+        {
+            Debug.LogWarning("[MapGen] Could not find Last Room for difficulty setting");
+            return;
+        }
+        
+        // Build adjacency list for distance calculations
+        var adjacencyList = BuildAdjacencyList();
+        
+        // Calculate distances from Last Room to all other rooms
+        var distancesFromLast = BFS(lastRoom, adjacencyList);
+        
+        // Sort rooms by distance from Last Room
+        var sortedRooms = distancesFromLast
+            .Where(kvp => kvp.Value >= 0) // Only reachable rooms
+            .OrderBy(kvp => kvp.Value)
+            .ToList();
+        
+        int totalRooms = sortedRooms.Count;
+        
+        // Set difficulty for each room based on its percentage position in the sorted list
+        for (int i = 0; i < sortedRooms.Count; i++)
+        {
+            var room = sortedRooms[i].Key;
+            var distance = sortedRooms[i].Value;
+            
+            // Calculate difficulty as percentage (0-100) based on room position
+            float difficultyPercentage = (float)i / (totalRooms - 1) * 100f;
+            int difficulty = Mathf.RoundToInt(difficultyPercentage);
+            
+            room.SetDifficulty(difficulty);
+            Debug.Log($"[MapGen] Set difficulty for room '{room.gameObject.name}': {difficulty} (position {i+1}/{totalRooms}, distance {distance} from Last Room)");
+        }
+        
+        // Handle unreachable rooms
+        foreach (var kvp in distancesFromLast)
+        {
+            if (kvp.Value < 0) // Unreachable room
+            {
+                var room = kvp.Key;
+                room.SetDifficulty(10); // Set to easiest difficulty
+                Debug.LogWarning($"[MapGen] Room '{room.gameObject.name}' is unreachable from Last Room, setting easiest difficulty");
+            }
+        }
+    }
+    
     private Dictionary<RoomGen, List<RoomGen>> BuildAdjacencyList()
     {
         var adjacencyList = new Dictionary<RoomGen, List<RoomGen>>();
@@ -868,5 +937,73 @@ public class MapGen : MonoBehaviour
         }
         
         return distances;
+    }
+    
+    private void BakeNavMesh()
+    {
+        Debug.Log("[MapGen] Starting NavMesh baking for generated dungeon...");
+        
+        try
+        {
+            // Get all surfaces that should be included in the NavMesh
+            List<NavMeshBuildSource> sources = new List<NavMeshBuildSource>();
+            
+            // Collect colliders from all child objects (rooms and corridors)
+            Collider[] colliders = GetComponentsInChildren<Collider>();
+            foreach (Collider collider in colliders)
+            {
+                if (collider != null && ((navMeshLayerMask.value & (1 << collider.gameObject.layer)) != 0))
+                {
+                    NavMeshBuildSource source = new NavMeshBuildSource();
+                    source.shape = NavMeshBuildSourceShape.Mesh;
+                    
+                    // Try to get mesh from filter
+                    MeshFilter meshFilter = collider.GetComponent<MeshFilter>();
+                    if (meshFilter != null && meshFilter.sharedMesh != null)
+                    {
+                        source.transform = collider.transform.localToWorldMatrix;
+                        source.sourceObject = meshFilter.sharedMesh;
+                        source.area = 0; // Walkable area
+                        sources.Add(source);
+                    }
+                }
+            }
+            
+            if (sources.Count == 0)
+            {
+                Debug.LogWarning("[MapGen] No valid geometry found for NavMesh baking");
+                return;
+            }
+            
+            // Calculate bounds
+            Bounds bounds = new Bounds(transform.position, Vector3.zero);
+            foreach (var source in sources)
+            {
+                bounds.Encapsulate(new Bounds(source.transform.GetPosition(), Vector3.one));
+            }
+            bounds.Expand(10f); // Add some padding
+            
+            // Build NavMesh data
+            NavMeshData navMeshData = new NavMeshData();
+            
+            // Configure build settings
+            NavMeshBuildSettings buildSettings = NavMesh.GetSettingsByID(0);
+            buildSettings.agentHeight = navMeshAgentHeight;
+            buildSettings.agentRadius = navMeshAgentRadius;
+            buildSettings.agentClimb = 0.5f;
+            buildSettings.minRegionArea = 2f;
+            
+            // Build the NavMesh
+            navMeshData = NavMeshBuilder.BuildNavMeshData(buildSettings, sources, bounds, Vector3.zero, Quaternion.identity);
+            
+            // Add the NavMesh to the scene
+            NavMesh.AddNavMeshData(navMeshData);
+            
+            Debug.Log($"[MapGen] NavMesh baking completed successfully! Generated {sources.Count} surfaces, bounds: {bounds}");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[MapGen] Failed to bake NavMesh: {e.Message}\n{e.StackTrace}");
+        }
     }
 }
