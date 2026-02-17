@@ -78,7 +78,29 @@ public class Enemy : MonoBehaviour, IDamageable
     private Transform FindPlayerBySpawner()
     {
         PlayerSpawning playerSpawning = FindObjectOfType<PlayerSpawning>();
-        return playerSpawning?.GetSpawnedPlayer()?.transform;
+        if (playerSpawning == null) return null;
+        
+        GameObject[] players = playerSpawning.GetSpawnedPlayers();
+        if (players == null || players.Length == 0) return null;
+        
+        // Find the closest player to this enemy
+        Transform closestPlayer = null;
+        float closestDistance = float.MaxValue;
+        
+        foreach (GameObject player in players)
+        {
+            if (player != null)
+            {
+                float distance = Vector3.Distance(transform.position, player.transform.position);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestPlayer = player.transform;
+                }
+            }
+        }
+        
+        return closestPlayer;
     }
 
     private void FindPatrolPointsInCurrentRoom()

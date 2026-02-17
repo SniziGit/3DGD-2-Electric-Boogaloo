@@ -340,6 +340,17 @@
                 },
                 {
                     "name": "",
+                    "id": "d7ccec44-b7ab-4bc0-b02a-f1dc2ec870cf",
+                    "path": "<Gamepad>/leftStickPress",
+                    "interactions": "Press(behavior=1)",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Sprint",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "a382ef7e-2bf4-4cf2-8f65-bdde77df8456",
                     "path": "<Keyboard>/ctrl",
                     "interactions": "Press(behavior=1)",
@@ -351,11 +362,33 @@
                 },
                 {
                     "name": "",
+                    "id": "fc15e615-10b7-45cc-9ab0-8a17619254f4",
+                    "path": "<Gamepad>/rightStickPress",
+                    "interactions": "Press",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Crouch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "abd0397c-d74a-4d90-a5bc-37d55ea433e9",
                     "path": "<Keyboard>/f",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard Mouse",
+                    "action": "Interact",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "82cb9a12-4260-4f85-88fb-dca725e36626",
+                    "path": "<Gamepad>/buttonNorth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
                     "action": "Interact",
                     "isComposite": false,
                     "isPartOfComposite": false

@@ -795,6 +795,7 @@ public class MapGen : MonoBehaviour
         {
             Debug.LogWarning("[MapGen] Could not find furthest rooms");
         }
+        InitializeRoomSpawning();
     }
     
     private void SetRoomDifficulties()
@@ -1006,6 +1007,23 @@ public class MapGen : MonoBehaviour
         catch (System.Exception e)
         {
             Debug.LogError($"[MapGen] Failed to bake NavMesh: {e.Message}\n{e.StackTrace}");
+        }
+    }
+
+    /// <summary>
+    /// Initializes spawning for all rooms after they have been properly named
+    /// </summary>
+    private void InitializeRoomSpawning()
+    {
+        Debug.Log($"[MapGen] Initializing spawning for {generatedRooms.Count} rooms");
+
+        foreach (RoomGen room in generatedRooms)
+        {
+            if (room != null)
+            {
+                room.InitializeSpawning();
+                Debug.Log($"[MapGen] Initialized spawning for room '{room.gameObject.name}'");
+            }
         }
     }
 }

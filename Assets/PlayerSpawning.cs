@@ -9,7 +9,12 @@ public class PlayerSpawning : MonoBehaviour
     [Tooltip("Height above ground to spawn the player")]
     [SerializeField] private float spawnHeight = 1f;
 
-    private GameObject spawnedPlayer;
+    [Header("Split Screen Settings")]
+    [Tooltip("Main camera for split screen setup")]
+    [SerializeField] private Camera mainCamera;
+
+    private GameObject[] spawnedPlayers = new GameObject[2];
+    private Camera[] playerCameras = new Camera[2];
 
     void Start()
     {
@@ -23,13 +28,13 @@ public class PlayerSpawning : MonoBehaviour
         yield return null;
         yield return null;
         
-        SpawnPlayerInFirstRoom();
+        SpawnPlayersInFirstRoom();
     }
 
     /// <summary>
-    /// Finds the room named "First Room" and spawns the player there
+    /// Finds the room named "First Room" and spawns 2 players there with split-screen cameras
     /// </summary>
-    private void SpawnPlayerInFirstRoom()
+    private void SpawnPlayersInFirstRoom()
     {
         if (playerPrefab == null)
         {
@@ -48,49 +53,114 @@ public class PlayerSpawning : MonoBehaviour
 
         // Get the RoomGen component to access spawn area information
         RoomGen roomGen = firstRoom.GetComponent<RoomGen>();
-        if (roomGen != null)
+        Vector3 baseSpawnPosition = firstRoom.transform.position;
+        baseSpawnPosition.y += spawnHeight; // Spawn slightly above ground
+        
+        // Spawn 2 players at slightly different positions
+        for (int i = 0; i < 2; i++)
         {
-            // Spawn player at the center of the room's spawn area
-            Vector3 spawnPosition = firstRoom.transform.position;
-            spawnPosition.y += spawnHeight; // Spawn slightly above ground
+            Vector3 spawnPosition = baseSpawnPosition;
+            spawnPosition.x += (i == 0) ? -1f : 1f; // Offset players horizontally
             
-            spawnedPlayer = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
-
-            Debug.Log($"[PlayerSpawning] Player spawned in 'First Room' at position {spawnPosition}");
+            spawnedPlayers[i] = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
+            
+            // Setup camera for each player
+            SetupPlayerCamera(i, spawnPosition);
+            
+            Debug.Log($"[PlayerSpawning] Player {i + 1} spawned in 'First Room' at position {spawnPosition}");
+        }
+        
+        // Setup split-screen cameras
+        SetupSplitScreen();
+    }
+    
+    /// <summary>
+    /// Sets up camera for each player using existing camera on player prefab
+    /// </summary>
+    private void SetupPlayerCamera(int playerIndex, Vector3 spawnPosition)
+    {
+        // Get the existing camera from the player prefab
+        Camera playerCamera = spawnedPlayers[playerIndex].GetComponentInChildren<Camera>();
+        
+        if (playerCamera != null)
+        {
+            playerCameras[playerIndex] = playerCamera;
+            Debug.Log($"[PlayerSpawning] Found existing camera for Player {playerIndex + 1}");
         }
         else
         {
-            Debug.LogWarning("[PlayerSpawning] 'First Room' found but no RoomGen component attached. Spawning at room position.");
-            
-            // Fallback: spawn at the room's position
-            Vector3 spawnPosition = firstRoom.transform.position;
-            spawnPosition.y += spawnHeight;
-            
-            spawnedPlayer = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
-            
-            Debug.Log($"[PlayerSpawning] Player spawned at fallback position {spawnPosition}");
+            Debug.LogError($"[PlayerSpawning] No camera found on Player {playerIndex + 1} prefab!");
         }
     }
-
+    
     /// <summary>
-    /// Gets the spawned player instance
+    /// Sets up split-screen view
     /// </summary>
-    /// <returns>The spawned player GameObject, or null if no player was spawned</returns>
-    public GameObject GetSpawnedPlayer()
+    private void SetupSplitScreen()
     {
-        return spawnedPlayer;
+        if (playerCameras[0] == null || playerCameras[1] == null)
+        {
+            Debug.LogError("[PlayerSpawning] Player cameras not found!");
+            return;
+        }
+        
+        // Disable main camera if it exists
+        if (mainCamera != null)
+        {
+            mainCamera.enabled = false;
+        }
+        
+        // Setup viewport rectangles for split screen
+        playerCameras[0].rect = new Rect(0f, 0f, 0.5f, 1f);  // Left half
+        playerCameras[1].rect = new Rect(0.5f, 0f, 0.5f, 1f); // Right half
+        
+        Debug.Log("[PlayerSpawning] Split-screen cameras configured");
     }
 
     /// <summary>
-    /// Respawns the player in the First Room
+    /// Gets the spawned player instances
+    /// </summary>
+    /// <returns>Array of spawned player GameObjects, or null if no players were spawned</returns>
+    public GameObject[] GetSpawnedPlayers()
+    {
+        return spawnedPlayers;
+    }
+    
+    /// <summary>
+    /// Gets a specific spawned player instance
+    /// </summary>
+    /// <param name="playerIndex">Index of the player (0 or 1)</param>
+    /// <returns>The spawned player GameObject, or null if not found</returns>
+    public GameObject GetSpawnedPlayer(int playerIndex)
+    {
+        if (playerIndex >= 0 && playerIndex < spawnedPlayers.Length)
+        {
+            return spawnedPlayers[playerIndex];
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Respawns both players in the First Room
+    /// </summary>
+    public void RespawnPlayers()
+    {
+        for (int i = 0; i < spawnedPlayers.Length; i++)
+        {
+            if (spawnedPlayers[i] != null)
+            {
+                Destroy(spawnedPlayers[i]);
+            }
+        }
+        
+        SpawnPlayersInFirstRoom();
+    }
+    
+    /// <summary>
+    /// Legacy method for backward compatibility
     /// </summary>
     public void RespawnPlayer()
     {
-        if (spawnedPlayer != null)
-        {
-            Destroy(spawnedPlayer);
-        }
-        
-        SpawnPlayerInFirstRoom();
+        RespawnPlayers();
     }
 }
