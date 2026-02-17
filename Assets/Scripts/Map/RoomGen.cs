@@ -24,13 +24,24 @@ public class RoomGen : MonoBehaviour
     
     private void OnEnable()
     {
+        // Spawning will now be manually triggered after room naming is complete
+    }
+
+    /// <summary>
+    /// Manually initializes spawning after room naming is complete
+    /// </summary>
+    public void InitializeSpawning()
+    {
         if (spawnOnStart)
         {
             SpawnObjects();
-            SpawnEnemies();
+            if (this.gameObject.name != "First Room")
+            {
+                SpawnEnemies();
+            }
         }
     }
-
+    
     /// <summary>
     /// Spawns objects randomly within the defined room area, as children of this transform
     /// </summary>

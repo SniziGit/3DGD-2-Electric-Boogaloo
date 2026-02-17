@@ -50,12 +50,37 @@ public class Enemy : MonoBehaviour, IDamageable
         originalMaterial = rend.material;
 
         agent = GetComponent<NavMeshAgent>();
-        PlayerTransform = GameObject.FindWithTag("Player").GetComponent<Transform>();
+        FindPlayerTransform();
 
         // Find patrol points only within the current room
         FindPatrolPointsInCurrentRoom();
     }
     
+    private void FindPlayerTransform()
+    {
+        if (PlayerTransform != null) return; // Already found
+        
+        // Try multiple strategies to find the player
+        PlayerTransform = FindPlayerByTag() ?? FindPlayerBySpawner() ?? null;
+        
+        if (PlayerTransform != null)
+        {
+            Debug.Log($"[Enemy] Found player: {PlayerTransform.name}");
+        }
+    }
+
+    private Transform FindPlayerByTag()
+    {
+        GameObject player = GameObject.FindWithTag("Player");
+        return player?.transform;
+    }
+
+    private Transform FindPlayerBySpawner()
+    {
+        PlayerSpawning playerSpawning = FindObjectOfType<PlayerSpawning>();
+        return playerSpawning?.GetSpawnedPlayer()?.transform;
+    }
+
     private void FindPatrolPointsInCurrentRoom()
     {
         // Find the GameObject tagged "PatrolPoint" that is a child of the room the enemy spawned in
@@ -229,16 +254,25 @@ public class Enemy : MonoBehaviour, IDamageable
 
     private void LookForPlayer()
     {
-        Vector3 directionToPlayer = PlayerTransform.position - transform.position;
-        if (Physics.Raycast(transform.position, directionToPlayer.normalized, out RaycastHit hit, maxVisionDistance))
-        {
-            canSeePlayer = hit.transform == PlayerTransform;
+        if (!EnsurePlayerExists()) return;
 
-            if (canSeePlayer && enemyState != EnemyState.Attacking)
-            {
-                enemyState = EnemyState.Chasing;
-            }
+        Vector3 directionToPlayer = PlayerTransform.position - transform.position;
+        bool hasLineOfSight = Physics.Raycast(transform.position, directionToPlayer.normalized, out RaycastHit hit, maxVisionDistance);
+        
+        canSeePlayer = hasLineOfSight && hit.transform == PlayerTransform;
+
+        if (canSeePlayer && enemyState != EnemyState.Attacking)
+        {
+            enemyState = EnemyState.Chasing;
         }
+    }
+
+    private bool EnsurePlayerExists()
+    {
+        if (PlayerTransform != null) return true;
+        
+        FindPlayerTransform();
+        return PlayerTransform != null;
     }
 
     private void IdleBehavior()
@@ -372,15 +406,16 @@ public class Enemy : MonoBehaviour, IDamageable
 
     private void LookAtPlayer()
     {
-        if (canSeePlayer)
-        {
-            transform.LookAt(new Vector3(PlayerTransform.position.x, transform.position.y, PlayerTransform.position.z));
-        }
+        if (!canSeePlayer || !EnsurePlayerExists()) return;
+        
+        Vector3 lookPosition = PlayerTransform.position;
+        lookPosition.y = transform.position.y; // Keep enemy upright
+        transform.LookAt(lookPosition);
     }
 
     private void SetLastKnownPlayerPosition()
     {
-        if (canSeePlayer)
+        if (canSeePlayer && EnsurePlayerExists())
         {
             lastKnownPlayerPosition = PlayerTransform.position;
         }
