@@ -406,6 +406,14 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 7864143128494020873, guid: ca5860ee6687fd0429fe4304dab6ee4e, type: 3}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
+      propertyPath: navMeshCellSize
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
+      propertyPath: navMeshMaxSlope
+      value: 1e+31
+      objectReference: {fileID: 0}
+    - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: branchProbability
       value: 1
       objectReference: {fileID: 0}
@@ -432,6 +440,14 @@ PrefabInstance:
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: minCorridorSpacing
       value: 22
+      objectReference: {fileID: 0}
+    - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
+      propertyPath: navMeshAgentHeight
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
+      propertyPath: navMeshAgentRadius
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: corridorClipThreshold
