@@ -29,10 +29,10 @@ public class MapGen : MonoBehaviour
     
     [Header("NavMesh Settings")]
     [SerializeField] private bool bakeNavMeshAfterGeneration = true;
-    [SerializeField] private float navMeshCellSize = 0.3f;
+    [SerializeField] private float navMeshCellSize = 0.05f;       // Very high detail for complex floor
     [SerializeField] private float navMeshAgentHeight = 2f;
-    [SerializeField] private float navMeshAgentRadius = 0.5f;
-    [SerializeField] private float navMeshMaxSlope = 45f;
+    [SerializeField] private float navMeshAgentRadius = 0.3f;      // Matches Unity Navigation
+    [SerializeField] private float navMeshMaxSlope = 60f;        // Matches Unity Navigation
     [SerializeField] private LayerMask navMeshLayerMask = -1;
     
     private readonly List<RoomGen> generatedRooms = new();
@@ -986,12 +986,14 @@ public class MapGen : MonoBehaviour
             // Build NavMesh data
             NavMeshData navMeshData = new NavMeshData();
             
-            // Configure build settings
+            // Configure build settings for maximum coverage
             NavMeshBuildSettings buildSettings = NavMesh.GetSettingsByID(0);
             buildSettings.agentHeight = navMeshAgentHeight;
             buildSettings.agentRadius = navMeshAgentRadius;
-            buildSettings.agentClimb = 0.5f;
-            buildSettings.minRegionArea = 2f;
+            buildSettings.agentClimb = 0.2f;              // Reduced climb for better coverage
+            buildSettings.agentSlope = navMeshMaxSlope;         // Use our max slope setting
+            buildSettings.minRegionArea = 0.5f;              // Smaller regions for better detail
+            buildSettings.voxelSize = navMeshCellSize;          // Use our cell size
             
             // Build the NavMesh
             navMeshData = NavMeshBuilder.BuildNavMeshData(buildSettings, sources, bounds, Vector3.zero, Quaternion.identity);
