@@ -29,6 +29,10 @@ public class PlayerGun : MonoBehaviour
     public GameObject weaponFlash;
     public GameObject weaponParticles;
     public Transform flashSpawnPoint;
+    
+    [Header("Ammo UI")]
+    public UnityEngine.UI.Image ammoFillImage;
+    public float fillSmoothSpeed = 5f;
 
     // Crosshair recoil variables
     private float nextTimeToFire;
@@ -40,6 +44,8 @@ public class PlayerGun : MonoBehaviour
     private int currentAmmo;
     private bool isReloading = false;
     private float recoilTimer;
+    private float currentFillAmount;
+    private float targetFillAmount;
 
     // Physical recoil variables
     public float recoilDistance = 0.1f;
@@ -57,6 +63,15 @@ public class PlayerGun : MonoBehaviour
         initialRotation = transform.localRotation;
         initialPosition = transform.localPosition;
         
+        // Initialize ammo fill
+        currentFillAmount = 1f; // 100% = full mag
+        targetFillAmount = 1f;
+        
+        if (ammoFillImage != null)
+        {
+            ammoFillImage.fillAmount = currentFillAmount;
+        }
+        
         if (recoilCrosshair != null)
         {
             originalCrosshairPosition = recoilCrosshair.transform.localPosition;
@@ -68,6 +83,7 @@ public class PlayerGun : MonoBehaviour
     {
         HandleShooting();
         UpdateCrosshairRecoil();
+        UpdateAmmoFill();
     }
    
     
@@ -90,6 +106,7 @@ public class PlayerGun : MonoBehaviour
 
         nextTimeToFire = Time.time + fireRate;
         currentAmmo--;
+        UpdateAmmoFillTarget();
         ShootFromCrosshair();
         StopCoroutine(nameof(PhysicalRecoil));
         StartCoroutine(nameof(PhysicalRecoil));
@@ -140,6 +157,7 @@ public class PlayerGun : MonoBehaviour
         }
 
         currentAmmo = magSize;
+        UpdateAmmoFillTarget();
         isReloading = false;
         Debug.Log("Reload complete!");
     }
@@ -156,6 +174,7 @@ public class PlayerGun : MonoBehaviour
             
             nextTimeToFire = Time.time + fireRate;
             currentAmmo--;
+            UpdateAmmoFillTarget();
             ShootFromCrosshair();
         }
     }
@@ -248,6 +267,23 @@ public class PlayerGun : MonoBehaviour
                 recoilCrosshair.SetActive(false);
                 currentRecoilOffset = Vector3.zero;
             }
+        }
+    }
+    
+    void UpdateAmmoFillTarget()
+    {
+        if (ammoFillImage != null)
+        {
+            targetFillAmount = (float)currentAmmo / magSize;
+        }
+    }
+    
+    void UpdateAmmoFill()
+    {
+        if (ammoFillImage != null)
+        {
+            currentFillAmount = Mathf.Lerp(currentFillAmount, targetFillAmount, Time.deltaTime * fillSmoothSpeed);
+            ammoFillImage.fillAmount = currentFillAmount;
         }
     }
     

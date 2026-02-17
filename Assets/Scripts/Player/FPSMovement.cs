@@ -23,6 +23,16 @@ public class FPSMovement : MonoBehaviour
     [SerializeField] float effectLifetime = 0.05f;
     [SerializeField] float effectSpawnRate = 0.1f;
     private float effectSpawnTimer;
+    
+    [Header("Stamina")]
+    [SerializeField] UnityEngine.UI.Image staminaFillImage;
+    [SerializeField] float maxStamina = 100f;
+    [SerializeField] float staminaDrainRate = 20f;
+    [SerializeField] float staminaRegenRate = 10f;
+    [SerializeField] float fillSmoothSpeed = 5f;
+    private float currentStamina;
+    private float currentStaminaFill;
+    private float targetStaminaFill;
 
     [Header("Movement")]
     [SerializeField] float normalSpeed = 800f;
@@ -83,8 +93,16 @@ public class FPSMovement : MonoBehaviour
         speed = normalSpeed;
         targetFOV = normalFOV;
         
+        // Initialize stamina
+        currentStamina = maxStamina;
+        currentStaminaFill = 1f;
+        targetStaminaFill = 1f;
+        
         if (playerCamera == null)
             playerCamera = Camera.main;
+        
+        if (staminaFillImage != null)
+            staminaFillImage.fillAmount = currentStaminaFill;
 
         StartCoroutine(PlayFootStep());
     }
@@ -98,6 +116,13 @@ public class FPSMovement : MonoBehaviour
         HandleFOV();
         UpdateAnimations();
         HandleRunEffect();
+        HandleStamina();
+        
+        // Cancel sprint if out of stamina
+        if (isRunning && currentStamina <= 0)
+        {
+            OnSprintCanceled(new InputAction.CallbackContext());
+        }
         //Look();
     }
 
@@ -137,10 +162,15 @@ public class FPSMovement : MonoBehaviour
             // Cancel crouch if sprint is pressed
             OnCrouchCanceled(context);
         }
-        isPressed = true;
-        isRunning = true;
-        speed = sprintSpeed;
-        targetFOV = sprintFOV;
+        
+        // Only allow sprinting if we have stamina
+        if (currentStamina > 0)
+        {
+            isPressed = true;
+            isRunning = true;
+            speed = sprintSpeed;
+            targetFOV = sprintFOV;
+        }
     }
 
     void OnSprintCanceled(InputAction.CallbackContext context)
@@ -276,7 +306,7 @@ public class FPSMovement : MonoBehaviour
     
     void HandleRunEffect()
     {
-        if (isRunning && isGrounded && rb.linearVelocity.magnitude > 0.1f && moveAction.ReadValue<Vector2>().magnitude > 0.1f)
+        if (isRunning && isGrounded && rb.linearVelocity.magnitude > 0.1f && moveAction.ReadValue<Vector2>().magnitude > 0.1f && currentStamina > 0)
         {
             effectSpawnTimer -= Time.deltaTime;
             if (effectSpawnTimer <= 0f)
@@ -299,6 +329,33 @@ public class FPSMovement : MonoBehaviour
     void DestroyRunEffect()
     {
         // No longer needed since effects auto-destroy after lifetime
+    }
+    
+    void HandleStamina()
+    {
+        if (isRunning && isGrounded && rb.linearVelocity.magnitude > 0.1f && moveAction.ReadValue<Vector2>().magnitude > 0.1f)
+        {
+            // Drain stamina while running
+            currentStamina = Mathf.Max(0, currentStamina - staminaDrainRate * Time.deltaTime);
+        }
+        else if (!isCrouching)
+        {
+            // Regenerate stamina when not running or crouching
+            currentStamina = Mathf.Min(maxStamina, currentStamina + staminaRegenRate * Time.deltaTime);
+        }
+        
+        // Update stamina fill
+        UpdateStaminaFill();
+    }
+    
+    void UpdateStaminaFill()
+    {
+        if (staminaFillImage != null)
+        {
+            targetStaminaFill = currentStamina / maxStamina;
+            currentStaminaFill = Mathf.Lerp(currentStaminaFill, targetStaminaFill, Time.deltaTime * fillSmoothSpeed);
+            staminaFillImage.fillAmount = currentStaminaFill;
+        }
     }
 
     //void Look()
