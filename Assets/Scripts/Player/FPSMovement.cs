@@ -36,7 +36,7 @@ public class FPSMovement : MonoBehaviour
     
     [Header("Pickup System")]
     [SerializeField] float pickupRange = 3f;
-    [SerializeField] LayerMask pickupLayerMask;
+    [SerializeField] LayerMask pickupLayerMask; // Keep for compatibility but not used
     private InputAction pickupAction;
 
     [Header("Movement")]
@@ -377,17 +377,38 @@ public class FPSMovement : MonoBehaviour
     {
         if (pickupAction == null || playerCamera == null) return;
         
-        // Raycast from camera center to check for health pickups
-        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+        // Find all pickups in range using distance (no collider needed)
+        GameObject[] allPickups = GameObject.FindGameObjectsWithTag("Pickup");
         
-        if (Physics.Raycast(ray, out RaycastHit hit, pickupRange, pickupLayerMask))
+        foreach (GameObject pickup in allPickups)
         {
-            // Check if hit object has HealthPickup component
-            HealthPickup healthPickup = hit.collider.GetComponent<HealthPickup>();
-            if (healthPickup != null)
+            float distance = Vector3.Distance(transform.position, pickup.transform.position);
+            
+            if (distance <= pickupRange)
             {
-                // Show pickup prompt or auto-pickup
-                // For now, we'll auto-pickup when F is pressed
+                // Check if player is looking at pickup (roughly)
+                Vector3 directionToPickup = (pickup.transform.position - transform.position).normalized;
+                float dotProduct = Vector3.Dot(playerCamera.transform.forward, directionToPickup);
+                
+                // Only show if looking roughly in the direction (within 60 degrees)
+                if (dotProduct > 0.5f)
+                {
+                    // Check for health pickups
+                    HealthPickup healthPickup = pickup.GetComponent<HealthPickup>();
+                    if (healthPickup != null)
+                    {
+                        // Could show pickup prompt here
+                        continue;
+                    }
+                    
+                    // Check for stamina pickups
+                    StaminaPickup staminaPickup = pickup.GetComponent<StaminaPickup>();
+                    if (staminaPickup != null)
+                    {
+                        // Could show pickup prompt here
+                        continue;
+                    }
+                }
             }
         }
     }
@@ -396,23 +417,54 @@ public class FPSMovement : MonoBehaviour
     {
         if (pickupAction == null || playerCamera == null) return;
         
-        // Raycast from camera center to pickup health
-        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+        // Find all pickups in range using distance (no collider needed)
+        GameObject[] allPickups = GameObject.FindGameObjectsWithTag("Pickup");
         
-        if (Physics.Raycast(ray, out RaycastHit hit, pickupRange, pickupLayerMask))
+        foreach (GameObject pickup in allPickups)
         {
-            HealthPickup healthPickup = hit.collider.GetComponent<HealthPickup>();
-            if (healthPickup != null)
+            float distance = Vector3.Distance(transform.position, pickup.transform.position);
+            
+            if (distance <= pickupRange)
             {
-                // Check if player is at full health
-                if (PlayerHealth.Instance != null && PlayerHealth.Instance.IsFullHealth())
-                {
-                    Debug.Log("Already at full health!");
-                    return;
-                }
+                // Check if player is looking at pickup (roughly)
+                Vector3 directionToPickup = (pickup.transform.position - transform.position).normalized;
+                float dotProduct = Vector3.Dot(playerCamera.transform.forward, directionToPickup);
                 
-                // Pickup the health item
-                PickupHealthItem(healthPickup);
+                // Only pickup if looking roughly in the direction (within 60 degrees)
+                if (dotProduct > 0.5f)
+                {
+                    // Check for health pickups
+                    HealthPickup healthPickup = pickup.GetComponent<HealthPickup>();
+                    if (healthPickup != null)
+                    {
+                        // Check if player is at full health
+                        if (PlayerHealth.Instance != null && PlayerHealth.Instance.IsFullHealth())
+                        {
+                            Debug.Log("Already at full health!");
+                            return;
+                        }
+                        
+                        // Pickup the health item
+                        PickupHealthItem(healthPickup);
+                        return;
+                    }
+                    
+                    // Check for stamina pickups
+                    StaminaPickup staminaPickup = pickup.GetComponent<StaminaPickup>();
+                    if (staminaPickup != null)
+                    {
+                        // Check if player is at full stamina
+                        if (currentStamina >= maxStamina)
+                        {
+                            Debug.Log("Already at full stamina!");
+                            return;
+                        }
+                        
+                        // Pickup the stamina item
+                        PickupStaminaItem(staminaPickup);
+                        return;
+                    }
+                }
             }
         }
     }
@@ -429,6 +481,30 @@ public class FPSMovement : MonoBehaviour
         Destroy(healthPickup.gameObject);
         
         Debug.Log($"Picked up health: +{healthPickup.GetHealthAmount()} HP");
+    }
+    
+    void PickupStaminaItem(StaminaPickup staminaPickup)
+    {
+        // Add stamina to player
+        if (staminaPickup.ShouldMaxOutStamina())
+        {
+            // Max out stamina
+            currentStamina = maxStamina;
+            Debug.Log("Picked up stamina: Maxed out!");
+        }
+        else
+        {
+            // Add specific amount
+            currentStamina = Mathf.Min(maxStamina, currentStamina + staminaPickup.GetStaminaAmount());
+            Debug.Log($"Picked up stamina: +{staminaPickup.GetStaminaAmount()}");
+        }
+        
+        // Update stamina fill immediately
+        targetStaminaFill = currentStamina / maxStamina;
+        currentStaminaFill = targetStaminaFill;
+        
+        // Destroy the pickup object
+        Destroy(staminaPickup.gameObject);
     }
 
     //void Look()
