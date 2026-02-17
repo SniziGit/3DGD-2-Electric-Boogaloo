@@ -13,6 +13,7 @@ public class PlayerHealth : MonoBehaviour
     [Header("UI References")]
     [SerializeField] private Image healthFillImage;
     [SerializeField] private TextMeshProUGUI healthText;
+    [SerializeField] private UIManager uiManager;
     [SerializeField] private float fillSmoothSpeed = 5f;
     
     private float currentHealthFill;
@@ -62,6 +63,8 @@ public class PlayerHealth : MonoBehaviour
 
     private void DecreaseHealth(int decreaseAmount)
     {
+        Debug.Log($"[PlayerHealth] Taking {decreaseAmount} damage. Current health: {currentHealth}");
+        
         currentHealth = Mathf.Max(0, currentHealth - decreaseAmount);
         UpdateHealthFillTarget();
         
@@ -72,9 +75,15 @@ public class PlayerHealth : MonoBehaviour
             movement.AddShake(0.1f, 0.25f); // Shake the camera when taking damage
         }
         
-        if (UIManager.Instance != null)
+        Debug.Log($"[PlayerHealth] UIManager reference: {(uiManager != null ? "FOUND" : "NULL")}");
+        if (uiManager != null)
         {
-            UIManager.Instance.InstantiateHitUI(); // Show hit UI when taking damage
+            uiManager.InstantiateHitUI(); // Show hit UI when taking damage
+            Debug.Log("[PlayerHealth] HitUI instantiated!");
+        }
+        else
+        {
+            Debug.LogWarning("[PlayerHealth] UIManager is NULL! HitUI cannot be shown.");
         }
         
         if (AudioManager.Instance != null)

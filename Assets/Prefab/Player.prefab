@@ -447,9 +447,9 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 0
   reviveInteraction: {fileID: 7644335928159998134}
-  normalSpeed: 100
-  sprintSpeed: 150
-  crouchSpeed: 50
+  normalSpeed: 200
+  sprintSpeed: 400
+  crouchSpeed: 100
   normalFOV: 100
   sprintFOV: 120
   crouchFOV: 90

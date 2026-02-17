@@ -209,8 +209,18 @@ public class PlayerGun : MonoBehaviour
     
     void ShootFromCrosshair()
     {
-        // Raycast from camera center (crosshair position)
-        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+        // Get the viewport rect of the player's camera
+        Rect viewport = playerCamera.rect;
+
+        // Calculate the center of the camera's viewport in screen coordinates
+        float viewportCenterX = (Screen.width * viewport.x) + (Screen.width * viewport.width / 2f);
+        float viewportCenterY = (Screen.height * viewport.y) + (Screen.height * viewport.height / 2f);
+
+        // Raycast from camera center (crosshair position) relative to its viewport
+        Ray ray = playerCamera.ScreenPointToRay(new Vector3(viewportCenterX, viewportCenterY, 0f));
+        
+        // Debug: Draw the ray in Scene view
+        Debug.DrawRay(ray.origin, ray.direction * range, Color.red, 2f);
         
         // First raycast to check for walls
         if (Physics.Raycast(ray, out RaycastHit wallHit, range, wallLayers))
@@ -223,19 +233,39 @@ public class PlayerGun : MonoBehaviour
         // Second raycast to check for enemies (ignoring walls)
         if (Physics.Raycast(ray, out RaycastHit hit, range, shootableLayers))
         {
+            Debug.Log($"Raycast hit: {hit.collider.name} on layer {LayerMask.LayerToName(hit.collider.gameObject.layer)}");
+            
             // Apply damage to hit target
             IDamageable damageable = hit.collider.GetComponent<IDamageable>();
             if (damageable != null)
             {
                 damageable.TakeDamage(damage);
                 ShowHitCrosshair(); // Show hit crosshair when hitting enemy
+                Debug.Log($"Successfully dealt {damage} damage to {hit.collider.name}");
             }
-            
-            Debug.Log($"Hit {hit.collider.name} at distance {hit.distance}");
+            else
+            {
+                Debug.Log($"Hit object {hit.collider.name} but no IDamageable component found");
+            }
         }
         else
         {
-            Debug.Log("Shot missed - no target in range");
+            // Debug: Try raycast without layer mask to see what we're hitting
+            if (Physics.Raycast(ray, out RaycastHit debugHit, range))
+            {
+                string hitLayerName = LayerMask.LayerToName(debugHit.collider.gameObject.layer);
+                Debug.Log($"Shot missed - but hit {debugHit.collider.name} on layer '{hitLayerName}' (not in shootableLayers)");
+                
+                // Check if this might be an enemy
+                if (debugHit.collider.GetComponent<Enemy>() != null)
+                {
+                    Debug.LogError($"ENEMY DETECTED BUT NOT IN SHOOTABLE LAYERS! Enemy '{debugHit.collider.name}' is on layer '{hitLayerName}'. Add this layer to shootableLayers!");
+                }
+            }
+            else
+            {
+                Debug.Log("Shot missed - no target in range");
+            }
         }
         
         // Apply crosshair recoil
@@ -377,8 +407,15 @@ public class PlayerGun : MonoBehaviour
     {
         if (persistentImage == null) return;
         
-        // Raycast from camera center to check for enemies
-        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+        // Get the viewport rect of player's camera
+        Rect viewport = playerCamera.rect;
+
+        // Calculate center of camera's viewport in screen coordinates
+        float viewportCenterX = (Screen.width * viewport.x) + (Screen.width * viewport.width / 2f);
+        float viewportCenterY = (Screen.height * viewport.y) + (Screen.height * viewport.height / 2f);
+
+        // Raycast from camera center (crosshair position) relative to its viewport
+        Ray ray = playerCamera.ScreenPointToRay(new Vector3(viewportCenterX, viewportCenterY, 0f));
         
         // First raycast to check for walls
         if (Physics.Raycast(ray, out RaycastHit wallHit, range, wallLayers))
