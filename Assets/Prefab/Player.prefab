@@ -259,7 +259,7 @@ MonoBehaviour:
   playerCamera: {fileID: 8832272218536659907}
   shootableLayers:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 768
   wallLayers:
     serializedVersion: 2
     m_Bits: 64
@@ -342,6 +342,7 @@ GameObject:
   - component: {fileID: 6699299753450581417}
   - component: {fileID: 4072839419339953132}
   - component: {fileID: 765877607141511573}
+  - component: {fileID: 7644335928159998134}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -444,7 +445,8 @@ MonoBehaviour:
   pickupRange: 3
   pickupLayerMask:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 0
+  reviveInteraction: {fileID: 7644335928159998134}
   normalSpeed: 800
   sprintSpeed: 2000
   crouchSpeed: 550
@@ -516,6 +518,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 100
   currentHealth: 0
+  isDowned: 0
   healthFillImage: {fileID: 0}
   healthText: {fileID: 0}
   fillSmoothSpeed: 5
@@ -542,6 +545,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &7644335928159998134
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7206747373956810602}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90ee6e0c8255d1749911a019e40678cd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  reviveTime: 3
+  reviveHealth: 50
+  reviveRange: 2
 --- !u!1001 &4166160047209048673
 PrefabInstance:
   m_ObjectHideFlags: 0
