@@ -43,6 +43,9 @@ public class FPSMovement : MonoBehaviour
     [SerializeField] private ReviveInteraction reviveInteraction;
     private PlayerHealth playerHealth;
     
+    [Header("Door Hacking System")]
+    [SerializeField] private DoorInteraction doorInteraction;
+    
     [Header("Interaction Preview System")]
     [SerializeField] private InteractionPreview interactionPreview;
 
@@ -99,6 +102,7 @@ public class FPSMovement : MonoBehaviour
         //lookAction = playerInput.actions.FindAction("Look");
         rb = GetComponent<Rigidbody>();
         reviveInteraction = GetComponent<ReviveInteraction>();
+        doorInteraction = GetComponent<DoorInteraction>();
         playerHealth = GetComponent<PlayerHealth>(); // Get PlayerHealth from same GameObject
         interactionPreview = GetComponent<InteractionPreview>();
         
@@ -425,6 +429,13 @@ public class FPSMovement : MonoBehaviour
             }
         }
         
+        // Check for door hacking (hold to hack)
+        if (doorInteraction != null && doorInteraction.CanHack())
+        {
+            doorInteraction.StartHack();
+            return;
+        }
+        
         // For regular interactables, perform immediately (single press)
         if (interactionPreview != null && interactionPreview.HasInteractionTarget())
         {
@@ -446,6 +457,12 @@ public class FPSMovement : MonoBehaviour
         if (reviveInteraction != null && reviveInteraction.IsReviving())
         {
             reviveInteraction.CancelRevive();
+        }
+        
+        // Cancel door hacking if it was in progress
+        if (doorInteraction != null && doorInteraction.IsHacking())
+        {
+            doorInteraction.CancelHack();
         }
     }
     
