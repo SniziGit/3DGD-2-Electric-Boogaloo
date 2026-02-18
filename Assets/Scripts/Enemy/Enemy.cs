@@ -76,31 +76,22 @@ public class Enemy : MonoBehaviour, IDamageable
     {
         Transform closestPlayer = null;
         
-        // First try to find players through PlayerSpawning
-        PlayerSpawning playerSpawning = FindObjectOfType<PlayerSpawning>();
-        if (playerSpawning != null)
+        // Find all GameObjects with FPSMovement script
+        FPSMovement[] fpsMovements = FindObjectsOfType<FPSMovement>();
+        if (fpsMovements.Length > 0)
         {
-            GameObject[] players = playerSpawning.GetSpawnedPlayers();
-            if (players != null && players.Length > 0)
+            GameObject[] players = new GameObject[fpsMovements.Length];
+            for (int i = 0; i < fpsMovements.Length; i++)
             {
-                closestPlayer = GetClosestPlayerFromList(players);
+                players[i] = fpsMovements[i].gameObject;
             }
-        }
-        
-        // Fallback: Find all players with "Player" tag
-        if (closestPlayer == null)
-        {
-            GameObject[] taggedPlayers = GameObject.FindGameObjectsWithTag("Player");
-            if (taggedPlayers.Length > 0)
-            {
-                closestPlayer = GetClosestPlayerFromList(taggedPlayers);
-            }
+            closestPlayer = GetClosestPlayerFromList(players);
         }
         
         // If no valid (non-downed) players found, clear the target
         if (closestPlayer == null)
         {
-            Debug.Log("[Enemy] No valid players found (all may be downed)");
+            Debug.Log("[Enemy] No valid players found (no FPSMovement components found)");
         }
         
         return closestPlayer;
