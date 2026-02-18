@@ -246,8 +246,10 @@ public class FPSMovement : MonoBehaviour
         isCrouching = true;
         speed = crouchSpeed;
         targetFOV = crouchFOV;
-        playerAnimator.SetBool("PlayerCrouch", true);
-        playerAnimator.SetBool("PlayerIdle", false);
+        if (playerAnimator != null) {
+            playerAnimator.SetBool("PlayerCrouch", true);
+            playerAnimator.SetBool("PlayerIdle", false);
+        }
     }
 
     void OnCrouchCanceled(InputAction.CallbackContext context)
@@ -256,7 +258,9 @@ public class FPSMovement : MonoBehaviour
         isCrouching = false;
         speed = normalSpeed;
         targetFOV = normalFOV;
-        playerAnimator.SetBool("PlayerCrouch", false);
+        if (playerAnimator != null) {
+            playerAnimator.SetBool("PlayerCrouch", false);
+        }
     }
 
     void JumpPlayer(InputAction.CallbackContext context)
@@ -331,6 +335,8 @@ public class FPSMovement : MonoBehaviour
     
     void UpdateAnimations()
     {
+        if (playerAnimator == null) return;
+        
         // Handle idle animation when not moving and not crouching
         if (rb.linearVelocity.magnitude < 0.1f && !isCrouching && !isShooting)
         {
