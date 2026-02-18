@@ -126,7 +126,7 @@ public class CollectableManager : MonoBehaviour
     
     public string GetCollectionText()
     {
-        return $"{collectableName}s: {currentCollected}/{totalRequiredCollectables}";
+        return $"{currentCollected}/{totalRequiredCollectables}";
     }
     
     public string GetDetailedCollectionText()
