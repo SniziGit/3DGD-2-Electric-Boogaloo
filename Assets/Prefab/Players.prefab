@@ -701,8 +701,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 799760093242794242}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.54000854, y: 0, z: -15}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.05, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -782,7 +782,7 @@ MonoBehaviour:
   runEffectSpawnPoint: {fileID: 3023293140859427654}
   effectLifetime: 0.5
   effectSpawnRate: 0.1
-  staminaFillImage: {fileID: 9142588432287421954}
+  staminaFillImage: {fileID: 4340666756068209299}
   maxStamina: 100
   staminaDrainRate: 20
   staminaRegenRate: 10
@@ -830,8 +830,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_ActionEvents: []
-  m_NeverAutoSwitchControlSchemes: 1
-  m_DefaultControlScheme: Gamepad
+  m_NeverAutoSwitchControlSchemes: 0
+  m_DefaultControlScheme: 
   m_DefaultActionMap: GamePlay
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 96571857791854793}
@@ -863,8 +863,8 @@ MonoBehaviour:
   maxHealth: 100
   currentHealth: 100
   isDowned: 0
-  healthFillImage: {fileID: 9170730526189100099}
-  healthText: {fileID: 2500614133906069633}
+  healthFillImage: {fileID: 7610401246882488720}
+  healthText: {fileID: 1962844179428824986}
   fillSmoothSpeed: 5
   hitUIPrefab: {fileID: 5059645157731833783}
   fadeInDuration: 0.1
@@ -4319,8 +4319,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6156982607684857097}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 429, y: 241.25, z: 0}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -5087,7 +5087,7 @@ MonoBehaviour:
   weaponFlash: {fileID: 3971537154403255433, guid: 0ca831b58ff9f364b94bcb456c0e7949, type: 3}
   weaponParticles: {fileID: 6604725421362112238, guid: 400d33116be7fc94c88fe139c9944c52, type: 3}
   flashSpawnPoint: {fileID: 5787930367647002328}
-  ammoFillImage: {fileID: 1446375063083937727}
+  ammoFillImage: {fileID: 60086890668305497}
   fillSmoothSpeed: 5
   recoilDistance: 0.1
   recoilSpeed: 15
@@ -5960,8 +5960,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8107502639328764301}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.46, y: 0, z: -15}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -6089,8 +6089,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_ActionEvents: []
-  m_NeverAutoSwitchControlSchemes: 1
-  m_DefaultControlScheme: Keyboard Mouse
+  m_NeverAutoSwitchControlSchemes: 0
+  m_DefaultControlScheme: 
   m_DefaultActionMap: GamePlay
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 8552735383582831665}

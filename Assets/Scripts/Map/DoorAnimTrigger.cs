@@ -22,16 +22,19 @@ public class DoorAnimTrigger : MonoBehaviour
         
         if (leadsToCorridor)
         {
-            UnlockDoor();
-            Debug.Log($"[DoorAnimTrigger] Unlocked door at {transform.position} (leads to corridor)");
-            
-            // 60% chance for unlocked doors to have puzzle and be locked
+            // Don't unlock immediately - first check if this door should have a puzzle
             if (Random.value < 0.6f)
             {
                 hasPuzzle = true;
                 LockDoor();
                 SetLightsColor(Color.yellow);
-                Debug.Log($"[DoorAnimTrigger] Door at {transform.position} now has puzzle and is locked (60% chance)");
+                Debug.Log($"[DoorAnimTrigger] Door at {transform.position} has puzzle and is locked (60% chance)");
+            }
+            else
+            {
+                // Only unlock if it doesn't have a puzzle
+                UnlockDoor();
+                Debug.Log($"[DoorAnimTrigger] Unlocked door at {transform.position} (leads to corridor, no puzzle)");
             }
         }
         else
@@ -50,7 +53,7 @@ public class DoorAnimTrigger : MonoBehaviour
         }
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerStay(Collider other)
     {
         if (other.CompareTag("Player") && !isLocked)
         {
@@ -88,12 +91,6 @@ public class DoorAnimTrigger : MonoBehaviour
     public void UnlockDoor()
     {
         isLocked = false;
-        
-        // Immediately open the door when unlocked (hacked)
-        if (doorAnimator != null)
-        {
-            doorAnimator.SetBool("isOpen", true);
-        }
         
         // Change lights to green to indicate unlocked
         SetLightsColor(Color.green);
