@@ -222,37 +222,98 @@ public class PlayerGun : MonoBehaviour
         // Debug: Draw the ray in Scene view
         Debug.DrawRay(ray.origin, ray.direction * range, Color.red, 2f);
         
-        // Single raycast to check all objects (both walls and enemies)
-        if (Physics.Raycast(ray, out RaycastHit hit, range, shootableLayers | wallLayers))
+        // Debug: Log layer mask values
+        Debug.Log($"Shootable layers: {shootableLayers.value} (int: {shootableLayers})");
+        Debug.Log($"Wall layers: {wallLayers.value} (int: {wallLayers})");
+        Debug.Log($"Combined layers: {shootableLayers | wallLayers}");
+        
+        // Debug: Check what's actually in front of us
+        Debug.Log($"Ray origin: {ray.origin}, direction: {ray.direction}");
+        Debug.Log($"Camera forward: {playerCamera.transform.forward}");
+        Debug.Log($"Camera rotation: {playerCamera.transform.rotation}");
+        
+        // Try using camera forward direction instead
+        Ray forwardRay = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+        Debug.Log($"Forward ray origin: {forwardRay.origin}, direction: {forwardRay.direction}");
+        
+        // First, try the forward ray
+        if (Physics.Raycast(forwardRay, out RaycastHit debugHit, range))
         {
-            Debug.Log($"Raycast hit: {hit.collider.name} on layer {LayerMask.LayerToName(hit.collider.gameObject.layer)}");
+            string hitLayerName = LayerMask.LayerToName(debugHit.collider.gameObject.layer);
+            int hitLayerValue = 1 << debugHit.collider.gameObject.layer;
+            Debug.Log($"FORWARD RAY: Hit {debugHit.collider.name} on layer '{hitLayerName}' (value: {hitLayerValue}) distance: {debugHit.distance}");
+            
+            // Check if this layer is in our masks
+            bool inShootable = (shootableLayers.value & hitLayerValue) != 0;
+            bool inWall = (wallLayers.value & hitLayerValue) != 0;
+            Debug.Log($"In shootable layers: {inShootable}, In wall layers: {inWall}");
+        }
+        else
+        {
+            Debug.Log("FORWARD RAY: No hit");
+        }
+        
+        // First, try a raycast without any layer mask to see what we hit
+        if (Physics.Raycast(ray, out RaycastHit hit, range))
+        {
+            string hitLayerName = LayerMask.LayerToName(hit.collider.gameObject.layer);
+            int hitLayerValue = 1 << hit.collider.gameObject.layer;
+            Debug.Log($"DEBUG: Hit {hit.collider.name} on layer '{hitLayerName}' (value: {hitLayerValue}) distance: {hit.distance}");
+            
+            // Check if this layer is in our masks
+            bool inShootable = (shootableLayers.value & hitLayerValue) != 0;
+            bool inWall = (wallLayers.value & hitLayerValue) != 0;
+            Debug.Log($"In shootable layers: {inShootable}, In wall layers: {inWall}");
+        }
+        else
+        {
+            Debug.Log("DEBUG: No hit with unlimited raycast");
+            
+            // Try a spherecast to see if we're close to anything
+            if (Physics.SphereCast(ray.origin, 0.5f, ray.direction, out RaycastHit sphereHit, range))
+            {
+                Debug.Log($"SPHERECAST: Found {sphereHit.collider.name} at distance {sphereHit.distance} - maybe ray is too thin?");
+            }
+            else
+            {
+                Debug.Log("SPHERECAST: Also found nothing");
+            }
+        }
+        
+        // Use the forward ray for actual shooting
+        ray = forwardRay;
+        
+        // Single raycast to check all objects (both walls and enemies)
+        if (Physics.Raycast(ray, out RaycastHit finalHit, range, shootableLayers | wallLayers))
+        {
+            Debug.Log($"Raycast hit: {finalHit.collider.name} on layer {LayerMask.LayerToName(finalHit.collider.gameObject.layer)}");
             
             // Check if what we hit is on the wall layer
-            if ((wallLayers.value & (1 << hit.collider.gameObject.layer)) != 0)
+            if ((wallLayers.value & (1 << finalHit.collider.gameObject.layer)) != 0)
             {
-                Debug.Log($"Shot hit wall: {hit.collider.name} at distance {hit.distance}");
+                Debug.Log($"Shot hit wall: {finalHit.collider.name} at distance {finalHit.distance}");
                 return;
             }
             
             // Check if what we hit is on the shootable layer (enemy)
-            if ((shootableLayers.value & (1 << hit.collider.gameObject.layer)) != 0)
+            if ((shootableLayers.value & (1 << finalHit.collider.gameObject.layer)) != 0)
             {
                 // Apply damage to hit target
-                IDamageable damageable = hit.collider.GetComponent<IDamageable>();
+                IDamageable damageable = finalHit.collider.GetComponent<IDamageable>();
                 if (damageable != null)
                 {
                     damageable.TakeDamage(damage);
                     ShowHitCrosshair(); // Show hit crosshair when hitting enemy
-                    Debug.Log($"Successfully dealt {damage} damage to {hit.collider.name}");
+                    Debug.Log($"Successfully dealt {damage} damage to {finalHit.collider.name}");
                 }
                 else
                 {
-                    Debug.Log($"Hit object {hit.collider.name} but no IDamageable component found");
+                    Debug.Log($"Hit object {finalHit.collider.name} but no IDamageable component found");
                 }
             }
             else
             {
-                Debug.Log($"Hit object {hit.collider.name} on layer '{LayerMask.LayerToName(hit.collider.gameObject.layer)}' but it's not configured as wall or shootable");
+                Debug.Log($"Hit object {finalHit.collider.name} on layer '{LayerMask.LayerToName(finalHit.collider.gameObject.layer)}' but it's not configured as wall or shootable");
             }
         }
         else

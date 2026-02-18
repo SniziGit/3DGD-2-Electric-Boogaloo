@@ -88,6 +88,15 @@ public class DoorAnimTrigger : MonoBehaviour
     public void UnlockDoor()
     {
         isLocked = false;
+        
+        // Immediately open the door when unlocked (hacked)
+        if (doorAnimator != null)
+        {
+            doorAnimator.SetBool("isOpen", true);
+        }
+        
+        // Change lights to green to indicate unlocked
+        SetLightsColor(Color.green);
     }
 
     public void LockDoor()
