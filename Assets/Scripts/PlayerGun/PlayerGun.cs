@@ -222,50 +222,42 @@ public class PlayerGun : MonoBehaviour
         // Debug: Draw the ray in Scene view
         Debug.DrawRay(ray.origin, ray.direction * range, Color.red, 2f);
         
-        // First raycast to check for walls
-        if (Physics.Raycast(ray, out RaycastHit wallHit, range, wallLayers))
-        {
-            // Wall is blocking, hit the wall instead
-            Debug.Log($"Shot hit wall: {wallHit.collider.name} at distance {wallHit.distance}");
-            return;
-        }
-        
-        // Second raycast to check for enemies (ignoring walls)
-        if (Physics.Raycast(ray, out RaycastHit hit, range, shootableLayers))
+        // Single raycast to check all objects (both walls and enemies)
+        if (Physics.Raycast(ray, out RaycastHit hit, range, shootableLayers | wallLayers))
         {
             Debug.Log($"Raycast hit: {hit.collider.name} on layer {LayerMask.LayerToName(hit.collider.gameObject.layer)}");
             
-            // Apply damage to hit target
-            IDamageable damageable = hit.collider.GetComponent<IDamageable>();
-            if (damageable != null)
+            // Check if what we hit is on the wall layer
+            if ((wallLayers.value & (1 << hit.collider.gameObject.layer)) != 0)
             {
-                damageable.TakeDamage(damage);
-                ShowHitCrosshair(); // Show hit crosshair when hitting enemy
-                Debug.Log($"Successfully dealt {damage} damage to {hit.collider.name}");
+                Debug.Log($"Shot hit wall: {hit.collider.name} at distance {hit.distance}");
+                return;
             }
-            else
+            
+            // Check if what we hit is on the shootable layer (enemy)
+            if ((shootableLayers.value & (1 << hit.collider.gameObject.layer)) != 0)
             {
-                Debug.Log($"Hit object {hit.collider.name} but no IDamageable component found");
-            }
-        }
-        else
-        {
-            // Debug: Try raycast without layer mask to see what we're hitting
-            if (Physics.Raycast(ray, out RaycastHit debugHit, range))
-            {
-                string hitLayerName = LayerMask.LayerToName(debugHit.collider.gameObject.layer);
-                Debug.Log($"Shot missed - but hit {debugHit.collider.name} on layer '{hitLayerName}' (not in shootableLayers)");
-                
-                // Check if this might be an enemy
-                if (debugHit.collider.GetComponent<Enemy>() != null)
+                // Apply damage to hit target
+                IDamageable damageable = hit.collider.GetComponent<IDamageable>();
+                if (damageable != null)
                 {
-                    Debug.LogError($"ENEMY DETECTED BUT NOT IN SHOOTABLE LAYERS! Enemy '{debugHit.collider.name}' is on layer '{hitLayerName}'. Add this layer to shootableLayers!");
+                    damageable.TakeDamage(damage);
+                    ShowHitCrosshair(); // Show hit crosshair when hitting enemy
+                    Debug.Log($"Successfully dealt {damage} damage to {hit.collider.name}");
+                }
+                else
+                {
+                    Debug.Log($"Hit object {hit.collider.name} but no IDamageable component found");
                 }
             }
             else
             {
-                Debug.Log("Shot missed - no target in range");
+                Debug.Log($"Hit object {hit.collider.name} on layer '{LayerMask.LayerToName(hit.collider.gameObject.layer)}' but it's not configured as wall or shootable");
             }
+        }
+        else
+        {
+            Debug.Log("Shot missed - no target in range");
         }
         
         // Apply crosshair recoil
@@ -417,27 +409,36 @@ public class PlayerGun : MonoBehaviour
         // Raycast from camera center (crosshair position) relative to its viewport
         Ray ray = playerCamera.ScreenPointToRay(new Vector3(viewportCenterX, viewportCenterY, 0f));
         
-        // First raycast to check for walls
-        if (Physics.Raycast(ray, out RaycastHit wallHit, range, wallLayers))
+        // Single raycast to check all objects (both walls and enemies)
+        if (Physics.Raycast(ray, out RaycastHit hit, range, shootableLayers | wallLayers))
         {
-            // Wall is blocking, return to original color
-            persistentImage.color = originalPersistentColor;
-            return;
-        }
-        
-        // Second raycast to check for enemies (ignoring walls)
-        if (Physics.Raycast(ray, out RaycastHit enemyHit, range, shootableLayers))
-        {
-            // Check if hit object has IDamageable (enemy)
-            IDamageable damageable = enemyHit.collider.GetComponent<IDamageable>();
-            if (damageable != null)
+            // Check if what we hit is on the wall layer
+            if ((wallLayers.value & (1 << hit.collider.gameObject.layer)) != 0)
             {
-                // Change to red when aiming at enemy
-                persistentImage.color = Color.red;
+                // Wall is blocking, return to original color
+                persistentImage.color = originalPersistentColor;
+                return;
+            }
+            
+            // Check if what we hit is on the shootable layer (enemy)
+            if ((shootableLayers.value & (1 << hit.collider.gameObject.layer)) != 0)
+            {
+                // Check if hit object has IDamageable (enemy)
+                IDamageable damageable = hit.collider.GetComponent<IDamageable>();
+                if (damageable != null)
+                {
+                    // Change to red when aiming at enemy
+                    persistentImage.color = Color.red;
+                }
+                else
+                {
+                    // Return to original color when not aiming at enemy
+                    persistentImage.color = originalPersistentColor;
+                }
             }
             else
             {
-                // Return to original color when not aiming at enemy
+                // Return to original color when hitting other objects
                 persistentImage.color = originalPersistentColor;
             }
         }
