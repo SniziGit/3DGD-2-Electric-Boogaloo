@@ -88,10 +88,24 @@ public class CollectableManager : MonoBehaviour
         if (crystalsToSpawn <= 0 || !availableRooms.Contains(room))
             return false;
         
-        // Randomly decide if this room should get a crystal
-        if (Random.value < 0.5f && crystalsToSpawn > 0)
+        // Calculate remaining rooms that haven't been checked yet
+        int remainingRooms = availableRooms.Count - availableRooms.IndexOf(room);
+        
+        // Ensure we spawn exactly the required number of crystals
+        // If we have more crystals to spawn than remaining rooms, spawn in this room
+        if (crystalsToSpawn >= remainingRooms)
         {
             crystalsToSpawn--;
+            Debug.Log($"[CollectableManager] Spawning crystal (forced). Remaining to spawn: {crystalsToSpawn}");
+            return true;
+        }
+        
+        // Otherwise, use probability to distribute remaining crystals among remaining rooms
+        float spawnProbability = (float)crystalsToSpawn / remainingRooms;
+        if (Random.value < spawnProbability)
+        {
+            crystalsToSpawn--;
+            Debug.Log($"[CollectableManager] Spawning crystal (probabilistic). Probability: {spawnProbability:F2}, Remaining to spawn: {crystalsToSpawn}");
             return true;
         }
         
