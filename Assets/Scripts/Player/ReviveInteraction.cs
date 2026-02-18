@@ -5,7 +5,7 @@ public class ReviveInteraction : MonoBehaviour
     [Header("Revive Settings")]
     [SerializeField] private float reviveTime = 3f;
     [SerializeField] private int reviveHealth = 50;
-    [SerializeField] private float reviveRange = 2f;
+    [SerializeField] private float reviveRange = 3f; // Increased from 2f to 3f
     
     private bool isReviving = false;
     private float reviveTimer = 0f;

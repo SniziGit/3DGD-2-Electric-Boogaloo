@@ -4,7 +4,7 @@ public class DoorInteraction : MonoBehaviour
 {
     [Header("Door Unlocking Puzzle")]
     [SerializeField] private float hackTime = 2f;
-    [SerializeField] private float hackRange = 2f;
+    [SerializeField] private float hackRange = 5f; // Increased from 3f to 5f to ensure it works
     
     private bool isHacking = false;
     private float hackTimer = 0f;
@@ -23,7 +23,23 @@ public class DoorInteraction : MonoBehaviour
             hackTimer += Time.deltaTime;
             
             // Check if target is still in range and still has puzzle
-            if (Vector3.Distance(transform.position, targetDoor.transform.position) > hackRange || !targetDoor.HasPuzzle())
+            // Use raycast to check actual distance to door collider instead of trigger position
+            if (Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, hackRange) && hit.collider.CompareTag("Door"))
+            {
+                // Check if this door still has puzzle
+                DoorAnimTrigger door = hit.collider.GetComponentInParent<DoorAnimTrigger>();
+                if (door == null)
+                {
+                    door = hit.collider.GetComponent<DoorAnimTrigger>();
+                }
+                
+                if (door != targetDoor || !door.HasPuzzle())
+                {
+                    CancelHack();
+                    return;
+                }
+            }
+            else
             {
                 CancelHack();
                 return;
@@ -39,20 +55,57 @@ public class DoorInteraction : MonoBehaviour
     
     public bool CanHack()
     {
-        if (isHacking) return false;
+        if (isHacking) 
+        {
+            Debug.Log("[DoorInteraction] Already hacking, cannot start new hack");
+            return false;
+        }
+        
+        Debug.Log($"[DoorInteraction] Checking if can hack - position: {transform.position}, forward: {transform.forward}, range: {hackRange}");
         
         // Raycast to check if player is looking at a door
         if (Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, hackRange))
         {
+            Debug.Log($"[DoorInteraction] Raycast hit: {hit.collider.name} at distance {hit.distance}");
+            
             if (hit.collider.CompareTag("Door"))
             {
-                DoorAnimTrigger door = hit.collider.GetComponent<DoorAnimTrigger>();
-                if (door != null && door.HasPuzzle())
+                Debug.Log("[DoorInteraction] Hit object has 'Door' tag");
+                
+                // Try to find DoorAnimTrigger on the parent or the object itself
+                DoorAnimTrigger door = hit.collider.GetComponentInParent<DoorAnimTrigger>();
+                if (door == null)
                 {
-                    targetDoor = door;
-                    return true;
+                    door = hit.collider.GetComponent<DoorAnimTrigger>();
+                }
+                
+                if (door != null)
+                {
+                    Debug.Log($"[DoorInteraction] Found DoorAnimTrigger for {door.name}");
+                    if (door.HasPuzzle())
+                    {
+                        Debug.Log("[DoorInteraction] Door has puzzle, can hack");
+                        targetDoor = door;
+                        return true;
+                    }
+                    else
+                    {
+                        Debug.Log("[DoorInteraction] Door does not have puzzle, cannot hack");
+                    }
+                }
+                else
+                {
+                    Debug.Log("[DoorInteraction] No DoorAnimTrigger component found on door or parent");
                 }
             }
+            else
+            {
+                Debug.Log($"[DoorInteraction] Hit object tag is '{hit.collider.tag}', not 'Door'");
+            }
+        }
+        else
+        {
+            Debug.Log("[DoorInteraction] Raycast hit nothing within hack range");
         }
         return false;
     }
@@ -63,7 +116,6 @@ public class DoorInteraction : MonoBehaviour
         {
             isHacking = true;
             hackTimer = 0f;
-            Debug.Log("Started hacking door...");
         }
     }
     
@@ -72,7 +124,6 @@ public class DoorInteraction : MonoBehaviour
         if (targetDoor != null)
         {
             targetDoor.UnlockDoor();
-            Debug.Log("Successfully hacked and unlocked door");
         }
         
         CancelHack();
@@ -83,16 +134,15 @@ public class DoorInteraction : MonoBehaviour
         isHacking = false;
         hackTimer = 0f;
         targetDoor = null;
-        Debug.Log("Door hack canceled");
-    }
-    
-    public float GetHackProgress()
-    {
-        return isHacking ? hackTimer / hackTime : 0f;
     }
     
     public bool IsHacking()
     {
         return isHacking;
+    }
+    
+    public float GetHackProgress()
+    {
+        return isHacking ? hackTimer / hackTime : 0f;
     }
 }

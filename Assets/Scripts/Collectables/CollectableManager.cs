@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using TMPro;
 
 public class CollectableManager : MonoBehaviour
 {
@@ -7,6 +8,9 @@ public class CollectableManager : MonoBehaviour
     [SerializeField] private int totalRequiredCollectables = 10;
     [SerializeField] private string collectableName = "Crystal";
     [SerializeField] private GameObject crystalPrefab;
+    
+    [Header("UI Display")]
+    [SerializeField] private TextMeshProUGUI collectableText;
     
     private static CollectableManager instance;
     private int currentCollected = 0;
@@ -57,6 +61,7 @@ public class CollectableManager : MonoBehaviour
     void Start()
     {
         crystalsToSpawn = totalRequiredCollectables;
+        UpdateCollectableUI();
     }
     
     public void CollectCollectable(GameObject player)
@@ -67,6 +72,8 @@ public class CollectableManager : MonoBehaviour
         currentCollected++;
         
         Debug.Log($"{player.name} collected a {collectableName}! Progress: {currentCollected}/{totalRequiredCollectables}");
+        
+        UpdateCollectableUI();
         
         // Check if game is completed
         if (currentCollected >= totalRequiredCollectables)
@@ -103,13 +110,33 @@ public class CollectableManager : MonoBehaviour
         return crystalPrefab;
     }
     
+    public string GetCollectionText()
+    {
+        return $"{collectableName}s: {currentCollected}/{totalRequiredCollectables}";
+    }
+    
+    public string GetDetailedCollectionText()
+    {
+        return $"Collected {currentCollected} out of {totalRequiredCollectables} {collectableName}s ({GetRemaining()} remaining)";
+    }
+    
     void CompleteGame()
     {
         gameCompleted = true;
         
         Debug.Log("Game Completed! All collectables gathered!");
         
+        UpdateCollectableUI();
+        
         // UI and completion effects are now handled by InteractionPreview.cs
+    }
+    
+    void UpdateCollectableUI()
+    {
+        if (collectableText != null)
+        {
+            collectableText.text = GetCollectionText();
+        }
     }
     
     // For testing purposes
@@ -119,6 +146,7 @@ public class CollectableManager : MonoBehaviour
         currentCollected = 0;
         gameCompleted = false;
         crystalsToSpawn = totalRequiredCollectables;
+        UpdateCollectableUI();
     }
     
     [ContextMenu("Add Test Collectable")]

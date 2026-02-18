@@ -9,36 +9,39 @@ public class InteractionPreview : MonoBehaviour
     [SerializeField] private TextMeshProUGUI interactionText;
     [SerializeField] private Image progressBar;
     [SerializeField] private TextMeshProUGUI progressText;
-    
+
     [Header("Settings")]
     [SerializeField] private float interactionRange = 3f;
     [SerializeField] private string[] interactableTags = { "Interactable", "Pickup" };
     [SerializeField] private float raycastDistance = 5f;
-    
+
     private Camera playerCamera;
     private FPSMovement playerMovement;
     private ReviveInteraction reviveInteraction;
+    private DoorInteraction doorInteraction;
     private PlayerHealth playerHealth;
-    
+
     private IInteractable currentInteractable;
     private PlayerHealth currentReviveTarget;
     private GameObject currentTarget;
-    
+
     private bool isReviving = false;
     private float reviveProgress = 0f;
-    
+    private bool isHacking = false;
+    private float hackProgress = 0f;
+
     void Start()
     {
         playerCamera = GetComponentInChildren<Camera>();
         playerMovement = GetComponent<FPSMovement>();
         reviveInteraction = GetComponent<ReviveInteraction>();
+        doorInteraction = GetComponent<DoorInteraction>();
         playerHealth = GetComponent<PlayerHealth>();
-        
-        // Hide UI initially
+
         if (interactionPanel != null)
             interactionPanel.SetActive(false);
     }
-    
+
     void Update()
     {
         if (playerHealth != null && playerHealth.IsDowned())
@@ -46,95 +49,99 @@ public class InteractionPreview : MonoBehaviour
             HideInteractionUI();
             return;
         }
-        
+
         CheckForInteractables();
         UpdateReviveProgress();
+        UpdateHackProgress();
         UpdateUI();
     }
-    
+
     void CheckForInteractables()
     {
-        // Don't clear targets if currently reviving
-        if (isReviving && reviveInteraction != null && reviveInteraction.IsReviving())
-        {
-            return; // Keep current targets while reviving
-        }
-        
+        // Keep targets while reviving or hacking
+        if ((reviveInteraction != null && reviveInteraction.IsReviving()) ||
+            (doorInteraction != null && doorInteraction.IsHacking()))
+            return;
+
         currentInteractable = null;
         currentReviveTarget = null;
         currentTarget = null;
-        
-        // Check for revive targets first (higher priority)
+
+        // --- REVIVE CHECK ---
         if (reviveInteraction != null && reviveInteraction.CanRevive())
         {
             GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
-            
+
             foreach (GameObject player in players)
             {
-                if (player != gameObject)
+                if (player == gameObject)
+                    continue;
+
+                PlayerHealth targetHealth = player.GetComponent<PlayerHealth>();
+                if (targetHealth != null && targetHealth.IsDowned())
                 {
-                    PlayerHealth targetHealth = player.GetComponent<PlayerHealth>();
-                    if (targetHealth != null && targetHealth.IsDowned())
+                    float distance = Vector3.Distance(transform.position, player.transform.position);
+                    if (distance <= interactionRange)
                     {
-                        float distance = Vector3.Distance(transform.position, player.transform.position);
-                        if (distance <= interactionRange)
+                        Vector3 directionToTarget = (player.transform.position - transform.position).normalized;
+                        float dot = Vector3.Dot(playerCamera.transform.forward, directionToTarget);
+
+                        if (dot > 0.5f)
                         {
-                            // Check if looking at the player
-                            Vector3 directionToTarget = (player.transform.position - transform.position).normalized;
-                            float dotProduct = Vector3.Dot(playerCamera.transform.forward, directionToTarget);
-                            
-                            if (dotProduct > 0.5f) // Within ~60 degrees
-                            {
-                                currentReviveTarget = targetHealth;
-                                currentTarget = player;
-                                isReviving = reviveInteraction.IsReviving();
-                                return;
-                            }
+                            currentReviveTarget = targetHealth;
+                            currentTarget = player;
+                            return;
                         }
                     }
                 }
             }
         }
-        
-        // Check for other interactables using raycast
-        RaycastHit hit;
-        if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out hit, raycastDistance))
+
+        // --- DOOR HACK CHECK ---
+        if (doorInteraction != null && doorInteraction.CanHack())
         {
-            float distance = Vector3.Distance(transform.position, hit.transform.position);
-            
-            if (distance <= interactionRange)
+            RaycastHit hit;
+            if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out hit, raycastDistance))
             {
-                // Check if the hit object has an interactable tag
-                if (IsInteractableTag(hit.collider.tag))
+                if (hit.distance <= interactionRange && hit.collider.CompareTag("Door"))
                 {
-                    IInteractable interactable = hit.collider.GetComponent<IInteractable>();
-                    if (interactable != null && interactable.CanInteract(gameObject))
-                    {
-                        currentInteractable = interactable;
-                        currentTarget = hit.collider.gameObject;
-                    }
+                    currentTarget = hit.collider.gameObject;
+                    return;
                 }
             }
         }
-        
-        // Also check for objects with interactable tags without relying on raycast
+
+        // --- NORMAL INTERACTABLE RAYCAST ---
+        RaycastHit hit2;
+        if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out hit2, raycastDistance))
+        {
+            if (hit2.distance <= interactionRange && IsInteractableTag(hit2.collider.tag))
+            {
+                IInteractable interactable = hit2.collider.GetComponent<IInteractable>();
+                if (interactable != null)
+                {
+                    currentInteractable = interactable;
+                    currentTarget = hit2.collider.gameObject;
+                }
+            }
+        }
+
+        // --- TAG-BASED FALLBACK ---
         foreach (string tag in interactableTags)
         {
             GameObject[] taggedObjects = GameObject.FindGameObjectsWithTag(tag);
             foreach (GameObject obj in taggedObjects)
             {
                 float distance = Vector3.Distance(transform.position, obj.transform.position);
-                
                 if (distance <= interactionRange)
                 {
-                    // Check if looking at object
-                    Vector3 directionToObj = (obj.transform.position - transform.position).normalized;
-                    float dotProduct = Vector3.Dot(playerCamera.transform.forward, directionToObj);
-                    
-                    if (dotProduct > 0.5f) // Within ~60 degrees
+                    Vector3 dir = (obj.transform.position - transform.position).normalized;
+                    float dot = Vector3.Dot(playerCamera.transform.forward, dir);
+
+                    if (dot > 0.5f)
                     {
                         IInteractable interactable = obj.GetComponent<IInteractable>();
-                        if (interactable != null && interactable.CanInteract(gameObject))
+                        if (interactable != null)
                         {
                             currentInteractable = interactable;
                             currentTarget = obj;
@@ -145,7 +152,7 @@ public class InteractionPreview : MonoBehaviour
             }
         }
     }
-    
+
     void UpdateReviveProgress()
     {
         if (reviveInteraction != null)
@@ -159,62 +166,103 @@ public class InteractionPreview : MonoBehaviour
             reviveProgress = 0f;
         }
     }
-    
+
+    void UpdateHackProgress()
+    {
+        if (doorInteraction != null)
+        {
+            isHacking = doorInteraction.IsHacking();
+            hackProgress = doorInteraction.GetHackProgress();
+        }
+        else
+        {
+            isHacking = false;
+            hackProgress = 0f;
+        }
+    }
+
     void UpdateUI()
     {
-        bool shouldShowUI = (currentInteractable != null || currentReviveTarget != null);
-        
+        bool shouldShowUI = currentInteractable != null ||
+                            currentReviveTarget != null ||
+                            currentTarget != null ||
+                            isReviving ||
+                            isHacking;
+
         if (interactionPanel != null)
-        {
             interactionPanel.SetActive(shouldShowUI);
-        }
-        
-        if (shouldShowUI && interactionText != null)
+
+        if (!shouldShowUI || interactionText == null)
+            return;
+
+        // --- UI TEXT LOGIC ---
+        if (isReviving)
         {
-            if (currentReviveTarget != null)
+            interactionText.text = "Reviving...";
+        }
+        else if (currentReviveTarget != null)
+        {
+            interactionText.text = "F to Revive";
+        }
+        else if (isHacking)
+        {
+            interactionText.text = "Hacking...";
+        }
+        else if (currentTarget != null && currentTarget.CompareTag("Door"))
+        {
+            interactionText.text = "F to Hack";
+        }
+        else if (currentInteractable != null)
+        {
+            string itemName = currentInteractable.GetInteractionName();
+
+            // --- Check for health/stamina full ---
+            if (!currentInteractable.CanInteract(gameObject))
             {
-                if (isReviving)
-                {
-                    interactionText.text = "Reviving...";
-                }
+                if (itemName.ToLower().Contains("health"))
+                    interactionText.text = "Health Full";
+                else if (itemName.ToLower().Contains("stamina"))
+                    interactionText.text = "Stamina Full";
                 else
-                {
-                    interactionText.text = "F to Revive";
-                }
+                    interactionText.text = $"{itemName} Unavailable";
             }
-            else if (currentInteractable != null)
+            else
             {
-                string itemName = currentInteractable.GetInteractionName();
                 interactionText.text = $"F to {itemName}";
             }
         }
-        
-        // Update progress bar for reviving
+
+        // --- PROGRESS BAR ---
         if (progressBar != null)
         {
-            progressBar.gameObject.SetActive(currentReviveTarget != null && isReviving);
-            if (currentReviveTarget != null && isReviving)
-            {
+            bool showProgress = isReviving || isHacking;
+            progressBar.gameObject.SetActive(showProgress);
+
+            if (isReviving)
                 progressBar.fillAmount = reviveProgress;
-            }
+            else if (isHacking)
+                progressBar.fillAmount = hackProgress;
         }
-        
+
+        // --- PROGRESS TEXT ---
         if (progressText != null)
         {
-            progressText.gameObject.SetActive(currentReviveTarget != null && isReviving);
-            if (currentReviveTarget != null && isReviving)
-            {
+            bool showProgress = isReviving || isHacking;
+            progressText.gameObject.SetActive(showProgress);
+
+            if (isReviving)
                 progressText.text = $"{Mathf.RoundToInt(reviveProgress * 100)}%";
-            }
+            else if (isHacking)
+                progressText.text = $"{Mathf.RoundToInt(hackProgress * 100)}%";
         }
     }
-    
+
     void HideInteractionUI()
     {
         if (interactionPanel != null)
             interactionPanel.SetActive(false);
     }
-    
+
     bool IsInteractableTag(string tag)
     {
         foreach (string interactableTag in interactableTags)
@@ -224,18 +272,17 @@ public class InteractionPreview : MonoBehaviour
         }
         return false;
     }
-    
-    // Public methods for external access
+
     public bool HasInteractionTarget()
     {
-        return currentInteractable != null || currentReviveTarget != null;
+        return currentInteractable != null || currentReviveTarget != null || currentTarget != null;
     }
-    
+
     public IInteractable GetCurrentInteractable()
     {
         return currentInteractable;
     }
-    
+
     public PlayerHealth GetCurrentReviveTarget()
     {
         return currentReviveTarget;

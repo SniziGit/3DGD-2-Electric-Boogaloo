@@ -406,6 +406,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   closeDelay: 2
   isLocked: 0
+  hasPuzzle: 0
+  lights: []
 --- !u!4 &541549450
 Transform:
   m_ObjectHideFlags: 0
@@ -1220,6 +1222,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: RoomA
       objectReference: {fileID: 0}
+    - target: {fileID: 6474883523488750943, guid: b98f117152ffefc408eb5295a919424c, type: 3}
+      propertyPath: isLocked
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6474883523488750943, guid: b98f117152ffefc408eb5295a919424c, type: 3}
+      propertyPath: hasPuzzle
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7757405875339015214, guid: b98f117152ffefc408eb5295a919424c, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.4526553
@@ -1283,7 +1293,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1475069276
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2775,6 +2785,7 @@ GameObject:
   - component: {fileID: 5851143085191457657}
   - component: {fileID: 449424132173783558}
   - component: {fileID: 4824393564160970229}
+  - component: {fileID: 8899884228819706954}
   m_Layer: 0
   m_Name: Player 0
   m_TagString: Player
@@ -3185,7 +3196,7 @@ Transform:
   m_GameObject: {fileID: 1440867096056766795}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -426.74, y: -239.809, z: -12.47}
+  m_LocalPosition: {x: -423.81, y: -239.809, z: -14.35}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -4422,6 +4433,7 @@ MonoBehaviour:
   fillSmoothSpeed: 5
   pickupRange: 3
   reviveInteraction: {fileID: 7041470446980699098}
+  doorInteraction: {fileID: 7963366790407732450}
   interactionPreview: {fileID: 0}
   normalSpeed: 200
   sprintSpeed: 400
@@ -5194,8 +5206,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 100
-  currentHealth: 100
-  isDowned: 0
+  currentHealth: 0
+  isDowned: 1
   healthFillImage: {fileID: 0}
   healthText: {fileID: 0}
   fillSmoothSpeed: 5
@@ -5422,11 +5434,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3812826831972298582, guid: 7cb58ae6c54126c46b92143ea8812ff7, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7956160817549174911, guid: 7cb58ae6c54126c46b92143ea8812ff7, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 8.16
+      value: 8.85
       objectReference: {fileID: 0}
     - target: {fileID: 7956160817549174911, guid: 7cb58ae6c54126c46b92143ea8812ff7, type: 3}
       propertyPath: m_LocalPosition.y
@@ -5434,7 +5446,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7956160817549174911, guid: 7cb58ae6c54126c46b92143ea8812ff7, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2.61
+      value: -5.84
       objectReference: {fileID: 0}
     - target: {fileID: 7956160817549174911, guid: 7cb58ae6c54126c46b92143ea8812ff7, type: 3}
       propertyPath: m_LocalRotation.w
@@ -5812,7 +5824,8 @@ MonoBehaviour:
   fillSmoothSpeed: 5
   pickupRange: 3
   reviveInteraction: {fileID: 449424132173783558}
-  interactionPreview: {fileID: 0}
+  doorInteraction: {fileID: 8899884228819706954}
+  interactionPreview: {fileID: 4824393564160970229}
   normalSpeed: 200
   sprintSpeed: 400
   crouchSpeed: 100
@@ -6737,6 +6750,7 @@ GameObject:
   - component: {fileID: 5067969365402286447}
   - component: {fileID: 2802348847644965702}
   - component: {fileID: 7041470446980699098}
+  - component: {fileID: 7963366790407732450}
   m_Layer: 0
   m_Name: Player 1
   m_TagString: Player
@@ -6971,6 +6985,20 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7963366790407732450
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7522154723017597380}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6deca1b1d0e7751448abfca37a4ebad5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hackTime: 2
+  hackRange: 2
 --- !u!222 &7964126722756319551
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -7528,6 +7556,20 @@ MonoBehaviour:
   m_DefaultActionMap: GamePlay
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 1570689506542548215}
+--- !u!114 &8899884228819706954
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1440867096056766795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6deca1b1d0e7751448abfca37a4ebad5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hackTime: 2
+  hackRange: 5
 --- !u!224 &8919992918876426116
 RectTransform:
   m_ObjectHideFlags: 0
