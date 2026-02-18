@@ -375,7 +375,7 @@
                     "name": "",
                     "id": "abd0397c-d74a-4d90-a5bc-37d55ea433e9",
                     "path": "<Keyboard>/f",
-                    "interactions": "",
+                    "interactions": "Press",
                     "processors": "",
                     "groups": ";Keyboard Mouse",
                     "action": "Interact",

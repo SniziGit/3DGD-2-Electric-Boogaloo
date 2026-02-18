@@ -171,7 +171,10 @@ public class FPSMovement : MonoBehaviour
         crouchAction.started += OnCrouchStarted;
         crouchAction.canceled += OnCrouchCanceled;
         if (pickupAction != null)
-            pickupAction.performed += OnPickupPerformed;
+        {
+            pickupAction.started += OnInteractStarted;
+            pickupAction.canceled += OnInteractCanceled;
+        }
     }
 
     private void OnDisable()
@@ -189,7 +192,10 @@ public class FPSMovement : MonoBehaviour
             crouchAction.canceled -= OnCrouchCanceled;
         }
         if (pickupAction != null)
-            pickupAction.performed -= OnPickupPerformed;
+        {
+            pickupAction.started -= OnInteractStarted;
+            pickupAction.canceled -= OnInteractCanceled;
+        }
     }
 
     void MovePlayer()
@@ -401,15 +407,19 @@ public class FPSMovement : MonoBehaviour
         }
     }
     
-    void OnPickupPerformed(InputAction.CallbackContext context)
+    void OnInteractStarted(InputAction.CallbackContext context)
     {
-        // Check for revive first
-        if (TryRevivePlayer())
+        // Check for revive first (hold to revive)
+        if (interactionPreview != null && interactionPreview.GetCurrentReviveTarget() != null)
         {
-            return;
+            if (reviveInteraction != null && reviveInteraction.CanRevive())
+            {
+                reviveInteraction.StartRevive();
+                return;
+            }
         }
         
-        // Try interact with interactables using the new system
+        // For regular interactables, perform immediately (single press)
         if (interactionPreview != null && interactionPreview.HasInteractionTarget())
         {
             IInteractable interactable = interactionPreview.GetCurrentInteractable();
@@ -422,6 +432,15 @@ public class FPSMovement : MonoBehaviour
         
         // Fallback to old pickup system
         TryPickupHealth();
+    }
+    
+    void OnInteractCanceled(InputAction.CallbackContext context)
+    {
+        // Cancel revive if it was in progress
+        if (reviveInteraction != null && reviveInteraction.IsReviving())
+        {
+            reviveInteraction.CancelRevive();
+        }
     }
     
     void CheckHealthPickups()

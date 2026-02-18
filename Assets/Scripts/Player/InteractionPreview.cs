@@ -54,6 +54,28 @@ public class InteractionPreview : MonoBehaviour
     
     void CheckForInteractables()
     {
+        // Don't clear targets if currently reviving
+        if (isReviving && reviveInteraction != null && reviveInteraction.IsReviving())
+        {
+            // Keep current revive target during revive, but still check if it's valid
+            if (currentReviveTarget != null)
+            {
+                // Check if target is still valid (in range and still downed)
+                float distance = Vector3.Distance(transform.position, currentReviveTarget.transform.position);
+                if (distance > interactionRange || !currentReviveTarget.IsDowned())
+                {
+                    // Target is no longer valid, clear everything
+                    currentInteractable = null;
+                    currentReviveTarget = null;
+                    currentTarget = null;
+                }
+            }
+            return; // Keep current targets while reviving
+        }
+        
+        // Store current revive target before clearing (to preserve during revive start)
+        PlayerHealth previousReviveTarget = currentReviveTarget;
+        
         currentInteractable = null;
         currentReviveTarget = null;
         currentTarget = null;
@@ -73,7 +95,7 @@ public class InteractionPreview : MonoBehaviour
                         float distance = Vector3.Distance(transform.position, player.transform.position);
                         if (distance <= interactionRange)
                         {
-                            // Check if looking at the player
+                            // Check if looking at player
                             Vector3 directionToTarget = (player.transform.position - transform.position).normalized;
                             float dotProduct = Vector3.Dot(playerCamera.transform.forward, directionToTarget);
                             
@@ -88,6 +110,14 @@ public class InteractionPreview : MonoBehaviour
                     }
                 }
             }
+        }
+        
+        // If we were reviving but lost target, try to restore it if revive is still active
+        if (previousReviveTarget != null && reviveInteraction != null && reviveInteraction.IsReviving())
+        {
+            currentReviveTarget = previousReviveTarget;
+            currentTarget = previousReviveTarget.gameObject;
+            isReviving = true;
         }
         
         // Check for other interactables using raycast
@@ -142,12 +172,14 @@ public class InteractionPreview : MonoBehaviour
     
     void UpdateReviveProgress()
     {
-        if (currentReviveTarget != null && reviveInteraction != null)
+        if (reviveInteraction != null)
         {
+            isReviving = reviveInteraction.IsReviving();
             reviveProgress = reviveInteraction.GetReviveProgress();
         }
         else
         {
+            isReviving = false;
             reviveProgress = 0f;
         }
     }
@@ -155,6 +187,9 @@ public class InteractionPreview : MonoBehaviour
     void UpdateUI()
     {
         bool shouldShowUI = (currentInteractable != null || currentReviveTarget != null);
+        
+        // Debug logging to help identify issue
+        Debug.Log($"UpdateUI - shouldShowUI: {shouldShowUI}, currentInteractable: {currentInteractable != null}, currentReviveTarget: {currentReviveTarget != null}, isReviving: {isReviving}");
         
         if (interactionPanel != null)
         {

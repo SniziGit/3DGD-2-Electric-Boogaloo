@@ -85,11 +85,12 @@ public class ReviveInteraction : MonoBehaviour
         CancelRevive();
     }
     
-    private void CancelRevive()
+    public void CancelRevive()
     {
         isReviving = false;
         reviveTimer = 0f;
         targetPlayer = null;
+        Debug.Log("Revive canceled");
     }
     
     public float GetReviveProgress()
