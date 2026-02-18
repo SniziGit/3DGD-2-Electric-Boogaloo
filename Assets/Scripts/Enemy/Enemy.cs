@@ -40,6 +40,11 @@ public class Enemy : MonoBehaviour, IDamageable
     private Transform PlayerTransform;
     private bool canSeePlayer;
     private Vector3 lastKnownPlayerPosition;
+    
+    // Target switching variables
+    private float targetSwitchTimer = 0f;
+    private float targetSwitchDelay = 0f;
+    private bool shouldSwitchTarget = false;
 
     public enum EnemyState { Idle, Patrolling, Chasing, Attacking }
     public EnemyState enemyState = EnemyState.Idle;
@@ -58,38 +63,57 @@ public class Enemy : MonoBehaviour, IDamageable
     
     private void FindPlayerTransform()
     {
-        if (PlayerTransform != null) return; // Already found
-        
-        // Try multiple strategies to find the player
-        PlayerTransform = FindPlayerByTag() ?? FindPlayerBySpawner() ?? null;
+        // Always find the closest player (don't cache the result)
+        PlayerTransform = FindClosestPlayer();
         
         if (PlayerTransform != null)
         {
-            Debug.Log($"[Enemy] Found player: {PlayerTransform.name}");
+            Debug.Log($"[Enemy] Targeting player: {PlayerTransform.name}");
         }
     }
 
-    private Transform FindPlayerByTag()
+    private Transform FindClosestPlayer()
     {
-        GameObject player = GameObject.FindWithTag("Player");
-        return player?.transform;
-    }
-
-    private Transform FindPlayerBySpawner()
-    {
+        Transform closestPlayer = null;
+        
+        // First try to find players through PlayerSpawning
         PlayerSpawning playerSpawning = FindObjectOfType<PlayerSpawning>();
-        if (playerSpawning == null) return null;
+        if (playerSpawning != null)
+        {
+            GameObject[] players = playerSpawning.GetSpawnedPlayers();
+            if (players != null && players.Length > 0)
+            {
+                closestPlayer = GetClosestPlayerFromList(players);
+            }
+        }
         
-        GameObject[] players = playerSpawning.GetSpawnedPlayers();
-        if (players == null || players.Length == 0) return null;
+        // Fallback: Find all players with "Player" tag
+        if (closestPlayer == null)
+        {
+            GameObject[] taggedPlayers = GameObject.FindGameObjectsWithTag("Player");
+            if (taggedPlayers.Length > 0)
+            {
+                closestPlayer = GetClosestPlayerFromList(taggedPlayers);
+            }
+        }
         
-        // Find the closest player to this enemy
+        // If no valid (non-downed) players found, clear the target
+        if (closestPlayer == null)
+        {
+            Debug.Log("[Enemy] No valid players found (all may be downed)");
+        }
+        
+        return closestPlayer;
+    }
+    
+    private Transform GetClosestPlayerFromList(GameObject[] players)
+    {
         Transform closestPlayer = null;
         float closestDistance = float.MaxValue;
         
         foreach (GameObject player in players)
         {
-            if (player != null)
+            if (player != null && !IsPlayerDowned(player.transform))
             {
                 float distance = Vector3.Distance(transform.position, player.transform.position);
                 if (distance < closestDistance)
@@ -250,6 +274,16 @@ public class Enemy : MonoBehaviour, IDamageable
 
     private void Update()
     {
+        // Update target switching timer
+        if (shouldSwitchTarget && targetSwitchTimer > 0)
+        {
+            targetSwitchTimer -= Time.deltaTime;
+            if (targetSwitchTimer <= 0)
+            {
+                Debug.Log("[Enemy] Switching targets now!");
+            }
+        }
+        
         LookForPlayer();
 
         switch (enemyState)
@@ -278,6 +312,8 @@ public class Enemy : MonoBehaviour, IDamageable
     {
         if (!EnsurePlayerExists()) return;
 
+        if (PlayerTransform == null) return; // Additional safety check
+
         Vector3 directionToPlayer = PlayerTransform.position - transform.position;
         bool hasLineOfSight = Physics.Raycast(transform.position, directionToPlayer.normalized, out RaycastHit hit, maxVisionDistance);
         
@@ -291,10 +327,78 @@ public class Enemy : MonoBehaviour, IDamageable
 
     private bool EnsurePlayerExists()
     {
-        if (PlayerTransform != null) return true;
+        // Check if current target should be switched
+        if (ShouldSwitchTarget())
+        {
+            StartTargetSwitchDelay();
+            return PlayerTransform != null; // Return current target until delay is over
+        }
         
-        FindPlayerTransform();
+        // Always find new player if we don't have one or after switching delay
+        if (PlayerTransform == null || (shouldSwitchTarget && targetSwitchTimer <= 0))
+        {
+            FindPlayerTransform();
+            shouldSwitchTarget = false;
+        }
+        
+        // If we have a target but they're downed, clear them immediately and stop attacking
+        if (PlayerTransform != null && IsPlayerDowned(PlayerTransform))
+        {
+            Debug.Log($"[Enemy] Current target {PlayerTransform.name} is downed, stopping attack and resuming patrol");
+            PlayerTransform = null;
+            
+            // Immediately stop attacking/chasing and resume patrolling
+            if (enemyState == EnemyState.Attacking || enemyState == EnemyState.Chasing)
+            {
+                enemyState = EnemyState.Patrolling;
+                agent.ResetPath(); // Stop current movement
+            }
+            
+            return false;
+        }
+        
         return PlayerTransform != null;
+    }
+    
+    private bool ShouldSwitchTarget()
+    {
+        if (PlayerTransform == null) return false;
+        
+        // Check if player is out of vision distance
+        float distanceToPlayer = Vector3.Distance(transform.position, PlayerTransform.position);
+        if (distanceToPlayer > maxVisionDistance) return true;
+        
+        // Check if we can't see the player
+        if (!canSeePlayer) return true;
+        
+        // Note: Downed player check is handled directly in EnsurePlayerExists()
+        // for immediate response and state transition
+        
+        return false;
+    }
+    
+    private bool IsPlayerDowned(Transform playerTransform)
+    {
+        if (playerTransform == null) return false;
+        
+        PlayerHealth playerHealth = playerTransform.GetComponent<PlayerHealth>();
+        if (playerHealth != null)
+        {
+            return playerHealth.IsDowned();
+        }
+        
+        return false;
+    }
+    
+    private void StartTargetSwitchDelay()
+    {
+        if (!shouldSwitchTarget)
+        {
+            shouldSwitchTarget = true;
+            targetSwitchDelay = Random.Range(5f, 15f);
+            targetSwitchTimer = targetSwitchDelay;
+            Debug.Log($"[Enemy] Will switch targets in {targetSwitchDelay:F1} seconds");
+        }
     }
 
     private void IdleBehavior()
@@ -385,11 +489,11 @@ public class Enemy : MonoBehaviour, IDamageable
         {
             enemyState = EnemyState.Patrolling; //cautious
         }
-        else if (Vector3.Distance(transform.position, PlayerTransform.position) <= attackDistance && canSeePlayer)
+        else if (PlayerTransform != null && Vector3.Distance(transform.position, PlayerTransform.position) <= attackDistance && canSeePlayer)
         {
             enemyState = EnemyState.Attacking;
         }
-        else if (canSeePlayer && Vector3.Distance(transform.position, PlayerTransform.position) <= maxVisionDistance)
+        else if (PlayerTransform != null && canSeePlayer && Vector3.Distance(transform.position, PlayerTransform.position) <= maxVisionDistance)
         {
             // Still can see player, continue chasing
             agent.SetDestination(PlayerTransform.position);
@@ -413,7 +517,7 @@ public class Enemy : MonoBehaviour, IDamageable
 
         Shoot();
 
-        if (Vector3.Distance(transform.position, PlayerTransform.position) > attackDistance || !canSeePlayer)
+        if (PlayerTransform == null || Vector3.Distance(transform.position, PlayerTransform.position) > attackDistance || !canSeePlayer)
         {
             if(health < minChasingHealth)
             {
@@ -430,6 +534,8 @@ public class Enemy : MonoBehaviour, IDamageable
     {
         if (!canSeePlayer || !EnsurePlayerExists()) return;
         
+        if (PlayerTransform == null) return; // Additional safety check
+        
         Vector3 lookPosition = PlayerTransform.position;
         lookPosition.y = transform.position.y; // Keep enemy upright
         transform.LookAt(lookPosition);
@@ -439,6 +545,7 @@ public class Enemy : MonoBehaviour, IDamageable
     {
         if (canSeePlayer && EnsurePlayerExists())
         {
+            if (PlayerTransform == null) return; // Additional safety check
             lastKnownPlayerPosition = PlayerTransform.position;
         }
     }
