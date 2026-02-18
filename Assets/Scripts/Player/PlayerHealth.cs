@@ -13,11 +13,22 @@ public class PlayerHealth : MonoBehaviour
     [Header("UI References")]
     [SerializeField] private Image healthFillImage;
     [SerializeField] private TextMeshProUGUI healthText;
-    [SerializeField] private UIManager uiManager;
     [SerializeField] private float fillSmoothSpeed = 5f;
+    
+    [Header("Hit Feedback Settings")]
+    [SerializeField] private GameObject hitUIPrefab;
+    [SerializeField] private float fadeInDuration = 0.1f;
+    [SerializeField] private float fadeOutDuration = 0.4f;
+    [SerializeField] private float maxAlpha = 0.3f;
     
     private float currentHealthFill;
     private float targetHealthFill;
+    
+    private GameObject hitUIInstance;
+    private CanvasGroup canvasGroup;
+    private bool isFading = false;
+    private float fadeTimer = 0f;
+    private bool isFadingIn = false;
     
     // Remove singleton pattern to support multiple players
     // public static PlayerHealth Instance;
@@ -46,11 +57,100 @@ public class PlayerHealth : MonoBehaviour
         targetHealthFill = 1f;
         
         UpdateHealthUI();
+        CreateHitUIInstance();
     }
     
     void Update()
     {
         UpdateHealthFill();
+        UpdateHitFeedback();
+    }
+    
+    private void CreateHitUIInstance()
+    {
+        if (hitUIPrefab == null)
+        {
+            Debug.LogError("[PlayerHealth] HitUI prefab is NULL!");
+            return;
+        }
+        
+        hitUIInstance = Instantiate(hitUIPrefab, transform);
+        canvasGroup = hitUIInstance.GetComponent<CanvasGroup>();
+        
+        // Remove DestroyAfterTime component if it exists
+        DestroyAfterTime destroyScript = hitUIInstance.GetComponent<DestroyAfterTime>();
+        if (destroyScript != null)
+        {
+            Destroy(destroyScript);
+        }
+        
+        // Start with disabled and transparent
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha = 0f;
+            hitUIInstance.SetActive(false);
+        }
+        
+        Debug.Log($"[PlayerHealth] HitUI instance created and disabled: {hitUIInstance.name}");
+    }
+    
+    private void UpdateHitFeedback()
+    {
+        if (isFading && canvasGroup != null)
+        {
+            fadeTimer += Time.deltaTime;
+            
+            float duration = isFadingIn ? fadeInDuration : fadeOutDuration;
+            float normalizedTime = fadeTimer / duration;
+            
+            if (isFadingIn)
+            {
+                // Fade in: 0 to maxAlpha
+                canvasGroup.alpha = Mathf.Lerp(0f, maxAlpha, normalizedTime);
+                
+                if (fadeTimer >= fadeInDuration)
+                {
+                    // Start fade out
+                    isFadingIn = false;
+                    fadeTimer = 0f;
+                }
+            }
+            else
+            {
+                // Fade out: maxAlpha to 0
+                canvasGroup.alpha = Mathf.Lerp(maxAlpha, 0f, normalizedTime);
+                
+                if (fadeTimer >= fadeOutDuration)
+                {
+                    // Disable and stop fading
+                    canvasGroup.alpha = 0f;
+                    hitUIInstance.SetActive(false);
+                    isFading = false;
+                    fadeTimer = 0f;
+                }
+            }
+        }
+    }
+    
+    private void TriggerHitFeedback()
+    {
+        Debug.Log("[PlayerHealth] Triggering hit fade effect");
+        
+        if (canvasGroup == null)
+        {
+            Debug.LogError("[PlayerHealth] CanvasGroup component is NULL!");
+            return;
+        }
+        
+        // Enable and start fade in
+        hitUIInstance.SetActive(true);
+        canvasGroup.alpha = 0f; // Ensure opacity is 0 first
+        
+        isFading = true;
+        isFadingIn = true;
+        fadeTimer = 0f;
+        
+        Debug.Log("[PlayerHealth] Hit fade effect triggered!");
     }
     
     public void OnCollisionEnter(Collision collision)
@@ -75,16 +175,8 @@ public class PlayerHealth : MonoBehaviour
             movement.AddShake(0.1f, 0.25f); // Shake the camera when taking damage
         }
         
-        Debug.Log($"[PlayerHealth] UIManager reference: {(uiManager != null ? "FOUND" : "NULL")}");
-        if (uiManager != null)
-        {
-            uiManager.InstantiateHitUI(); // Show hit UI when taking damage
-            Debug.Log("[PlayerHealth] HitUI instantiated!");
-        }
-        else
-        {
-            Debug.LogWarning("[PlayerHealth] UIManager is NULL! HitUI cannot be shown.");
-        }
+        // Trigger hit feedback directly
+        TriggerHitFeedback();
         
         if (AudioManager.Instance != null)
         {
