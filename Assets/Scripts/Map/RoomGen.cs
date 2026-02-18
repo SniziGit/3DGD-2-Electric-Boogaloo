@@ -32,9 +32,16 @@ public class RoomGen : MonoBehaviour
     /// </summary>
     public void InitializeSpawning()
     {
+        // Register this room with the collectable manager
+        if (CollectableManager.Instance != null)
+        {
+            CollectableManager.Instance.RegisterRoom(this);
+        }
+        
         if (spawnOnStart)
         {
             SpawnObjects();
+            SpawnCrystals();
             if (this.gameObject.name != "First Room")
             {
                 SpawnEnemies();
@@ -116,6 +123,47 @@ public class RoomGen : MonoBehaviour
         spawnEnemyCount = Mathf.RoundToInt(5 + difficultyRatio * 5);
 
         Debug.Log($"[RoomGen] Set difficulty: distance={distanceFromLastRoom}, ratio={difficultyRatio:F2}, spawnCount={spawnCount}");
+    }
+    
+    /// <summary>
+    /// Spawns crystals in this room
+    /// </summary>
+    public void SpawnCrystals()
+    {
+        if (CollectableManager.Instance == null)
+            return;
+        
+        // Check if this room should spawn a crystal
+        if (!CollectableManager.Instance.ShouldSpawnCrystalInRoom(this))
+            return;
+        
+        GameObject crystalPrefab = CollectableManager.Instance.GetCrystalPrefab();
+        if (crystalPrefab == null)
+        {
+            Debug.LogWarning("[RoomGen] Crystal prefab not assigned in CollectableManager!");
+            return;
+        }
+        
+        Vector3 randomPosition = GetRandomSpawnPosition();
+        GameObject crystal = Instantiate(crystalPrefab, randomPosition, Quaternion.identity);
+        crystal.transform.SetParent(transform);
+        
+        Debug.Log($"[RoomGen] Spawned crystal in {gameObject.name}");
+    }
+    
+    /// <summary>
+    /// Gets a random position within the spawn area
+    /// </summary>
+    private Vector3 GetRandomSpawnPosition()
+    {
+        Vector3 randomPos = transform.position;
+        randomPos.x += Random.Range(-spawnAreaSize.x / 2f, spawnAreaSize.x / 2f);
+        randomPos.z += Random.Range(-spawnAreaSize.z / 2f, spawnAreaSize.z / 2f);
+        
+        // Add some height to spawn above ground
+        randomPos.y = transform.position.y + 2f;
+        
+        return randomPos;
     }
 
 
