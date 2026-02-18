@@ -619,6 +619,7 @@ GameObject:
   - component: {fileID: 2677483461805472169}
   - component: {fileID: 5016639592902884224}
   - component: {fileID: 199577152583799580}
+  - component: {fileID: 7487546457374124763}
   m_Layer: 0
   m_Name: Player 1
   m_TagString: Player
@@ -720,6 +721,7 @@ MonoBehaviour:
   fillSmoothSpeed: 5
   pickupRange: 3
   reviveInteraction: {fileID: 199577152583799580}
+  doorInteraction: {fileID: 0}
   interactionPreview: {fileID: 0}
   normalSpeed: 200
   sprintSpeed: 400
@@ -838,6 +840,20 @@ MonoBehaviour:
   reviveTime: 3
   reviveHealth: 50
   reviveRange: 2
+--- !u!114 &7487546457374124763
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 799760093242794242}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6deca1b1d0e7751448abfca37a4ebad5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hackTime: 2
+  hackRange: 2
 --- !u!1 &1503495777078702695
 GameObject:
   m_ObjectHideFlags: 0
@@ -4188,6 +4204,7 @@ GameObject:
   - component: {fileID: 3624889649281461183}
   - component: {fileID: 7296379577546072768}
   - component: {fileID: 2418131932853718323}
+  - component: {fileID: 8456885962113937368}
   m_Layer: 0
   m_Name: Player 0
   m_TagString: Player
@@ -4290,6 +4307,7 @@ MonoBehaviour:
   fillSmoothSpeed: 5
   pickupRange: 3
   reviveInteraction: {fileID: 7296379577546072768}
+  doorInteraction: {fileID: 0}
   interactionPreview: {fileID: 2418131932853718323}
   normalSpeed: 200
   sprintSpeed: 400
@@ -4429,6 +4447,20 @@ MonoBehaviour:
   - Player
   - Pickup
   raycastDistance: 5
+--- !u!114 &8456885962113937368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8107502639328764301}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6deca1b1d0e7751448abfca37a4ebad5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hackTime: 2
+  hackRange: 2
 --- !u!1 &8283356666611291388
 GameObject:
   m_ObjectHideFlags: 0
