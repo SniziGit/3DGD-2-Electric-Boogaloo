@@ -399,6 +399,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2409959165566146031, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1992156681}
+    - targetCorrespondingSourceObject: {fileID: 2409959165566146031, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1992156682}
   m_SourcePrefab: {fileID: 100100000, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
 --- !u!1001 &847209340
 PrefabInstance:
@@ -476,6 +479,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerPrefab: {fileID: 1663198280769423191, guid: ee557ea89c0dbc7448b99f81b375b792, type: 3}
   spawnHeight: 1
+--- !u!114 &1992156682
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1992156678}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83abd7e8421384c46a7d37de22f63901, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  warpPadPrefab: {fileID: 4202254413491720941, guid: 4afc69acbdbb16a4f8db88a2867c8c42, type: 3}
+  spawnHeight: 0
+  spawnDelay: 1
 --- !u!1001 &2095355011
 PrefabInstance:
   m_ObjectHideFlags: 0
