@@ -42,6 +42,9 @@ public class FPSMovement : MonoBehaviour
     [Header("Revive System")]
     [SerializeField] private ReviveInteraction reviveInteraction;
     private PlayerHealth playerHealth;
+    
+    [Header("Interaction Preview System")]
+    [SerializeField] private InteractionPreview interactionPreview;
 
     [Header("Movement")]
     [SerializeField] float normalSpeed = 800f;
@@ -95,8 +98,9 @@ public class FPSMovement : MonoBehaviour
         pickupAction = playerInput.actions.FindAction("Interact"); // Add pickup action
         //lookAction = playerInput.actions.FindAction("Look");
         rb = GetComponent<Rigidbody>();
-        playerAnimator = GetComponent<Animator>();
+        reviveInteraction = GetComponent<ReviveInteraction>();
         playerHealth = GetComponent<PlayerHealth>(); // Get PlayerHealth from same GameObject
+        interactionPreview = GetComponent<InteractionPreview>();
         
         //Take dmg visual - remove singleton to support multiple players
         // Instance = this;
@@ -405,6 +409,18 @@ public class FPSMovement : MonoBehaviour
             return;
         }
         
+        // Try interact with interactables using the new system
+        if (interactionPreview != null && interactionPreview.HasInteractionTarget())
+        {
+            IInteractable interactable = interactionPreview.GetCurrentInteractable();
+            if (interactable != null)
+            {
+                interactable.Interact(gameObject);
+                return;
+            }
+        }
+        
+        // Fallback to old pickup system
         TryPickupHealth();
     }
     
@@ -568,6 +584,24 @@ public class FPSMovement : MonoBehaviour
         }
         
         return false;
+    }
+
+    // Stamina getters/setters for other scripts
+    public float GetCurrentStamina() => currentStamina;
+    public float GetMaxStamina() => maxStamina;
+    
+    public void SetStamina(float amount)
+    {
+        currentStamina = Mathf.Clamp(amount, 0f, maxStamina);
+        targetStaminaFill = currentStamina / maxStamina;
+        currentStaminaFill = targetStaminaFill;
+    }
+    
+    public void AddStamina(float amount)
+    {
+        currentStamina = Mathf.Min(maxStamina, currentStamina + amount);
+        targetStaminaFill = currentStamina / maxStamina;
+        currentStaminaFill = targetStaminaFill;
     }
 
     //void Look()

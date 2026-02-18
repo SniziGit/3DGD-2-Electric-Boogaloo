@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class StaminaPickup : MonoBehaviour
+public class StaminaPickup : MonoBehaviour, IInteractable
 {
     [Header("Stamina Pickup Settings")]
     public bool maxOutStamina = true; // Set to true to max out stamina
@@ -44,5 +44,42 @@ public class StaminaPickup : MonoBehaviour
     public bool ShouldMaxOutStamina()
     {
         return maxOutStamina;
+    }
+    
+    // IInteractable implementation
+    public string GetInteractionName()
+    {
+        return "Pickup Stamina";
+    }
+    
+    public bool CanInteract(GameObject player)
+    {
+        FPSMovement playerMovement = player.GetComponent<FPSMovement>();
+        if (playerMovement == null) return false;
+        
+        // Check if player needs stamina (not at max)
+        return playerMovement.GetCurrentStamina() < playerMovement.GetMaxStamina();
+    }
+    
+    public void Interact(GameObject player)
+    {
+        FPSMovement playerMovement = player.GetComponent<FPSMovement>();
+        if (playerMovement != null)
+        {
+            if (maxOutStamina)
+            {
+                playerMovement.SetStamina(playerMovement.GetMaxStamina());
+            }
+            else
+            {
+                playerMovement.AddStamina(staminaAmount);
+            }
+            Destroy(gameObject);
+        }
+    }
+    
+    public float GetInteractionRange()
+    {
+        return 3f;
     }
 }

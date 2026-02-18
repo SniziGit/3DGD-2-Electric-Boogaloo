@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class HealthPickup : MonoBehaviour
+public class HealthPickup : MonoBehaviour, IInteractable
 {
     [Header("Health Pickup Settings")]
     public int healthAmount = 25;
@@ -37,5 +37,32 @@ public class HealthPickup : MonoBehaviour
     public int GetHealthAmount()
     {
         return healthAmount;
+    }
+    
+    // IInteractable implementation
+    public string GetInteractionName()
+    {
+        return "Pickup Health";
+    }
+    
+    public bool CanInteract(GameObject player)
+    {
+        PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+        return playerHealth != null && !playerHealth.IsFullHealth();
+    }
+    
+    public void Interact(GameObject player)
+    {
+        PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
+        if (playerHealth != null && !playerHealth.IsFullHealth())
+        {
+            playerHealth.Heal(healthAmount);
+            Destroy(gameObject);
+        }
+    }
+    
+    public float GetInteractionRange()
+    {
+        return 3f;
     }
 }

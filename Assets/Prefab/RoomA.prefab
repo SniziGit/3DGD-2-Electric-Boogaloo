@@ -575,7 +575,7 @@ MonoBehaviour:
   spawnCount: 20
   spawnEnemyCount: 4
   spawnAreaSize: {x: 22, y: 4, z: 22}
-  spawnOnStart: 0
+  spawnOnStart: 1
 --- !u!1 &7469763156063555002
 GameObject:
   m_ObjectHideFlags: 0
