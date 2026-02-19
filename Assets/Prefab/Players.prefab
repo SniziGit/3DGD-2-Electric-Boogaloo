@@ -9006,6 +9006,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: CollectableManager
       objectReference: {fileID: 0}
+    - target: {fileID: 3473095664816644483, guid: 491e01773822ae948bec0dafda041651, type: 3}
+      propertyPath: collectableText
+      value: 
+      objectReference: {fileID: 3936186867179516136}
     - target: {fileID: 4620805686069950547, guid: 491e01773822ae948bec0dafda041651, type: 3}
       propertyPath: m_LocalPosition.x
       value: 53.134598

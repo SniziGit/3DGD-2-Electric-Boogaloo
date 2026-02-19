@@ -15,7 +15,7 @@ public class PasswordNode : MonoBehaviour, IInteractable
     [SerializeField] private string unlockDoorFunction = "UnlockDoor";
     
     [Header("UI")]
-    [SerializeField] private DirectionalSequenceUI sequenceUI;
+    private DirectionalSequenceUI sequenceUI;
     
     private List<Direction> currentSequence;
     private int currentAttempt = 0;
