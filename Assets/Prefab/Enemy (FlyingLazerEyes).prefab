@@ -32,9 +32,9 @@ Transform:
   m_GameObject: {fileID: 3812826831972298582}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.436, y: 1.441, z: 0}
-  m_LocalScale: {x: 2, y: 2, z: 2}
-  m_ConstrainProportionsScale: 1
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4770143476600161537}
   - {fileID: 1537003847595999869}
@@ -59,7 +59,7 @@ Rigidbody:
     m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 256
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 1
@@ -81,19 +81,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   health: 100
   bulletPrefab: {fileID: 8522927543607488731, guid: 63b6404fa8c3e154e9b2fd231d457894, type: 3}
-  bulletSpawnPoint: {fileID: 1537003847595999869}
+  bulletSpawnPoint:
+  - {fileID: 0}
   muzzleFlash: {fileID: 3971537154403255433, guid: 0ca831b58ff9f364b94bcb456c0e7949, type: 3}
   bloom: 0.75
   fireRate: 0.5
   hitMat: {fileID: 2100000, guid: 912dfede47b42c6429b544046fd1e497, type: 2}
   shootingSFX: {fileID: 8300000, guid: 883153b4aadef934a8362985a404d082, type: 3}
+  visualEffectsObject: {fileID: 0}
   currentPointIndex: 0
   previousPointIndex: -1
   currentTarget: {x: 0, y: 0, z: 0}
-  positionThreshold: 15
+  positionThreshold: 5
   idleTime: 5
   attackDistance: 10
-  maxVisionDistance: 20
+  maxVisionDistance: 30
   minChasingHealth: 30
   patrolPoints: []
   enemyState: 1
@@ -132,7 +134,7 @@ CapsuleCollider:
     m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 256
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0

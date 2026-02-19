@@ -571,9 +571,10 @@ MonoBehaviour:
   spawnPrefabs: []
   spawnEnemy:
   - {fileID: 3812826831972298582, guid: 7cb58ae6c54126c46b92143ea8812ff7, type: 3}
-  - {fileID: 6222487978565273276, guid: 7519ec4af7b11d44f8142fac794f786f, type: 3}
+  - {fileID: 4085704404721749738, guid: 7519ec4af7b11d44f8142fac794f786f, type: 3}
   spawnCount: 20
   spawnEnemyCount: 4
+  patrolPointCount: 5
   spawnAreaSize: {x: 22, y: 4, z: 22}
   spawnOnStart: 1
 --- !u!1 &7469763156063555002

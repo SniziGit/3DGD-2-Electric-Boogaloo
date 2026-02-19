@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 
 public class DoorAnimTrigger : MonoBehaviour
 {
@@ -10,11 +11,30 @@ public class DoorAnimTrigger : MonoBehaviour
     [SerializeField] private Light[] lights;
     private bool isPlayerInside = false;
     private Coroutine closeCoroutine;
+    private NavMeshObstacle navObstacle;
 
     void Start()
     {
         doorAnimator = GetComponent<Animator>();
         doorCollider = GetComponent<Collider>();
+        
+        // Initialize NavMeshObstacle for dynamic carving
+        navObstacle = GetComponent<NavMeshObstacle>();
+        if (navObstacle == null)
+        {
+            navObstacle = gameObject.AddComponent<NavMeshObstacle>();
+            navObstacle.shape = NavMeshObstacleShape.Box;
+            if (doorCollider is BoxCollider box)
+            {
+                navObstacle.center = box.center;
+                navObstacle.size = box.size;
+            }
+            else
+            {
+                navObstacle.size = Vector3.one * 2f; // Default size
+            }
+        }
+        navObstacle.carving = true; // Doors start closed, so carve to block pathfinding
         
         // Check if door leads to corridor and set lock state accordingly
         bool leadsToCorridor = DoesDoorLeadToCorridor();
@@ -59,6 +79,7 @@ public class DoorAnimTrigger : MonoBehaviour
         {
             isPlayerInside = true;
             doorAnimator.SetBool("isOpen", true);
+            if (navObstacle != null) navObstacle.carving = false; // Allow pathfinding through open door
             
             if (closeCoroutine != null)
             {
@@ -84,6 +105,7 @@ public class DoorAnimTrigger : MonoBehaviour
         if (!isPlayerInside)
         {
             doorAnimator.SetBool("isOpen", false);
+            if (navObstacle != null) navObstacle.carving = true; // Block pathfinding when door closes
         }
         closeCoroutine = null;
     }

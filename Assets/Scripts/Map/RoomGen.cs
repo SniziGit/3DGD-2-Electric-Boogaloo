@@ -15,6 +15,9 @@ public class RoomGen : MonoBehaviour
     [SerializeField] private int spawnCount = 20;
     [SerializeField] private int spawnEnemyCount = 10;
 
+    [Tooltip("Number of patrol points to spawn for enemies")]
+    [SerializeField] private int patrolPointCount = 5;
+
     [Tooltip("Size of the area (centered on this object) to spawn objects within, on the XZ plane")]
     [SerializeField] private Vector3 spawnAreaSize = new Vector3(10f, 0f, 10f);
 
@@ -42,6 +45,7 @@ public class RoomGen : MonoBehaviour
         {
             SpawnObjects();
             SpawnCrystals();
+            SpawnPatrolPoints();
             if (this.gameObject.name != "First Room")
             {
                 SpawnEnemies();
@@ -110,6 +114,26 @@ public class RoomGen : MonoBehaviour
         }
     }
     
+    /// <summary>
+    /// Spawns patrol points for enemies to follow
+    /// </summary>
+    public void SpawnPatrolPoints()
+    {
+        GameObject patrolParent = new GameObject("PatrolPoint");
+        patrolParent.tag = "PatrolPoint";
+        patrolParent.transform.SetParent(transform);
+        
+        for (int i = 0; i < patrolPointCount; i++)
+        {
+            GameObject point = new GameObject($"PatrolPoint_{i}");
+            point.transform.SetParent(patrolParent.transform);
+            
+            Vector3 randomPos = GetRandomSpawnPosition();
+            // Place on ground level
+            randomPos.y = transform.position.y;
+            point.transform.position = randomPos;
+        }
+    }
     
     public void SetDifficulty(int distanceFromLastRoom)
     {

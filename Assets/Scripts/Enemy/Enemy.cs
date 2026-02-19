@@ -9,7 +9,7 @@ public class Enemy : MonoBehaviour, IDamageable
     public int health = 100;
 
     public GameObject bulletPrefab;
-    public Transform bulletSpawnPoint;
+    public Transform[] bulletSpawnPoint;
     public GameObject muzzleFlash;
     public float bloom;
     public float fireRate;
@@ -18,6 +18,9 @@ public class Enemy : MonoBehaviour, IDamageable
     public Material hitMat;
 
     public AudioClip shootingSFX;
+    
+    [Header("Visual Effects")]
+    public GameObject visualEffectsObject; // Assign the model part with renderer in inspector
 
     private Rigidbody rb;
     private Renderer rend;
@@ -40,44 +43,62 @@ public class Enemy : MonoBehaviour, IDamageable
     private Transform PlayerTransform;
     private bool canSeePlayer;
     private Vector3 lastKnownPlayerPosition;
+    private Vector3 lastSeenDirection;
+    private bool isPursuingBeyond = false;
+    private Vector3 pursuitTarget;
     
-    // Target switching variables
-    private float targetSwitchTimer = 0f;
-    private float targetSwitchDelay = 0f;
-    private bool shouldSwitchTarget = false;
+    // Player caching for performance
+    private List<FPSMovement> activePlayers = new List<FPSMovement>();
+    private float playerUpdateTimer = 0f;
+    private float playerUpdateInterval = 1f;
+
+    // Lose sight timer for state transitions
+    private float loseSightTimer = 0f;
+    private float loseSightThreshold = 15f;
 
     public enum EnemyState { Idle, Patrolling, Chasing, Attacking }
     public EnemyState enemyState = EnemyState.Idle;
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        rend = GetComponent<Renderer>();
-        originalMaterial = rend.material;
+        
+        // Get renderer from the assigned visual effects object
+        if (visualEffectsObject != null)
+        {
+            rend = visualEffectsObject.GetComponent<Renderer>();
+            if (rend != null)
+            {
+                originalMaterial = rend.material;
+            }
+            else
+            {
+                Debug.LogWarning($"[Enemy] No Renderer found on assigned visualEffectsObject: {visualEffectsObject.name}");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("[Enemy] No visualEffectsObject assigned in inspector. Hit effects will be disabled.");
+        }
 
         agent = GetComponent<NavMeshAgent>();
-        FindPlayerTransform();
+        UpdateActivePlayers();
+        PlayerTransform = FindClosestPlayer();
 
         // Find patrol points only within the current room
         FindPatrolPointsInCurrentRoom();
     }
     
-    private void FindPlayerTransform()
+    private void UpdateActivePlayers()
     {
-        // Always find the closest player (don't cache the result)
-        PlayerTransform = FindClosestPlayer();
-        
-        if (PlayerTransform != null)
-        {
-            Debug.Log($"[Enemy] Targeting player: {PlayerTransform.name}");
-        }
+        activePlayers = FindObjectsOfType<FPSMovement>().ToList();
     }
 
     private Transform FindClosestPlayer()
     {
         Transform closestPlayer = null;
         
-        // Find all GameObjects with FPSMovement script
-        FPSMovement[] fpsMovements = FindObjectsOfType<FPSMovement>();
+        // Use cached active players
+        FPSMovement[] fpsMovements = activePlayers.ToArray();
         if (fpsMovements.Length > 0)
         {
             GameObject[] players = new GameObject[fpsMovements.Length];
@@ -107,10 +128,24 @@ public class Enemy : MonoBehaviour, IDamageable
             if (player != null && !IsPlayerDowned(player.transform))
             {
                 float distance = Vector3.Distance(transform.position, player.transform.position);
-                if (distance < closestDistance)
+                
+                // Only consider players within vision distance
+                if (distance <= maxVisionDistance)
                 {
-                    closestDistance = distance;
-                    closestPlayer = player.transform;
+                    // Check if we have line of sight to this player
+                    Vector3 directionToPlayer = player.transform.position - transform.position;
+                    bool hasLineOfSight = Physics.Raycast(transform.position, directionToPlayer.normalized, out RaycastHit hit, maxVisionDistance);
+                    bool canSeeThisPlayer = hasLineOfSight && hit.transform == player.transform;
+                    
+                    // Only consider players we can see, or if no one is visible yet
+                    if (canSeeThisPlayer || closestPlayer == null)
+                    {
+                        if (distance < closestDistance)
+                        {
+                            closestDistance = distance;
+                            closestPlayer = player.transform;
+                        }
+                    }
                 }
             }
         }
@@ -258,21 +293,30 @@ public class Enemy : MonoBehaviour, IDamageable
 
     IEnumerator Blink()
     {
-        rend.material = hitMat;
-        yield return new WaitForSeconds(0.1f);
-        rend.material = originalMaterial;
+        if (rend != null && hitMat != null)
+        {
+            rend.material = hitMat;
+            yield return new WaitForSeconds(0.1f);
+            if (rend != null && originalMaterial != null)
+            {
+                rend.material = originalMaterial;
+            }
+        }
+        else
+        {
+            // If no renderer available, just wait for the duration
+            yield return new WaitForSeconds(0.1f);
+        }
     }
 
     private void Update()
     {
-        // Update target switching timer
-        if (shouldSwitchTarget && targetSwitchTimer > 0)
+        // Update player cache periodically
+        playerUpdateTimer += Time.deltaTime;
+        if (playerUpdateTimer >= playerUpdateInterval)
         {
-            targetSwitchTimer -= Time.deltaTime;
-            if (targetSwitchTimer <= 0)
-            {
-                Debug.Log("[Enemy] Switching targets now!");
-            }
+            UpdateActivePlayers();
+            playerUpdateTimer = 0f;
         }
         
         LookForPlayer();
@@ -293,8 +337,6 @@ public class Enemy : MonoBehaviour, IDamageable
                 break;
         }
 
-        rb.linearVelocity = Vector3.zero;
-
         LookAtPlayer();
         SetLastKnownPlayerPosition();
     }
@@ -310,6 +352,16 @@ public class Enemy : MonoBehaviour, IDamageable
         
         canSeePlayer = hasLineOfSight && hit.transform == PlayerTransform;
 
+        // Update lose sight timer
+        if (canSeePlayer)
+        {
+            loseSightTimer = 0f;
+        }
+        else
+        {
+            loseSightTimer += Time.deltaTime;
+        }
+
         if (canSeePlayer && enemyState != EnemyState.Attacking)
         {
             enemyState = EnemyState.Chasing;
@@ -318,54 +370,26 @@ public class Enemy : MonoBehaviour, IDamageable
 
     private bool EnsurePlayerExists()
     {
-        // Check if current target should be switched
-        if (ShouldSwitchTarget())
+        // Check if current target is still valid
+        if (PlayerTransform != null && !IsPlayerDowned(PlayerTransform) && activePlayers.Contains(PlayerTransform.GetComponent<FPSMovement>()))
         {
-            StartTargetSwitchDelay();
-            return PlayerTransform != null; // Return current target until delay is over
+            return true;
         }
-        
-        // Always find new player if we don't have one or after switching delay
-        if (PlayerTransform == null || (shouldSwitchTarget && targetSwitchTimer <= 0))
+
+        // Find closest valid player
+        Transform closestPlayer = FindClosestPlayer();
+        if (closestPlayer != null && closestPlayer != PlayerTransform)
         {
-            FindPlayerTransform();
-            shouldSwitchTarget = false;
+            PlayerTransform = closestPlayer;
+            Debug.Log($"[Enemy] Targeting player: {PlayerTransform.name}");
         }
-        
-        // If we have a target but they're downed, clear them immediately and stop attacking
-        if (PlayerTransform != null && IsPlayerDowned(PlayerTransform))
+        else if (closestPlayer == null)
         {
-            Debug.Log($"[Enemy] Current target {PlayerTransform.name} is downed, stopping attack and resuming patrol");
             PlayerTransform = null;
-            
-            // Immediately stop attacking/chasing and resume patrolling
-            if (enemyState == EnemyState.Attacking || enemyState == EnemyState.Chasing)
-            {
-                enemyState = EnemyState.Patrolling;
-                agent.ResetPath(); // Stop current movement
-            }
-            
-            return false;
+            Debug.Log("[Enemy] No valid players found");
         }
-        
+
         return PlayerTransform != null;
-    }
-    
-    private bool ShouldSwitchTarget()
-    {
-        if (PlayerTransform == null) return false;
-        
-        // Check if player is out of vision distance
-        float distanceToPlayer = Vector3.Distance(transform.position, PlayerTransform.position);
-        if (distanceToPlayer > maxVisionDistance) return true;
-        
-        // Check if we can't see the player
-        if (!canSeePlayer) return true;
-        
-        // Note: Downed player check is handled directly in EnsurePlayerExists()
-        // for immediate response and state transition
-        
-        return false;
     }
     
     private bool IsPlayerDowned(Transform playerTransform)
@@ -381,16 +405,6 @@ public class Enemy : MonoBehaviour, IDamageable
         return false;
     }
     
-    private void StartTargetSwitchDelay()
-    {
-        if (!shouldSwitchTarget)
-        {
-            shouldSwitchTarget = true;
-            targetSwitchDelay = Random.Range(5f, 15f);
-            targetSwitchTimer = targetSwitchDelay;
-            Debug.Log($"[Enemy] Will switch targets in {targetSwitchDelay:F1} seconds");
-        }
-    }
 
     private void IdleBehavior()
     {
@@ -417,6 +431,12 @@ public class Enemy : MonoBehaviour, IDamageable
                 enemyState = EnemyState.Idle;
                 return;
             }
+        }
+        
+        // Initialize currentTarget if it's not set
+        if (currentTarget == Vector3.zero && patrolPoints.Length > 0)
+        {
+            currentTarget = patrolPoints[0].position;
         }
         
         if (Vector3.Distance(currentTarget, transform.position) < positionThreshold)
@@ -473,31 +493,53 @@ public class Enemy : MonoBehaviour, IDamageable
     {
         idleTimeCounter = idleTime; // Reset idle timer when switching to chasing
         
-        // Check if enemy has reached the last known player position
-        float distanceToLastKnown = Vector3.Distance(transform.position, lastKnownPlayerPosition);
+        if (loseSightTimer > loseSightThreshold)
+        {
+            // Lost interest, return to patrolling
+            enemyState = EnemyState.Patrolling;
+            PlayerTransform = null;
+            agent.ResetPath();
+            isPursuingBeyond = false;
+            return;
+        }
         
-        if(health < minChasingHealth)
+        if (health < minChasingHealth)
         {
             enemyState = EnemyState.Patrolling; //cautious
+            PlayerTransform = null;
+            isPursuingBeyond = false;
         }
         else if (PlayerTransform != null && Vector3.Distance(transform.position, PlayerTransform.position) <= attackDistance && canSeePlayer)
         {
             enemyState = EnemyState.Attacking;
         }
-        else if (PlayerTransform != null && canSeePlayer && Vector3.Distance(transform.position, PlayerTransform.position) <= maxVisionDistance)
-        {
-            // Still can see player, continue chasing
-            agent.SetDestination(PlayerTransform.position);
-        }
-        else if (distanceToLastKnown < positionThreshold)
-        {
-            // Reached last known position but player not found, return to patrol
-            enemyState = EnemyState.Patrolling;
-        }
         else
         {
-            // Continue to last known position
-            agent.SetDestination(lastKnownPlayerPosition);
+            // Determine destination
+            if (PlayerTransform != null && canSeePlayer && Vector3.Distance(transform.position, PlayerTransform.position) <= maxVisionDistance)
+            {
+                agent.SetDestination(PlayerTransform.position);
+            }
+            else if (isPursuingBeyond)
+            {
+                agent.SetDestination(pursuitTarget);
+                if (Vector3.Distance(transform.position, pursuitTarget) < positionThreshold)
+                {
+                    isPursuingBeyond = false;
+                    enemyState = EnemyState.Patrolling;
+                }
+            }
+            else if (Vector3.Distance(transform.position, lastKnownPlayerPosition) < positionThreshold)
+            {
+                // Reached last known, start pursuing beyond
+                pursuitTarget = lastKnownPlayerPosition + lastSeenDirection * 10f;
+                agent.SetDestination(pursuitTarget);
+                isPursuingBeyond = true;
+            }
+            else
+            {
+                agent.SetDestination(lastKnownPlayerPosition);
+            }
         }
     }
 
@@ -513,6 +555,7 @@ public class Enemy : MonoBehaviour, IDamageable
             if(health < minChasingHealth)
             {
                 enemyState = EnemyState.Patrolling; //cautious
+                PlayerTransform = null;
             }
             else
             {
@@ -538,6 +581,7 @@ public class Enemy : MonoBehaviour, IDamageable
         {
             if (PlayerTransform == null) return; // Additional safety check
             lastKnownPlayerPosition = PlayerTransform.position;
+            lastSeenDirection = (PlayerTransform.position - transform.position).normalized;
         }
     }
 
@@ -546,39 +590,45 @@ public class Enemy : MonoBehaviour, IDamageable
         if(Time.time > lastshotTime + fireRate)
         {
             // Check for required components
-            if (PlayerTransform == null || bulletSpawnPoint == null)
+            if (PlayerTransform == null || bulletSpawnPoint == null || bulletSpawnPoint.Length == 0)
             {
                 Debug.LogWarning("[Enemy] Missing PlayerTransform or bulletSpawnPoint");
                 return;
             }
             
-            Vector3 shootDirection = (PlayerTransform.position - bulletSpawnPoint.position).normalized;
-            shootDirection.Normalize();
+            // Shoot from each bullet spawn point (for dual-wielding enemies)
+            foreach (Transform spawnPoint in bulletSpawnPoint)
+            {
+                if (spawnPoint == null) continue;
+                
+                Vector3 shootDirection = (PlayerTransform.position - spawnPoint.position).normalized;
+                shootDirection.Normalize();
 
-            Quaternion bulletRotation = Quaternion.LookRotation(shootDirection);
+                Quaternion bulletRotation = Quaternion.LookRotation(shootDirection);
 
-            float maxInaccuracy = 10f;
-            float currentInaccuracy = bloom * maxInaccuracy;
-            float randomYaw = Random.Range(-currentInaccuracy, currentInaccuracy);
-            float randomPitch = Random.Range(-currentInaccuracy, currentInaccuracy);
+                float maxInaccuracy = 10f;
+                float currentInaccuracy = bloom * maxInaccuracy;
+                float randomYaw = Random.Range(-currentInaccuracy, currentInaccuracy);
+                float randomPitch = Random.Range(-currentInaccuracy, currentInaccuracy);
 
-            bulletRotation *= Quaternion.Euler(randomPitch, randomYaw, 0f);
+                bulletRotation *= Quaternion.Euler(randomPitch, randomYaw, 0f);
+
+                // Instantiate bullet and muzzle flash if prefabs are available
+                if (bulletPrefab != null)
+                {
+                    Instantiate(bulletPrefab, spawnPoint.position, bulletRotation);
+                }
+                
+                if (muzzleFlash != null)
+                {
+                    Instantiate(muzzleFlash, spawnPoint.position, bulletRotation);
+                }
+            }
 
             // Play shooting sound if AudioManager and audio clip are available
             if (AudioManager.Instance != null && shootingSFX != null)
             {
                 AudioManager.Instance.PlaySFX(shootingSFX, 0.25f);
-            }
-
-            // Instantiate bullet and muzzle flash if prefabs are available
-            if (bulletPrefab != null)
-            {
-                Instantiate(bulletPrefab, bulletSpawnPoint.position, bulletRotation);
-            }
-            
-            if (muzzleFlash != null)
-            {
-                Instantiate(muzzleFlash, bulletSpawnPoint.position, bulletRotation);
             }
 
             lastshotTime = Time.time;
