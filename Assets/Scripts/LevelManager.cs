@@ -16,8 +16,7 @@ public class LevelManager : MonoBehaviour
     public bool playersDead = false;
     
     [Header("Game Progress")]
-    public int totalCollectibles = 0;
-    public int collectedCollectibles = 0;
+    private CollectableManager collectableManager;
     public bool reachedWarpPad = false;
     
     private int player1DownedCount = 0;
@@ -27,6 +26,7 @@ public class LevelManager : MonoBehaviour
     private void Start()
     {
         currentTime = maxTime;
+        collectableManager = CollectableManager.Instance;
     }
     
     private void Update()
@@ -44,7 +44,7 @@ public class LevelManager : MonoBehaviour
             }
             
             // Check win condition: all collectibles collected and reached warp pad
-            if (collectedCollectibles >= totalCollectibles && reachedWarpPad)
+            if (collectableManager != null && collectableManager.GetCurrentCollected() >= collectableManager.GetTotalRequired() && reachedWarpPad)
             {
                 playerWon = true;
                 isGameOver = true;
@@ -87,21 +87,11 @@ public class LevelManager : MonoBehaviour
         playerWon = win;
     }
     
-    // Collectible management
-    public void CollectItem()
-    {
-        collectedCollectibles++;
-    }
-    
-    public void SetTotalCollectibles(int total)
-    {
-        totalCollectibles = total;
-    }
-    
+    // Collectible progress using CollectableManager
     public float GetCollectibleProgress()
     {
-        if (totalCollectibles == 0) return 0f;
-        return (float)collectedCollectibles / totalCollectibles;
+        if (collectableManager == null) return 0f;
+        return (float)collectableManager.GetCurrentCollected() / collectableManager.GetTotalRequired();
     }
     
     // Warp pad management
