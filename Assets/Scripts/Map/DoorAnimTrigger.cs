@@ -63,13 +63,23 @@ public class DoorAnimTrigger : MonoBehaviour
             Debug.Log($"[DoorAnimTrigger] Locked door at {transform.position} (does not lead to corridor)");
         }
         
-        // Last Room doors always have puzzle and are locked
+        // Last Room doors: only those leading to corridors have puzzles, others are just locked
         if (isLastRoomDoor)
         {
-            hasPuzzle = true;
-            LockDoor();
-            SetLightsColor(Color.yellow);
-            Debug.Log($"[DoorAnimTrigger] Last Room door at {transform.position} has puzzle and is locked");
+            if (leadsToCorridor)
+            {
+                hasPuzzle = true;
+                LockDoor();
+                SetLightsColor(Color.yellow);
+                Debug.Log($"[DoorAnimTrigger] Last Room door at {transform.position} leads to corridor, has puzzle and is locked");
+            }
+            else
+            {
+                hasPuzzle = false;
+                LockDoor();
+                SetLightsColor(Color.red);
+                Debug.Log($"[DoorAnimTrigger] Last Room door at {transform.position} does not lead to corridor, is locked only");
+            }
         }
     }
 

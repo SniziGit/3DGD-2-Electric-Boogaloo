@@ -32,7 +32,7 @@ Transform:
   m_GameObject: {fileID: 3812826831972298582}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -86,9 +86,9 @@ MonoBehaviour:
   muzzleFlash: {fileID: 3971537154403255433, guid: 0ca831b58ff9f364b94bcb456c0e7949, type: 3}
   bloom: 0.75
   fireRate: 0.5
-  hitMat: {fileID: 2100000, guid: 912dfede47b42c6429b544046fd1e497, type: 2}
   shootingSFX: {fileID: 8300000, guid: 883153b4aadef934a8362985a404d082, type: 3}
-  visualEffectsObject: {fileID: 0}
+  visualEffectsObject: {fileID: 5294303086713905083}
+  hitMat: {fileID: 2100000, guid: 912dfede47b42c6429b544046fd1e497, type: 2}
   currentPointIndex: 0
   previousPointIndex: -1
   currentTarget: {x: 0, y: 0, z: 0}
@@ -688,5 +688,10 @@ PrefabInstance:
 --- !u!4 &4770143476600161537 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8156742887874493266, guid: d3a476cce1a9a6448a1d79e83d078bf5, type: 3}
+  m_PrefabInstance: {fileID: 3675049752297586259}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &5294303086713905083 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8825158458161734120, guid: d3a476cce1a9a6448a1d79e83d078bf5, type: 3}
   m_PrefabInstance: {fileID: 3675049752297586259}
   m_PrefabAsset: {fileID: 0}
