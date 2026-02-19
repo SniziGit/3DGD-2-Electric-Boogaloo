@@ -12,6 +12,10 @@ public class ReviveInteraction : MonoBehaviour
     private PlayerHealth targetPlayer;
     private FPSMovement reviverMovement;
     
+    private GameObject[] cachedPlayers;
+    private float lastPlayerCacheTime = 0f;
+    private const float PLAYER_CACHE_INTERVAL = 0.5f; // Cache players every 0.5 seconds
+    
     void Start()
     {
         reviverMovement = GetComponent<FPSMovement>();
@@ -42,10 +46,16 @@ public class ReviveInteraction : MonoBehaviour
     {
         if (isReviving) return false;
         
-        // Find all players with "Player" tag
-        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        // Cache players to avoid expensive FindGameObjectsWithTag every frame
+        if (Time.time - lastPlayerCacheTime > PLAYER_CACHE_INTERVAL)
+        {
+            cachedPlayers = GameObject.FindGameObjectsWithTag("Player");
+            lastPlayerCacheTime = Time.time;
+        }
         
-        foreach (GameObject player in players)
+        if (cachedPlayers == null) return false;
+        
+        foreach (GameObject player in cachedPlayers)
         {
             if (player != gameObject) // Don't check self
             {

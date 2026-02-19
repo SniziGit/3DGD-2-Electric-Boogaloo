@@ -52,6 +52,11 @@ public class Enemy : MonoBehaviour, IDamageable
     private float playerUpdateTimer = 0f;
     private float playerUpdateInterval = 1f;
 
+    // Raycast optimization
+    private float lastRaycastTime = 0f;
+    private float raycastInterval = 0.1f; // Raycast every 0.1 seconds
+    private bool cachedCanSeePlayer = false;
+
     // Damage-based targeting
     private Transform lastAttacker = null;
     private float lastAttackTime = 0f;
@@ -303,15 +308,25 @@ public class Enemy : MonoBehaviour, IDamageable
         }
     }
 
+    private GameObject[] cachedPlayers;
+    private float lastPlayerCacheTime = 0f;
+    private const float PLAYER_CACHE_INTERVAL = 0.5f; // Cache players every 0.5 seconds
+    
     private GameObject FindAttacker()
     {
-        // Try to find the most recent damage source
-        // This is a simplified approach - in a real game you might want to pass attacker info through damage system
-        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        // Cache players to avoid expensive FindGameObjectsWithTag every frame
+        if (Time.time - lastPlayerCacheTime > PLAYER_CACHE_INTERVAL)
+        {
+            cachedPlayers = GameObject.FindGameObjectsWithTag("Player");
+            lastPlayerCacheTime = Time.time;
+        }
+        
+        if (cachedPlayers == null) return null;
+        
         GameObject closestPlayer = null;
         float closestDistance = float.MaxValue;
         
-        foreach (GameObject player in players)
+        foreach (GameObject player in cachedPlayers)
         {
             if (player != null && !IsPlayerDowned(player.transform))
             {
@@ -401,20 +416,35 @@ public class Enemy : MonoBehaviour, IDamageable
 
         if (PlayerTransform == null) return; // Additional safety check
 
-        Vector3 directionToPlayer = PlayerTransform.position - transform.position;
-        bool hasLineOfSight = Physics.Raycast(transform.position, directionToPlayer.normalized, out RaycastHit hit, maxVisionDistance);
-        
-        canSeePlayer = hasLineOfSight && hit.transform == PlayerTransform;
-
-        // Update lose sight timer
-        if (canSeePlayer)
+        // Only perform raycast if enough time has passed
+        if (Time.time - lastRaycastTime >= raycastInterval)
         {
-            loseSightTimer = 0f;
+            Vector3 directionToPlayer = PlayerTransform.position - transform.position;
+            bool hasLineOfSight = Physics.Raycast(transform.position, directionToPlayer.normalized, out RaycastHit hit, maxVisionDistance);
+            
+            cachedCanSeePlayer = hasLineOfSight && hit.transform == PlayerTransform;
+            lastRaycastTime = Time.time;
+
+            // Update lose sight timer
+            if (cachedCanSeePlayer)
+            {
+                loseSightTimer = 0f;
+            }
+            else
+            {
+                loseSightTimer += Time.deltaTime * (raycastInterval / Time.deltaTime); // Approximate accumulation
+            }
         }
         else
         {
-            loseSightTimer += Time.deltaTime;
+            // Use cached value, but still update lose sight timer if not seeing
+            if (!cachedCanSeePlayer)
+            {
+                loseSightTimer += Time.deltaTime;
+            }
         }
+
+        canSeePlayer = cachedCanSeePlayer;
 
         if (canSeePlayer && enemyState != EnemyState.Attacking)
         {

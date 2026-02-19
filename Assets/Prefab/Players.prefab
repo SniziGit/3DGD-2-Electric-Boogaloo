@@ -4816,7 +4816,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 15
+  orthographic size: 40
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -5599,7 +5599,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 15
+  orthographic size: 40
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -6531,6 +6531,7 @@ GameObject:
   - component: {fileID: 4541261930646860980}
   - component: {fileID: 6489636626638777742}
   - component: {fileID: 5571730352319045238}
+  - component: {fileID: 7046952138137920726}
   m_Layer: 0
   m_Name: GeneralCanvas
   m_TagString: Untagged
@@ -6622,6 +6623,19 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &7046952138137920726
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7091185253973465503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74619046d8cfe7b47868c4a9a04c25ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  collectableUI: {fileID: 3936186867179516136}
 --- !u!1 &7337192514708733172
 GameObject:
   m_ObjectHideFlags: 0

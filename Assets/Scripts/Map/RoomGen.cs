@@ -137,16 +137,20 @@ public class RoomGen : MonoBehaviour
     
     public void SetDifficulty(int distanceFromLastRoom)
     {
-        // More enemies the closer to the Last Room (inverted difficulty)
-        // distanceFromLastRoom: 0 = Last Room (hardest), higher numbers = easier
-        int maxDistance = 10; // Maximum expected distance
-        float difficultyRatio = 1f - (float)distanceFromLastRoom / maxDistance;
-        difficultyRatio = Mathf.Clamp01(difficultyRatio);
-        
-        // Spawn count: 5 (easiest) to 10 (hardest)
-        spawnEnemyCount = Mathf.RoundToInt(5 + difficultyRatio * 5);
-
-        Debug.Log($"[RoomGen] Set difficulty: distance={distanceFromLastRoom}, ratio={difficultyRatio:F2}, spawnCount={spawnCount}");
+        // Only apply difficulty scaling to the Last Room (distance = 0)
+        // All other rooms keep their default spawn count
+        if (distanceFromLastRoom == 0)
+        {
+            // Last Room gets maximum difficulty
+            spawnEnemyCount = 10;
+            Debug.Log($"[RoomGen] Set difficulty: Last Room (distance=0) - max difficulty spawnCount={spawnEnemyCount}");
+        }
+        else
+        {
+            // All other rooms keep their default spawn count
+            // spawnEnemyCount remains at its default value (10)
+            Debug.Log($"[RoomGen] Set difficulty: Regular room (distance={distanceFromLastRoom}) - default spawnCount={spawnEnemyCount}");
+        }
     }
     
     /// <summary>

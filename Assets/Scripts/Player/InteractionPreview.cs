@@ -32,6 +32,11 @@ public class InteractionPreview : MonoBehaviour
     private bool isHoldingHack = false;
     private float hackHoldProgress = 0f;
 
+    private GameObject[] cachedPlayers;
+    private GameObject[] cachedInteractables;
+    private float lastCacheTime = 0f;
+    private const float CACHE_INTERVAL = 0.5f; // Cache every 0.5 seconds
+    
     void Start()
     {
         playerCamera = GetComponentInChildren<Camera>();
@@ -72,27 +77,38 @@ public class InteractionPreview : MonoBehaviour
         // --- REVIVE CHECK ---
         if (reviveInteraction != null && reviveInteraction.CanRevive())
         {
-            GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
-
-            foreach (GameObject player in players)
+            // Cache players to avoid expensive FindGameObjectsWithTag every frame
+            if (Time.time - lastCacheTime > CACHE_INTERVAL)
             {
-                if (player == gameObject)
-                    continue;
-
-                PlayerHealth targetHealth = player.GetComponent<PlayerHealth>();
-                if (targetHealth != null && targetHealth.IsDowned())
+                cachedPlayers = GameObject.FindGameObjectsWithTag("Player");
+                lastCacheTime = Time.time;
+            }
+            
+            if (cachedPlayers != null)
+            {
+                foreach (GameObject player in cachedPlayers)
                 {
-                    float distance = Vector3.Distance(transform.position, player.transform.position);
-                    if (distance <= interactionRange)
-                    {
-                        Vector3 directionToTarget = (player.transform.position - transform.position).normalized;
-                        float dot = Vector3.Dot(playerCamera.transform.forward, directionToTarget);
+                    // Skip destroyed objects
+                    if (player == null) continue;
+                    
+                    if (player == gameObject)
+                        continue;
 
-                        if (dot > 0.5f)
+                    PlayerHealth targetHealth = player.GetComponent<PlayerHealth>();
+                    if (targetHealth != null && targetHealth.IsDowned())
+                    {
+                        float distance = Vector3.Distance(transform.position, player.transform.position);
+                        if (distance <= interactionRange)
                         {
-                            currentReviveTarget = targetHealth;
-                            currentTarget = player;
-                            return;
+                            Vector3 directionToTarget = (player.transform.position - transform.position).normalized;
+                            float dot = Vector3.Dot(playerCamera.transform.forward, directionToTarget);
+
+                            if (dot > 0.5f)
+                            {
+                                currentReviveTarget = targetHealth;
+                                currentTarget = player;
+                                return;
+                            }
                         }
                     }
                 }
@@ -137,11 +153,26 @@ public class InteractionPreview : MonoBehaviour
         }
 
         // --- TAG-BASED FALLBACK ---
-        foreach (string tag in interactableTags)
+        // Cache interactables to avoid expensive FindGameObjectsWithTag every frame
+        if (Time.time - lastCacheTime > CACHE_INTERVAL)
         {
-            GameObject[] taggedObjects = GameObject.FindGameObjectsWithTag(tag);
-            foreach (GameObject obj in taggedObjects)
+            System.Collections.Generic.List<GameObject> allInteractables = new System.Collections.Generic.List<GameObject>();
+            foreach (string tag in interactableTags)
             {
+                GameObject[] taggedObjects = GameObject.FindGameObjectsWithTag(tag);
+                allInteractables.AddRange(taggedObjects);
+            }
+            cachedInteractables = allInteractables.ToArray();
+            lastCacheTime = Time.time;
+        }
+        
+        if (cachedInteractables != null)
+        {
+            foreach (GameObject obj in cachedInteractables)
+            {
+                // Skip destroyed objects
+                if (obj == null) continue;
+                
                 float distance = Vector3.Distance(transform.position, obj.transform.position);
                 if (distance <= interactionRange)
                 {
@@ -287,8 +318,7 @@ public class InteractionPreview : MonoBehaviour
         // --- PROGRESS BAR ---
         if (progressBar != null)
         {
-            bool showProgress = isReviving || isHacking || isHoldingHack || 
-                               (currentTarget != null && currentTarget.CompareTag("Door") && doorInteraction != null && doorInteraction.IsLastLookedAtDoorOnCooldown());
+            bool showProgress = isReviving || isHacking || isHoldingHack || (currentTarget != null && currentTarget.CompareTag("Door") && doorInteraction != null && doorInteraction.IsLastLookedAtDoorOnCooldown());
             progressBar.gameObject.SetActive(showProgress);
 
             if (isReviving)

@@ -5,7 +5,7 @@ using TMPro;
 public class CollectableManager : MonoBehaviour
 {
     [Header("Collectable Settings")]
-    [SerializeField] private int totalRequiredCollectables = 10;
+    int totalRequiredCollectables = 10;
     [SerializeField] private string collectableName = "Crystal";
     [SerializeField] private GameObject crystalPrefab;
     
@@ -13,7 +13,7 @@ public class CollectableManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI collectableText;
     
     private static CollectableManager instance;
-    private int currentCollected = 0;
+    public int currentCollected = 0;
     private bool gameCompleted = false;
     private int crystalsToSpawn = 0;
     private List<RoomGen> availableRooms = new List<RoomGen>();
@@ -144,7 +144,11 @@ public class CollectableManager : MonoBehaviour
         
         // UI and completion effects are now handled by InteractionPreview.cs
     }
-    
+    public void AssignCollectableUI(TextMeshProUGUI collectableUI)
+    {
+        collectableText = collectableUI;
+        UpdateCollectableUI();
+    }
     void UpdateCollectableUI()
     {
         if (collectableText != null)

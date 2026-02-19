@@ -113,11 +113,19 @@ public class MapGen : MonoBehaviour
         // Set difficulty for all rooms based on distance from Last Room
         SetRoomDifficulties();
 
+        // Initialize spawning for all rooms (enemies, objects, crystals)
+        InitializeRoomSpawning();
+
         // Bake NavMesh for the entire generated dungeon
         if (bakeNavMeshAfterGeneration)
         {
             BakeNavMesh();
         }
+        
+        // Disable this component after generation is complete
+        // GameObject remains for DoorAnimTrigger references and room management
+        enabled = false;
+        Debug.Log("[MapGen] Generation complete - component disabled for optimization");
     }
 
     private void GrowTreeFromRoom(RoomGen parentRoom, int currentDepth)
@@ -458,9 +466,20 @@ public class MapGen : MonoBehaviour
 
     private void CreateCorridors()
     {
-        foreach (var (fromOpening, toOpening) in connections)
+        // Create a copy of connections to avoid modification during enumeration
+        var connectionsCopy = new List<(RoomOpening from, RoomOpening to)>(connections);
+        foreach (var (fromOpening, toOpening) in connectionsCopy)
         {
-            CreateCorridor(fromOpening.transform.position, toOpening.transform.position);
+            // Check if RoomOpening objects are still valid before accessing their transform
+            if (fromOpening != null && fromOpening.gameObject != null && 
+                toOpening != null && toOpening.gameObject != null)
+            {
+                CreateCorridor(fromOpening.transform.position, toOpening.transform.position);
+            }
+            else
+            {
+                Debug.LogWarning("[MapGen] Skipping corridor creation due to destroyed RoomOpening");
+            }
         }
     }
 
@@ -1612,6 +1631,24 @@ public class MapGen : MonoBehaviour
             Debug.LogError($"[MapGen] Failed to generate map without corridor clipping after {maxRegenerationAttempts} attempts. Using current map.");
             currentRegenerationAttempt = 0; // Reset for next time
         }
+    }
+
+    /// <summary>
+    /// Initializes spawning for all generated rooms (enemies, objects, crystals)
+    /// </summary>
+    private void InitializeRoomSpawning()
+    {
+        Debug.Log($"[MapGen] Initializing spawning for {generatedRooms.Count} rooms");
+        
+        foreach (RoomGen room in generatedRooms)
+        {
+            if (room != null)
+            {
+                room.InitializeSpawning();
+            }
+        }
+        
+        Debug.Log("[MapGen] Room spawning initialization complete");
     }
 }
 

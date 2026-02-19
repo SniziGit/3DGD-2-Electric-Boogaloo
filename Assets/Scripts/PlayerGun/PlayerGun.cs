@@ -67,6 +67,11 @@ public class PlayerGun : MonoBehaviour
 
     public AudioClip shootingSFX;
 
+    // Raycast optimization for aim check
+    private float lastAimRaycastTime = 0f;
+    private float aimRaycastInterval = 0.1f; // Check every 0.1 seconds
+    private Color cachedAimColor;
+
     void Start()
     {
         currentAmmo = magSize;
@@ -219,79 +224,15 @@ public class PlayerGun : MonoBehaviour
         // Raycast from camera center (crosshair position) relative to its viewport
         Ray ray = playerCamera.ScreenPointToRay(new Vector3(viewportCenterX, viewportCenterY, 0f));
         
-        // Debug: Draw the ray in Scene view
-        Debug.DrawRay(ray.origin, ray.direction * range, Color.red, 2f);
-        
-        // Debug: Log layer mask values
-        Debug.Log($"Shootable layers: {shootableLayers.value} (int: {shootableLayers})");
-        Debug.Log($"Wall layers: {wallLayers.value} (int: {wallLayers})");
-        Debug.Log($"Combined layers: {shootableLayers | wallLayers}");
-        
-        // Debug: Check what's actually in front of us
-        Debug.Log($"Ray origin: {ray.origin}, direction: {ray.direction}");
-        Debug.Log($"Camera forward: {playerCamera.transform.forward}");
-        Debug.Log($"Camera rotation: {playerCamera.transform.rotation}");
-        
-        // Try using camera forward direction instead
-        Ray forwardRay = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
-        Debug.Log($"Forward ray origin: {forwardRay.origin}, direction: {forwardRay.direction}");
-        
-        // First, try the forward ray
-        if (Physics.Raycast(forwardRay, out RaycastHit debugHit, range))
-        {
-            string hitLayerName = LayerMask.LayerToName(debugHit.collider.gameObject.layer);
-            int hitLayerValue = 1 << debugHit.collider.gameObject.layer;
-            Debug.Log($"FORWARD RAY: Hit {debugHit.collider.name} on layer '{hitLayerName}' (value: {hitLayerValue}) distance: {debugHit.distance}");
-            
-            // Check if this layer is in our masks
-            bool inShootable = (shootableLayers.value & hitLayerValue) != 0;
-            bool inWall = (wallLayers.value & hitLayerValue) != 0;
-            Debug.Log($"In shootable layers: {inShootable}, In wall layers: {inWall}");
-        }
-        else
-        {
-            Debug.Log("FORWARD RAY: No hit");
-        }
-        
-        // First, try a raycast without any layer mask to see what we hit
-        if (Physics.Raycast(ray, out RaycastHit hit, range))
-        {
-            string hitLayerName = LayerMask.LayerToName(hit.collider.gameObject.layer);
-            int hitLayerValue = 1 << hit.collider.gameObject.layer;
-            Debug.Log($"DEBUG: Hit {hit.collider.name} on layer '{hitLayerName}' (value: {hitLayerValue}) distance: {hit.distance}");
-            
-            // Check if this layer is in our masks
-            bool inShootable = (shootableLayers.value & hitLayerValue) != 0;
-            bool inWall = (wallLayers.value & hitLayerValue) != 0;
-            Debug.Log($"In shootable layers: {inShootable}, In wall layers: {inWall}");
-        }
-        else
-        {
-            Debug.Log("DEBUG: No hit with unlimited raycast");
-            
-            // Try a spherecast to see if we're close to anything
-            if (Physics.SphereCast(ray.origin, 0.5f, ray.direction, out RaycastHit sphereHit, range))
-            {
-                Debug.Log($"SPHERECAST: Found {sphereHit.collider.name} at distance {sphereHit.distance} - maybe ray is too thin?");
-            }
-            else
-            {
-                Debug.Log("SPHERECAST: Also found nothing");
-            }
-        }
-        
         // Use the forward ray for actual shooting
-        ray = forwardRay;
+        ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
         
         // Single raycast to check all objects (both walls and enemies)
         if (Physics.Raycast(ray, out RaycastHit finalHit, range, shootableLayers | wallLayers))
         {
-            Debug.Log($"Raycast hit: {finalHit.collider.name} on layer {LayerMask.LayerToName(finalHit.collider.gameObject.layer)}");
-            
             // Check if what we hit is on the wall layer
             if ((wallLayers.value & (1 << finalHit.collider.gameObject.layer)) != 0)
             {
-                Debug.Log($"Shot hit wall: {finalHit.collider.name} at distance {finalHit.distance}");
                 return;
             }
             
@@ -304,21 +245,8 @@ public class PlayerGun : MonoBehaviour
                 {
                     damageable.TakeDamage(damage);
                     ShowHitCrosshair(); // Show hit crosshair when hitting enemy
-                    Debug.Log($"Successfully dealt {damage} damage to {finalHit.collider.name}");
-                }
-                else
-                {
-                    Debug.Log($"Hit object {finalHit.collider.name} but no IDamageable component found");
                 }
             }
-            else
-            {
-                Debug.Log($"Hit object {finalHit.collider.name} on layer '{LayerMask.LayerToName(finalHit.collider.gameObject.layer)}' but it's not configured as wall or shootable");
-            }
-        }
-        else
-        {
-            Debug.Log("Shot missed - no target in range");
         }
         
         // Apply crosshair recoil
@@ -460,54 +388,62 @@ public class PlayerGun : MonoBehaviour
     {
         if (persistentImage == null) return;
         
-        // Get the viewport rect of player's camera
-        Rect viewport = playerCamera.rect;
-
-        // Calculate center of camera's viewport in screen coordinates
-        float viewportCenterX = (Screen.width * viewport.x) + (Screen.width * viewport.width / 2f);
-        float viewportCenterY = (Screen.height * viewport.y) + (Screen.height * viewport.height / 2f);
-
-        // Raycast from camera center (crosshair position) relative to its viewport
-        Ray ray = playerCamera.ScreenPointToRay(new Vector3(viewportCenterX, viewportCenterY, 0f));
-        
-        // Single raycast to check all objects (both walls and enemies)
-        if (Physics.Raycast(ray, out RaycastHit hit, range, shootableLayers | wallLayers))
+        // Only perform raycast if enough time has passed
+        if (Time.time - lastAimRaycastTime >= aimRaycastInterval)
         {
-            // Check if what we hit is on the wall layer
-            if ((wallLayers.value & (1 << hit.collider.gameObject.layer)) != 0)
-            {
-                // Wall is blocking, return to original color
-                persistentImage.color = originalPersistentColor;
-                return;
-            }
+            // Get the viewport rect of player's camera
+            Rect viewport = playerCamera.rect;
+
+            // Calculate center of camera's viewport in screen coordinates
+            float viewportCenterX = (Screen.width * viewport.x) + (Screen.width * viewport.width / 2f);
+            float viewportCenterY = (Screen.height * viewport.y) + (Screen.height * viewport.height / 2f);
+
+            // Raycast from camera center (crosshair position) relative to its viewport
+            Ray ray = playerCamera.ScreenPointToRay(new Vector3(viewportCenterX, viewportCenterY, 0f));
             
-            // Check if what we hit is on the shootable layer (enemy)
-            if ((shootableLayers.value & (1 << hit.collider.gameObject.layer)) != 0)
+            // Single raycast to check all objects (both walls and enemies)
+            if (Physics.Raycast(ray, out RaycastHit hit, range, shootableLayers | wallLayers))
             {
-                // Check if hit object has IDamageable (enemy)
-                IDamageable damageable = hit.collider.GetComponent<IDamageable>();
-                if (damageable != null)
+                // Check if what we hit is on the wall layer
+                if ((wallLayers.value & (1 << hit.collider.gameObject.layer)) != 0)
                 {
-                    // Change to red when aiming at enemy
-                    persistentImage.color = Color.red;
+                    // Wall is blocking, return to original color
+                    cachedAimColor = originalPersistentColor;
+                }
+                
+                // Check if what we hit is on the shootable layer (enemy)
+                else if ((shootableLayers.value & (1 << hit.collider.gameObject.layer)) != 0)
+                {
+                    // Check if hit object has IDamageable (enemy)
+                    IDamageable damageable = hit.collider.GetComponent<IDamageable>();
+                    if (damageable != null)
+                    {
+                        // Change to red when aiming at enemy
+                        cachedAimColor = Color.red;
+                    }
+                    else
+                    {
+                        // Return to original color when not aiming at enemy
+                        cachedAimColor = originalPersistentColor;
+                    }
                 }
                 else
                 {
-                    // Return to original color when not aiming at enemy
-                    persistentImage.color = originalPersistentColor;
+                    // Return to original color when hitting other objects
+                    cachedAimColor = originalPersistentColor;
                 }
             }
             else
             {
-                // Return to original color when hitting other objects
-                persistentImage.color = originalPersistentColor;
+                // Return to original color when no target
+                cachedAimColor = originalPersistentColor;
             }
+
+            lastAimRaycastTime = Time.time;
         }
-        else
-        {
-            // Return to original color when no target
-            persistentImage.color = originalPersistentColor;
-        }
+
+        // Apply cached color
+        persistentImage.color = cachedAimColor;
     }
     
     void UpdateAmmoFillTarget()

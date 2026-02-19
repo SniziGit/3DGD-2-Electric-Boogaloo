@@ -470,15 +470,28 @@ public class FPSMovement : MonoBehaviour
         }
     }
     
+    private GameObject[] cachedPickups;
+    private float lastPickupCacheTime = 0f;
+    private const float PICKUP_CACHE_INTERVAL = 0.5f; // Cache pickups every 0.5 seconds
+    
     void CheckHealthPickups()
     {
         if (pickupAction == null || playerCamera == null) return;
         
-        // Find all pickups in range using distance (no collider needed)
-        GameObject[] allPickups = GameObject.FindGameObjectsWithTag("Pickup");
-        
-        foreach (GameObject pickup in allPickups)
+        // Cache pickups to avoid expensive FindGameObjectsWithTag every frame
+        if (Time.time - lastPickupCacheTime > PICKUP_CACHE_INTERVAL)
         {
+            cachedPickups = GameObject.FindGameObjectsWithTag("Pickup");
+            lastPickupCacheTime = Time.time;
+        }
+        
+        if (cachedPickups == null) return;
+        
+        foreach (GameObject pickup in cachedPickups)
+        {
+            // Skip destroyed objects
+            if (pickup == null) continue;
+            
             float distance = Vector3.Distance(transform.position, pickup.transform.position);
             
             if (distance <= pickupRange)
@@ -514,11 +527,20 @@ public class FPSMovement : MonoBehaviour
     {
         if (pickupAction == null || playerCamera == null) return;
         
-        // Find all pickups in range using distance (no collider needed)
-        GameObject[] allPickups = GameObject.FindGameObjectsWithTag("Pickup");
-        
-        foreach (GameObject pickup in allPickups)
+        // Use cached pickups to avoid expensive FindGameObjectsWithTag every frame
+        if (cachedPickups == null || Time.time - lastPickupCacheTime > PICKUP_CACHE_INTERVAL)
         {
+            cachedPickups = GameObject.FindGameObjectsWithTag("Pickup");
+            lastPickupCacheTime = Time.time;
+        }
+        
+        if (cachedPickups == null) return;
+        
+        foreach (GameObject pickup in cachedPickups)
+        {
+            // Skip destroyed objects
+            if (pickup == null) continue;
+            
             float distance = Vector3.Distance(transform.position, pickup.transform.position);
             
             if (distance <= pickupRange)
@@ -668,5 +690,5 @@ public class FPSMovement : MonoBehaviour
     //    rb.rotation = Quaternion.Euler(new Vector3(0, currentRotation.x, 0));
     //}
 
-
+    
 }
