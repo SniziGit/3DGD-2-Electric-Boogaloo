@@ -29,6 +29,8 @@ public class InteractionPreview : MonoBehaviour
     private float reviveProgress = 0f;
     private bool isHacking = false;
     private float hackProgress = 0f;
+    private bool isHoldingHack = false;
+    private float hackHoldProgress = 0f;
 
     void Start()
     {
@@ -60,7 +62,7 @@ public class InteractionPreview : MonoBehaviour
     {
         // Keep targets while reviving or hacking
         if ((reviveInteraction != null && reviveInteraction.IsReviving()) ||
-            (doorInteraction != null && doorInteraction.IsHacking()))
+            (doorInteraction != null && (doorInteraction.IsHacking() || doorInteraction.IsHoldingHack())))
             return;
 
         currentInteractable = null;
@@ -98,7 +100,7 @@ public class InteractionPreview : MonoBehaviour
         }
 
         // --- DOOR HACK CHECK ---
-        if (doorInteraction != null && doorInteraction.CanHack())
+        if (doorInteraction != null)
         {
             RaycastHit hit;
             if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward, out hit, raycastDistance))
@@ -173,11 +175,15 @@ public class InteractionPreview : MonoBehaviour
         {
             isHacking = doorInteraction.IsHacking();
             hackProgress = doorInteraction.GetHackProgress();
+            isHoldingHack = doorInteraction.IsHoldingHack();
+            hackHoldProgress = doorInteraction.GetHackHoldProgress();
         }
         else
         {
             isHacking = false;
             hackProgress = 0f;
+            isHoldingHack = false;
+            hackHoldProgress = 0f;
         }
     }
 
@@ -187,7 +193,8 @@ public class InteractionPreview : MonoBehaviour
                             currentReviveTarget != null ||
                             currentTarget != null ||
                             isReviving ||
-                            isHacking;
+                            isHacking ||
+                            isHoldingHack;
 
         if (interactionPanel != null)
             interactionPanel.SetActive(shouldShowUI);
@@ -200,17 +207,39 @@ public class InteractionPreview : MonoBehaviour
         {
             interactionText.text = "Reviving...";
         }
+        else if (isHoldingHack)
+        {
+            interactionText.text = $"Hacking...";
+        }
+        else if (isHacking)
+        {
+            interactionText.text = "Enter Password...";
+        }
         else if (currentReviveTarget != null)
         {
             interactionText.text = "F to Revive";
         }
-        else if (isHacking)
-        {
-            interactionText.text = "Hacking...";
-        }
         else if (currentTarget != null && currentTarget.CompareTag("Door"))
         {
-            interactionText.text = "F to Hack";
+            float cooldownRemaining = 0f;
+            if (doorInteraction != null)
+            {
+                DoorAnimTrigger door = currentTarget.GetComponentInParent<DoorAnimTrigger>();
+                if (door == null)
+                    door = currentTarget.GetComponent<DoorAnimTrigger>();
+
+                if (door != null)
+                    cooldownRemaining = doorInteraction.GetDoorCooldownRemaining(door);
+            }
+
+            if (cooldownRemaining > 0f)
+            {
+                interactionText.text = $"Hack again in {cooldownRemaining:F0}s";
+            }
+            else
+            {
+                interactionText.text = "F to Hack";
+            }
         }
         else if (currentInteractable != null)
         {
@@ -235,11 +264,13 @@ public class InteractionPreview : MonoBehaviour
         // --- PROGRESS BAR ---
         if (progressBar != null)
         {
-            bool showProgress = isReviving || isHacking;
+            bool showProgress = isReviving || isHacking || isHoldingHack;
             progressBar.gameObject.SetActive(showProgress);
 
             if (isReviving)
                 progressBar.fillAmount = reviveProgress;
+            else if (isHoldingHack)
+                progressBar.fillAmount = hackHoldProgress;
             else if (isHacking)
                 progressBar.fillAmount = hackProgress;
         }
@@ -247,13 +278,14 @@ public class InteractionPreview : MonoBehaviour
         // --- PROGRESS TEXT ---
         if (progressText != null)
         {
-            bool showProgress = isReviving || isHacking;
+            // Show progress text for revive and hacking hold
+            bool showProgress = isReviving || isHoldingHack;
             progressText.gameObject.SetActive(showProgress);
 
             if (isReviving)
                 progressText.text = $"{Mathf.RoundToInt(reviveProgress * 100)}%";
-            else if (isHacking)
-                progressText.text = $"{Mathf.RoundToInt(hackProgress * 100)}%";
+            else if (isHoldingHack)
+                progressText.text = $"{Mathf.RoundToInt(hackHoldProgress * 100)}%";
         }
     }
 

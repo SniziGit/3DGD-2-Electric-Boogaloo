@@ -246,19 +246,16 @@ public class FPSMovement : MonoBehaviour
             // Cancel sprint if crouch is pressed
             OnSprintCanceled(context);
         }
-        isPressed = true;
         isCrouching = true;
         speed = crouchSpeed;
         targetFOV = crouchFOV;
         if (playerAnimator != null) {
             playerAnimator.SetBool("PlayerCrouch", true);
-            playerAnimator.SetBool("PlayerIdle", false);
         }
     }
 
     void OnCrouchCanceled(InputAction.CallbackContext context)
     {
-        isPressed = false;
         isCrouching = false;
         speed = normalSpeed;
         targetFOV = normalFOV;
@@ -344,18 +341,18 @@ public class FPSMovement : MonoBehaviour
         // Handle idle animation when not moving and not crouching
         if (rb.linearVelocity.magnitude < 0.1f && !isCrouching && !isShooting)
         {
-            playerAnimator.SetBool("PlayerIdle", true);
+            // playerAnimator.SetBool("PlayerIdle", true); // Parameter doesn't exist - removed
         }
         else if (rb.linearVelocity.magnitude > 0.1f)
         {
-            playerAnimator.SetBool("PlayerIdle", false);
+            // playerAnimator.SetBool("PlayerIdle", false); // Parameter doesn't exist - removed
         }
         
         // Handle shooting animation (this would be called from the gun script)
         if (isShooting && !isCrouching)
         {
             playerAnimator.SetBool("PlayerShooting", true);
-            playerAnimator.SetBool("PlayerIdle", false);
+            // playerAnimator.SetBool("PlayerIdle", false); // Parameter doesn't exist - removed
         }
         else
         {
@@ -460,9 +457,16 @@ public class FPSMovement : MonoBehaviour
         }
         
         // Cancel door hacking if it was in progress
-        if (doorInteraction != null && doorInteraction.IsHacking())
+        if (doorInteraction != null)
         {
-            doorInteraction.CancelHack();
+            if (doorInteraction.IsHacking())
+            {
+                doorInteraction.CancelHack();
+            }
+            else if (doorInteraction.IsHoldingHack())
+            {
+                doorInteraction.CancelHack();
+            }
         }
     }
     

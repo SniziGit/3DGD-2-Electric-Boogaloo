@@ -3,75 +3,151 @@ using UnityEngine;
 public class DoorInteraction : MonoBehaviour
 {
     [Header("Door Unlocking Puzzle")]
-    [SerializeField] private float hackTime = 2f;
     [SerializeField] private float hackRange = 5f; // Increased from 3f to 5f to ensure it works
+    [SerializeField] private float hackCooldownSeconds = 5f;
+    [SerializeField] private int passwordLength = 4;
+    [SerializeField] private float passwordDisplaySeconds = 2.5f;
+    [SerializeField] private float hackHoldDuration = 2f; // Time required to hold before password appears
     
+    [Header("Per-Player UI")]
+    [SerializeField] private DirectionalSequenceUI passwordUi;
+
     private bool isHacking = false;
-    private float hackTimer = 0f;
+    private bool isHoldingHack = false;
+    private float hackHoldTimer = 0f;
     private DoorAnimTrigger targetDoor;
+    private DoorAnimTrigger lastDoorLookedAt;
     private FPSMovement playerMovement;
+    private SequenceInputHandler sequenceInput;
+
+    private static readonly System.Collections.Generic.Dictionary<DoorAnimTrigger, float> doorCooldownEndTime = new System.Collections.Generic.Dictionary<DoorAnimTrigger, float>();
     
     void Start()
     {
         playerMovement = GetComponent<FPSMovement>();
+        sequenceInput = GetComponent<SequenceInputHandler>();
     }
     
     void Update()
     {
-        if (isHacking && targetDoor != null)
+        // Update hold timer
+        if (isHoldingHack && targetDoor != null)
         {
-            hackTimer += Time.deltaTime;
+            hackHoldTimer += Time.deltaTime;
             
-            // Check if target is still in range and still has puzzle
-            // Use raycast to check actual distance to door collider instead of trigger position
-            if (Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, hackRange) && hit.collider.CompareTag("Door"))
+            // Check if hold is complete
+            if (hackHoldTimer >= hackHoldDuration)
             {
-                // Check if this door still has puzzle
-                DoorAnimTrigger door = hit.collider.GetComponentInParent<DoorAnimTrigger>();
-                if (door == null)
-                {
-                    door = hit.collider.GetComponent<DoorAnimTrigger>();
-                }
-                
-                if (door != targetDoor || !door.HasPuzzle())
-                {
-                    CancelHack();
-                    return;
-                }
+                CompleteHackHold();
             }
-            else
+            // Check if player stopped looking at door or moved away
+            else if (!IsDoorStillHackable(targetDoor))
             {
-                CancelHack();
-                return;
-            }
-            
-            // Complete hack
-            if (hackTimer >= hackTime)
-            {
-                CompleteHack();
+                CancelHackHold();
             }
         }
+        
+        if (!isHacking || targetDoor == null)
+            return;
+
+        if (!IsDoorStillHackable(targetDoor))
+        {
+            CancelHack();
+            return;
+        }
+    }
+
+    private bool IsDoorStillHackable(DoorAnimTrigger expectedDoor)
+    {
+        if (Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, hackRange) && hit.collider.CompareTag("Door"))
+        {
+            DoorAnimTrigger door = hit.collider.GetComponentInParent<DoorAnimTrigger>();
+            if (door == null)
+                door = hit.collider.GetComponent<DoorAnimTrigger>();
+
+            if (door == null)
+                return false;
+
+            if (door != expectedDoor)
+                return false;
+
+            if (!door.HasPuzzle())
+                return false;
+
+            if (IsDoorOnCooldown(door))
+                return false;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool IsDoorOnCooldown(DoorAnimTrigger door)
+    {
+        if (door == null)
+            return false;
+
+        if (!doorCooldownEndTime.TryGetValue(door, out float endTime))
+            return false;
+
+        if (Time.time >= endTime)
+        {
+            doorCooldownEndTime.Remove(door);
+            return false;
+        }
+
+        return true;
+    }
+
+    public float GetDoorCooldownRemaining(DoorAnimTrigger door)
+    {
+        if (!IsDoorOnCooldown(door))
+            return 0f;
+
+        return Mathf.Max(0f, doorCooldownEndTime[door] - Time.time);
+    }
+
+    public bool IsLastLookedAtDoorOnCooldown()
+    {
+        return lastDoorLookedAt != null && IsDoorOnCooldown(lastDoorLookedAt);
+    }
+
+    public float GetLastLookedAtDoorCooldownRemaining()
+    {
+        return lastDoorLookedAt != null ? GetDoorCooldownRemaining(lastDoorLookedAt) : 0f;
+    }
+
+    public float GetLastLookedAtDoorCooldownProgress01()
+    {
+        if (lastDoorLookedAt == null)
+            return 0f;
+
+        if (!IsDoorOnCooldown(lastDoorLookedAt))
+            return 0f;
+
+        float remaining = GetDoorCooldownRemaining(lastDoorLookedAt);
+        if (hackCooldownSeconds <= 0f)
+            return 1f;
+
+        // Fill bar while cooling down (0 -> 1).
+        return Mathf.Clamp01(1f - (remaining / hackCooldownSeconds));
     }
     
     public bool CanHack()
     {
+        lastDoorLookedAt = null;
+
         if (isHacking) 
         {
-            Debug.Log("[DoorInteraction] Already hacking, cannot start new hack");
             return false;
         }
-        
-        Debug.Log($"[DoorInteraction] Checking if can hack - position: {transform.position}, forward: {transform.forward}, range: {hackRange}");
         
         // Raycast to check if player is looking at a door
         if (Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, hackRange))
         {
-            Debug.Log($"[DoorInteraction] Raycast hit: {hit.collider.name} at distance {hit.distance}");
-            
             if (hit.collider.CompareTag("Door"))
             {
-                Debug.Log("[DoorInteraction] Hit object has 'Door' tag");
-                
                 // Try to find DoorAnimTrigger on the parent or the object itself
                 DoorAnimTrigger door = hit.collider.GetComponentInParent<DoorAnimTrigger>();
                 if (door == null)
@@ -81,59 +157,123 @@ public class DoorInteraction : MonoBehaviour
                 
                 if (door != null)
                 {
-                    Debug.Log($"[DoorInteraction] Found DoorAnimTrigger for {door.name}");
+                    lastDoorLookedAt = door;
+
                     if (door.HasPuzzle())
                     {
-                        Debug.Log("[DoorInteraction] Door has puzzle, can hack");
+                        if (IsDoorOnCooldown(door))
+                        {
+                            return false;
+                        }
+
                         targetDoor = door;
                         return true;
                     }
-                    else
-                    {
-                        Debug.Log("[DoorInteraction] Door does not have puzzle, cannot hack");
-                    }
-                }
-                else
-                {
-                    Debug.Log("[DoorInteraction] No DoorAnimTrigger component found on door or parent");
                 }
             }
-            else
-            {
-                Debug.Log($"[DoorInteraction] Hit object tag is '{hit.collider.tag}', not 'Door'");
-            }
-        }
-        else
-        {
-            Debug.Log("[DoorInteraction] Raycast hit nothing within hack range");
         }
         return false;
     }
     
     public void StartHack()
     {
-        if (CanHack() && !isHacking)
+        if (CanHack() && !isHoldingHack && !isHacking)
         {
-            isHacking = true;
-            hackTimer = 0f;
+            isHoldingHack = true;
+            hackHoldTimer = 0f;
+            Debug.Log("Starting hack hold...");
         }
     }
     
-    private void CompleteHack()
+    private void CompleteHackHold()
     {
-        if (targetDoor != null)
+        if (!isHoldingHack)
+            return;
+            
+        isHoldingHack = false;
+        isHacking = true;
+        hackHoldTimer = 0f;
+
+        if (passwordUi != null)
+            passwordUi.HideImmediately();
+
+        if (sequenceInput != null)
+            sequenceInput.SetUI(passwordUi);
+
+        if (playerMovement != null)
+            playerMovement.enabled = false;
+
+        StartPasswordMinigame();
+        Debug.Log("Hack hold complete, starting password minigame...");
+    }
+    
+    private void CancelHackHold()
+    {
+        isHoldingHack = false;
+        hackHoldTimer = 0f;
+        targetDoor = null;
+        Debug.Log("Hack hold cancelled");
+    }
+
+    private void StartPasswordMinigame()
+    {
+        if (passwordUi == null || sequenceInput == null || targetDoor == null)
         {
-            targetDoor.UnlockDoor();
+            CancelHack();
+            return;
         }
-        
+
+        System.Collections.Generic.List<PasswordNode.Direction> seq = GenerateRandomSequence(passwordLength);
+        passwordUi.ShowSequence(seq, passwordDisplaySeconds, null);
+        passwordUi.ShowInputPrompt();
+        sequenceInput.StartListening(seq, OnPasswordFinished);
+    }
+
+    private System.Collections.Generic.List<PasswordNode.Direction> GenerateRandomSequence(int length)
+    {
+        var sequence = new System.Collections.Generic.List<PasswordNode.Direction>(length);
+        var random = new System.Random();
+        for (int i = 0; i < length; i++)
+            sequence.Add((PasswordNode.Direction)random.Next(0, 4));
+        return sequence;
+    }
+
+    private void OnPasswordFinished(bool success)
+    {
+        if (!isHacking)
+            return;
+
+        if (success)
+        {
+            if (targetDoor != null)
+                targetDoor.UnlockDoor();
+
+            CancelHack();
+            return;
+        }
+
+        // On failure: disable screen and set cooldown
+        if (targetDoor != null)
+            doorCooldownEndTime[targetDoor] = Time.time + hackCooldownSeconds;
+
         CancelHack();
     }
     
     public void CancelHack()
     {
+        isHoldingHack = false;
         isHacking = false;
-        hackTimer = 0f;
         targetDoor = null;
+        hackHoldTimer = 0f;
+
+        if (sequenceInput != null)
+            sequenceInput.StopListeningExternal(false);
+
+        if (passwordUi != null)
+            passwordUi.HideImmediately();
+
+        if (playerMovement != null)
+            playerMovement.enabled = true;
     }
     
     public bool IsHacking()
@@ -143,6 +283,27 @@ public class DoorInteraction : MonoBehaviour
     
     public float GetHackProgress()
     {
-        return isHacking ? hackTimer / hackTime : 0f;
+        if (isHoldingHack && hackHoldDuration > 0f)
+            return Mathf.Clamp01(hackHoldTimer / hackHoldDuration);
+            
+        if (isHacking)
+            return 1f;
+
+        if (IsLastLookedAtDoorOnCooldown())
+            return GetLastLookedAtDoorCooldownProgress01();
+
+        return 0f;
+    }
+    
+    public bool IsHoldingHack()
+    {
+        return isHoldingHack;
+    }
+    
+    public float GetHackHoldProgress()
+    {
+        if (isHoldingHack && hackHoldDuration > 0f)
+            return Mathf.Clamp01(hackHoldTimer / hackHoldDuration);
+        return 0f;
     }
 }
