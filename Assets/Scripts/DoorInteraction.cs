@@ -21,6 +21,7 @@ public class DoorInteraction : MonoBehaviour
     private SequenceInputHandler sequenceInput;
 
     private static readonly System.Collections.Generic.Dictionary<DoorAnimTrigger, float> doorCooldownEndTime = new System.Collections.Generic.Dictionary<DoorAnimTrigger, float>();
+    private static readonly System.Collections.Generic.Dictionary<DoorAnimTrigger, DoorInteraction> doorBeingHacked = new System.Collections.Generic.Dictionary<DoorAnimTrigger, DoorInteraction>();
     
     void Start()
     {
@@ -74,7 +75,13 @@ public class DoorInteraction : MonoBehaviour
             if (!door.HasPuzzle())
                 return false;
 
+            if (!door.IsLocked())
+                return false;
+
             if (IsDoorOnCooldown(door))
+                return false;
+
+            if (IsDoorBeingHackedByOtherPlayer(door))
                 return false;
 
             return true;
@@ -98,6 +105,25 @@ public class DoorInteraction : MonoBehaviour
         }
 
         return true;
+    }
+
+    public bool IsDoorBeingHackedByOtherPlayer(DoorAnimTrigger door)
+    {
+        if (door == null)
+            return false;
+
+        if (!doorBeingHacked.TryGetValue(door, out DoorInteraction hacker))
+            return false;
+
+        // If the hacker is no longer actually hacking, clean up the reference
+        if (hacker == null || !hacker.isHacking && !hacker.isHoldingHack)
+        {
+            doorBeingHacked.Remove(door);
+            return false;
+        }
+
+        // Return true if someone else is hacking this door
+        return hacker != this;
     }
 
     public float GetDoorCooldownRemaining(DoorAnimTrigger door)
@@ -157,11 +183,20 @@ public class DoorInteraction : MonoBehaviour
                 
                 if (door != null)
                 {
-                    lastDoorLookedAt = door;
-
+                    // Always set lastDoorLookedAt for doors with puzzles (for cooldown display)
                     if (door.HasPuzzle())
                     {
+                        lastDoorLookedAt = door;
+                    }
+
+                    if (door.HasPuzzle() && door.IsLocked())
+                    {
                         if (IsDoorOnCooldown(door))
+                        {
+                            return false;
+                        }
+
+                        if (IsDoorBeingHackedByOtherPlayer(door))
                         {
                             return false;
                         }
@@ -181,6 +216,13 @@ public class DoorInteraction : MonoBehaviour
         {
             isHoldingHack = true;
             hackHoldTimer = 0f;
+            
+            // Register this player as hacking the door
+            if (targetDoor != null)
+            {
+                doorBeingHacked[targetDoor] = this;
+            }
+            
             Debug.Log("Starting hack hold...");
         }
     }
@@ -211,6 +253,13 @@ public class DoorInteraction : MonoBehaviour
     {
         isHoldingHack = false;
         hackHoldTimer = 0f;
+        
+        // Remove this player from hacking dictionary
+        if (targetDoor != null)
+        {
+            doorBeingHacked.Remove(targetDoor);
+        }
+        
         targetDoor = null;
         Debug.Log("Hack hold cancelled");
     }
@@ -225,7 +274,6 @@ public class DoorInteraction : MonoBehaviour
 
         System.Collections.Generic.List<PasswordNode.Direction> seq = GenerateRandomSequence(passwordLength);
         passwordUi.ShowSequence(seq, passwordDisplaySeconds, null);
-        passwordUi.ShowInputPrompt();
         sequenceInput.StartListening(seq, OnPasswordFinished);
     }
 
@@ -263,6 +311,13 @@ public class DoorInteraction : MonoBehaviour
     {
         isHoldingHack = false;
         isHacking = false;
+        
+        // Remove this player from hacking dictionary
+        if (targetDoor != null)
+        {
+            doorBeingHacked.Remove(targetDoor);
+        }
+        
         targetDoor = null;
         hackHoldTimer = 0f;
 

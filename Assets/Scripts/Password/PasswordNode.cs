@@ -17,11 +17,6 @@ public class PasswordNode : MonoBehaviour, IInteractable
     [Header("UI")]
     [SerializeField] private DirectionalSequenceUI sequenceUI;
     
-    [Header("Events")]
-    public UnityEvent onPasswordCorrect;
-    public UnityEvent onPasswordWrong;
-    public UnityEvent onPasswordStarted;
-    
     private List<Direction> currentSequence;
     private int currentAttempt = 0;
     private bool isInteracting = false;
@@ -56,8 +51,6 @@ public class PasswordNode : MonoBehaviour, IInteractable
         
         isInteracting = true;
         currentSequence = GenerateRandomSequence();
-        
-        onPasswordStarted?.Invoke();
         
         // Show the sequence to the player
         if (sequenceUI != null)
@@ -114,7 +107,6 @@ public class PasswordNode : MonoBehaviour, IInteractable
     private void OnPasswordCorrect()
     {
         Debug.Log("Password correct! Unlocking door...");
-        onPasswordCorrect?.Invoke();
         
         // Unlock the door
         if (doorToUnlock != null)
@@ -128,7 +120,6 @@ public class PasswordNode : MonoBehaviour, IInteractable
     private void OnPasswordWrong()
     {
         Debug.Log($"Password wrong! Attempt {currentAttempt + 1}/{maxAttempts}");
-        onPasswordWrong?.Invoke();
         
         currentAttempt++;
         
