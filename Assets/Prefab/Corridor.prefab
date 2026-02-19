@@ -1048,6 +1048,59 @@ Transform:
   - {fileID: 1045712950597375227}
   m_Father: {fileID: 1644181022622452851}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
+--- !u!1 &3012192026043969733
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4691245194243075874}
+  - component: {fileID: 6897105346011867310}
+  m_Layer: 0
+  m_Name: CeilingCollider
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4691245194243075874
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3012192026043969733}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 4, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1644181022622452851}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &6897105346011867310
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3012192026043969733}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 22, y: 0.11999999, z: 10.011648}
+  m_Center: {x: 0, y: 0.07, z: -0.08917642}
 --- !u!1 &3222003590861415924
 GameObject:
   m_ObjectHideFlags: 0
@@ -2148,7 +2201,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 3.86, z: -0.05}
-  m_LocalScale: {x: 1.842962, y: 2.08638, z: 0.68831605}
+  m_LocalScale: {x: 2.195, y: 2.08638, z: 0.6194844}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1644181022622452851}
@@ -2315,6 +2368,7 @@ Transform:
   - {fileID: 6501526141438580065}
   - {fileID: 2782534039690318067}
   - {fileID: 5540042609507850712}
+  - {fileID: 4691245194243075874}
   - {fileID: 8246609622816165262}
   - {fileID: 5292441928109818652}
   - {fileID: 7163963050194672484}

@@ -82,13 +82,13 @@ MonoBehaviour:
   health: 100
   bulletPrefab: {fileID: 8522927543607488731, guid: 63b6404fa8c3e154e9b2fd231d457894, type: 3}
   bulletSpawnPoint:
-  - {fileID: 0}
+  - {fileID: 1537003847595999869}
   muzzleFlash: {fileID: 3971537154403255433, guid: 0ca831b58ff9f364b94bcb456c0e7949, type: 3}
   bloom: 0.75
   fireRate: 0.5
+  hitMat: {fileID: 2100000, guid: 912dfede47b42c6429b544046fd1e497, type: 2}
   shootingSFX: {fileID: 8300000, guid: 883153b4aadef934a8362985a404d082, type: 3}
   visualEffectsObject: {fileID: 5294303086713905083}
-  hitMat: {fileID: 2100000, guid: 912dfede47b42c6429b544046fd1e497, type: 2}
   currentPointIndex: 0
   previousPointIndex: -1
   currentTarget: {x: 0, y: 0, z: 0}
@@ -140,8 +140,8 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.2
-  m_Height: 1.15
+  m_Radius: 0.66
+  m_Height: 1
   m_Direction: 2
   m_Center: {x: 0, y: 0.49, z: 0.05}
 --- !u!114 &2611686615710593630
@@ -242,7 +242,7 @@ Transform:
   m_GameObject: {fileID: 4305765187690429617}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.531, z: 0.67}
+  m_LocalPosition: {x: 0, y: 0.531, z: 0.677}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
