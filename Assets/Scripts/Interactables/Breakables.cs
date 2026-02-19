@@ -103,28 +103,28 @@ public class Breakables : MonoBehaviour, IDamageable
             
             GameObject droppedItem = Instantiate(randomItem, dropPosition, Quaternion.identity);
             
-            // Add Rigidbody if it doesn't exist to make it fall
-            Rigidbody rb = droppedItem.GetComponent<Rigidbody>();
-            if (rb == null)
-            {
-                rb = droppedItem.AddComponent<Rigidbody>();
-            }
+            //// Add Rigidbody if it doesn't exist to make it fall
+            //Rigidbody rb = droppedItem.GetComponent<Rigidbody>();
+            //if (rb == null)
+            //{
+            //    rb = droppedItem.AddComponent<Rigidbody>();
+            //}
             
-            // Reset any existing angular velocity to prevent spinning
-            rb.angularVelocity = Vector3.zero;
+            //// Reset any existing angular velocity to prevent spinning
+            //rb.angularVelocity = Vector3.zero;
             
-            // Add very gentle downward force
-            rb.AddForce(Vector3.down * 0.5f, ForceMode.Impulse);
+            //// Add very gentle downward force
+            //rb.AddForce(Vector3.down * 0.5f, ForceMode.Impulse);
             
-            // Add minimal horizontal force
-            rb.AddForce(new Vector3(
-                Random.Range(-0.1f, 0.1f),
-                0f,
-                Random.Range(-0.1f, 0.1f)
-            ), ForceMode.Impulse);
+            //// Add minimal horizontal force
+            //rb.AddForce(new Vector3(
+            //    Random.Range(-0.1f, 0.1f),
+            //    0f,
+            //    Random.Range(-0.1f, 0.1f)
+            //), ForceMode.Impulse);
             
-            // Freeze rotation to prevent spinning
-            rb.freezeRotation = true;
+            //// Freeze rotation to prevent spinning
+            //rb.freezeRotation = true;
             
             droppedItems.Add(randomItem);
             
