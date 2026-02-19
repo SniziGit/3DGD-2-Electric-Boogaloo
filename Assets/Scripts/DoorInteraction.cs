@@ -74,6 +74,9 @@ public class DoorInteraction : MonoBehaviour
             if (!door.HasPuzzle())
                 return false;
 
+            if (!door.IsLocked())
+                return false;
+
             if (IsDoorOnCooldown(door))
                 return false;
 
@@ -157,9 +160,13 @@ public class DoorInteraction : MonoBehaviour
                 
                 if (door != null)
                 {
-                    lastDoorLookedAt = door;
-
+                    // Always set lastDoorLookedAt for doors with puzzles (for cooldown display)
                     if (door.HasPuzzle())
+                    {
+                        lastDoorLookedAt = door;
+                    }
+
+                    if (door.HasPuzzle() && door.IsLocked())
                     {
                         if (IsDoorOnCooldown(door))
                         {
@@ -225,7 +232,6 @@ public class DoorInteraction : MonoBehaviour
 
         System.Collections.Generic.List<PasswordNode.Direction> seq = GenerateRandomSequence(passwordLength);
         passwordUi.ShowSequence(seq, passwordDisplaySeconds, null);
-        passwordUi.ShowInputPrompt();
         sequenceInput.StartListening(seq, OnPasswordFinished);
     }
 

@@ -107,8 +107,16 @@ public class InteractionPreview : MonoBehaviour
             {
                 if (hit.distance <= interactionRange && hit.collider.CompareTag("Door"))
                 {
-                    currentTarget = hit.collider.gameObject;
-                    return;
+                    // Check if door has puzzle and either is locked or is on cooldown
+                    DoorAnimTrigger door = hit.collider.GetComponentInParent<DoorAnimTrigger>();
+                    if (door == null)
+                        door = hit.collider.GetComponent<DoorAnimTrigger>();
+                    
+                    if (door != null && door.HasPuzzle() && (door.IsLocked() || doorInteraction.IsDoorOnCooldown(door)))
+                    {
+                        currentTarget = hit.collider.gameObject;
+                        return;
+                    }
                 }
             }
         }
@@ -221,24 +229,39 @@ public class InteractionPreview : MonoBehaviour
         }
         else if (currentTarget != null && currentTarget.CompareTag("Door"))
         {
-            float cooldownRemaining = 0f;
-            if (doorInteraction != null)
-            {
-                DoorAnimTrigger door = currentTarget.GetComponentInParent<DoorAnimTrigger>();
-                if (door == null)
-                    door = currentTarget.GetComponent<DoorAnimTrigger>();
+            DoorAnimTrigger door = currentTarget.GetComponentInParent<DoorAnimTrigger>();
+            if (door == null)
+                door = currentTarget.GetComponent<DoorAnimTrigger>();
 
-                if (door != null)
-                    cooldownRemaining = doorInteraction.GetDoorCooldownRemaining(door);
-            }
+            if (door != null)
+            {
+                if (!door.HasPuzzle())
+                {
+                    // Don't show any UI for doors without puzzles
+                    interactionText.text = "";
+                }
+                else
+                {
+                    float cooldownRemaining = 0f;
+                    if (doorInteraction != null)
+                    {
+                        cooldownRemaining = doorInteraction.GetDoorCooldownRemaining(door);
+                    }
 
-            if (cooldownRemaining > 0f)
-            {
-                interactionText.text = $"Hack again in {cooldownRemaining:F0}s";
-            }
-            else
-            {
-                interactionText.text = "F to Hack";
+                    if (cooldownRemaining > 0f)
+                    {
+                        interactionText.text = $"Hack again in {cooldownRemaining:F0}s";
+                    }
+                    else if (door.IsLocked())
+                    {
+                        interactionText.text = "F to Hack";
+                    }
+                    else
+                    {
+                        // Door is unlocked and not on cooldown - don't show UI
+                        interactionText.text = "";
+                    }
+                }
             }
         }
         else if (currentInteractable != null)
@@ -264,7 +287,8 @@ public class InteractionPreview : MonoBehaviour
         // --- PROGRESS BAR ---
         if (progressBar != null)
         {
-            bool showProgress = isReviving || isHacking || isHoldingHack;
+            bool showProgress = isReviving || isHacking || isHoldingHack || 
+                               (currentTarget != null && currentTarget.CompareTag("Door") && doorInteraction != null && doorInteraction.IsLastLookedAtDoorOnCooldown());
             progressBar.gameObject.SetActive(showProgress);
 
             if (isReviving)
@@ -273,6 +297,8 @@ public class InteractionPreview : MonoBehaviour
                 progressBar.fillAmount = hackHoldProgress;
             else if (isHacking)
                 progressBar.fillAmount = hackProgress;
+            else if (currentTarget != null && currentTarget.CompareTag("Door") && doorInteraction != null && doorInteraction.IsLastLookedAtDoorOnCooldown())
+                progressBar.fillAmount = doorInteraction.GetLastLookedAtDoorCooldownProgress01();
         }
 
         // --- PROGRESS TEXT ---

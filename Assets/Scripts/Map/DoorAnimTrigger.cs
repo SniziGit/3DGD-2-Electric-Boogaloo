@@ -136,6 +136,11 @@ public class DoorAnimTrigger : MonoBehaviour
         return hasPuzzle;
     }
 
+    public bool IsLocked()
+    {
+        return isLocked;
+    }
+
     private void SetLightsColor(Color color)
     {
         if (lights != null)
