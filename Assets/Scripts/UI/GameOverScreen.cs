@@ -63,7 +63,7 @@ public class GameOverScreen : MonoBehaviour
         LevelManager levelManager = FindObjectOfType<LevelManager>();
         if (levelManager != null && levelManager.isGameOver && !gameOverPanel.activeInHierarchy)
         {
-            ShowGameOver(levelManager.DidPlayerWin(), levelManager.IsOutOfMoves(), levelManager.IsOutOfTime());
+            ShowGameOver(levelManager.DidPlayerWin(), false, levelManager.IsOutOfTime());
         }
     }
 
@@ -118,13 +118,13 @@ public class GameOverScreen : MonoBehaviour
     public void RestartLevel()
     {
         Time.timeScale = 1f; // Resume time before loading
-        SceneManager.LoadScene("Game");
+        SceneManager.LoadScene("Carpet");
     }
 
     public void ExitToTitle()
     {
         Time.timeScale = 1f; // Resume time before loading
-        SceneManager.LoadScene("Title");
+        SceneManager.LoadScene("MainMenu");
     }
 
     public void HideGameOver()
