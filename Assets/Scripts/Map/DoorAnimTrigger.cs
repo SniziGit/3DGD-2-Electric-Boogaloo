@@ -12,11 +12,17 @@ public class DoorAnimTrigger : MonoBehaviour
     private bool isPlayerInside = false;
     private Coroutine closeCoroutine;
     private NavMeshObstacle navObstacle;
+    private int wallLayer;
+    private int groundLayer;
 
     void Start()
     {
         doorAnimator = GetComponent<Animator>();
         doorCollider = GetComponent<Collider>();
+        
+        // Initialize layer indices
+        wallLayer = LayerMask.NameToLayer("Wall");
+        groundLayer = LayerMask.NameToLayer("Ground");
         
         // Initialize NavMeshObstacle for dynamic carving
         navObstacle = GetComponent<NavMeshObstacle>();
@@ -35,6 +41,9 @@ public class DoorAnimTrigger : MonoBehaviour
             }
         }
         navObstacle.carving = true; // Doors start closed, so carve to block pathfinding
+        
+        // Set initial layer based on closed state
+        SetLayerRecursively(transform, wallLayer);
         
         // Check if door leads to corridor and set lock state accordingly
         bool leadsToCorridor = DoesDoorLeadToCorridor();
@@ -90,6 +99,7 @@ public class DoorAnimTrigger : MonoBehaviour
             isPlayerInside = true;
             doorAnimator.SetBool("isOpen", true);
             if (navObstacle != null) navObstacle.carving = false; // Allow pathfinding through open door
+            SetLayerRecursively(transform, groundLayer); // Change to ground layer when open
             
             if (closeCoroutine != null)
             {
@@ -116,6 +126,7 @@ public class DoorAnimTrigger : MonoBehaviour
         {
             doorAnimator.SetBool("isOpen", false);
             if (navObstacle != null) navObstacle.carving = true; // Block pathfinding when door closes
+            SetLayerRecursively(transform, wallLayer); // Change back to wall layer when closed
         }
         closeCoroutine = null;
     }
@@ -245,5 +256,14 @@ public class DoorAnimTrigger : MonoBehaviour
         }
         
         return false;
+    }
+    
+    private void SetLayerRecursively(Transform parent, int layer)
+    {
+        parent.gameObject.layer = layer;
+        foreach (Transform child in parent)
+        {
+            SetLayerRecursively(child, layer);
+        }
     }
 }
