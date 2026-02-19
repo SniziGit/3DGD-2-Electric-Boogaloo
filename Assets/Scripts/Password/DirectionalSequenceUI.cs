@@ -9,6 +9,7 @@ public class DirectionalSequenceUI : MonoBehaviour
     [Header("UI Elements")]
     [SerializeField] private GameObject sequencePanel;
     [SerializeField] private Transform[] arrowSlots;
+    [SerializeField] private TextMeshProUGUI timerText;
     [SerializeField] private Sprite upArrowSprite;
     [SerializeField] private Sprite downArrowSprite;
     [SerializeField] private Sprite leftArrowSprite;
@@ -26,6 +27,9 @@ public class DirectionalSequenceUI : MonoBehaviour
 
     private List<PasswordNode.Direction> currentSequence;
     private System.Action onCompleteCallback;
+    private Coroutine timerCoroutine;
+    private float currentTimerDuration;
+    private bool isTimerActive;
 
     private void Start()
     {
@@ -49,9 +53,75 @@ public class DirectionalSequenceUI : MonoBehaviour
     {
         currentSequence = sequence;
         onCompleteCallback = onComplete;
+        currentTimerDuration = displayTime;
 
         ShowPanel();
         DisplayArrows(sequence);
+        StartTimer(displayTime);
+    }
+
+    public void StartTimer(float duration)
+    {
+        StopTimer();
+        currentTimerDuration = duration;
+        isTimerActive = true;
+        timerCoroutine = StartCoroutine(TimerCoroutine(duration));
+    }
+
+    public void StopTimer()
+    {
+        if (timerCoroutine != null)
+        {
+            StopCoroutine(timerCoroutine);
+            timerCoroutine = null;
+        }
+        isTimerActive = false;
+        
+        if (timerText != null)
+            timerText.gameObject.SetActive(false);
+    }
+
+    public void SetTimerDuration(float duration)
+    {
+        currentTimerDuration = duration;
+        if (isTimerActive)
+        {
+            StopTimer();
+            StartTimer(duration);
+        }
+    }
+
+    public float GetRemainingTime()
+    {
+        return currentTimerDuration;
+    }
+
+    private IEnumerator TimerCoroutine(float duration)
+    {
+        if (timerText != null)
+        {
+            timerText.gameObject.SetActive(true);
+        }
+
+        float timeRemaining = duration;
+        while (timeRemaining > 0)
+        {
+            timeRemaining -= Time.deltaTime;
+            currentTimerDuration = timeRemaining;
+
+            if (timerText != null)
+            {
+                timerText.text = $"{timeRemaining:F1}";
+            }
+
+            yield return null;
+        }
+
+        currentTimerDuration = 0;
+        isTimerActive = false;
+        
+        if (timerText != null)
+            timerText.gameObject.SetActive(false);
     }
 
     private void DisplayArrows(List<PasswordNode.Direction> sequence)
@@ -134,6 +204,7 @@ public class DirectionalSequenceUI : MonoBehaviour
 
     public void HideImmediately()
     {
+        StopTimer();
         HidePanel();
     }
 }
