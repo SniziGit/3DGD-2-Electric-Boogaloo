@@ -52,6 +52,11 @@ public class Enemy : MonoBehaviour, IDamageable
     private float playerUpdateTimer = 0f;
     private float playerUpdateInterval = 1f;
 
+    // Damage-based targeting
+    private Transform lastAttacker = null;
+    private float lastAttackTime = 0f;
+    private float attackerPriorityDuration = 5f; // How long to prioritize last attacker
+
     // Lose sight timer for state transitions
     private float loseSightTimer = 0f;
     private float loseSightThreshold = 15f;
@@ -123,6 +128,12 @@ public class Enemy : MonoBehaviour, IDamageable
         Transform closestPlayer = null;
         float closestDistance = float.MaxValue;
         
+        // Check if we should prioritize last attacker
+        bool shouldPrioritizeAttacker = lastAttacker != null && 
+                                       (Time.time - lastAttackTime) < attackerPriorityDuration &&
+                                       !IsPlayerDowned(lastAttacker) &&
+                                       activePlayers.Contains(lastAttacker.GetComponent<FPSMovement>());
+        
         foreach (GameObject player in players)
         {
             if (player != null && !IsPlayerDowned(player.transform))
@@ -137,13 +148,23 @@ public class Enemy : MonoBehaviour, IDamageable
                     bool hasLineOfSight = Physics.Raycast(transform.position, directionToPlayer.normalized, out RaycastHit hit, maxVisionDistance);
                     bool canSeeThisPlayer = hasLineOfSight && hit.transform == player.transform;
                     
-                    // Only consider players we can see, or if no one is visible yet
-                    if (canSeeThisPlayer || closestPlayer == null)
+                    // Prioritize last attacker if within priority duration
+                    if (shouldPrioritizeAttacker && player.transform == lastAttacker)
                     {
-                        if (distance < closestDistance)
+                        closestDistance = distance;
+                        closestPlayer = player.transform;
+                        Debug.Log($"[Enemy] Prioritizing attacker {player.name}");
+                    }
+                    // Otherwise use normal closest player logic
+                    else if (!shouldPrioritizeAttacker || player.transform != lastAttacker)
+                    {
+                        if (canSeeThisPlayer || closestPlayer == null)
                         {
-                            closestDistance = distance;
-                            closestPlayer = player.transform;
+                            if (distance < closestDistance)
+                            {
+                                closestDistance = distance;
+                                closestPlayer = player.transform;
+                            }
                         }
                     }
                 }
@@ -271,6 +292,39 @@ public class Enemy : MonoBehaviour, IDamageable
         {
             StartCoroutine(Blink());
         }
+
+        // Find out who attacked us
+        GameObject attacker = FindAttacker();
+        if (attacker != null)
+        {
+            lastAttacker = attacker.transform;
+            lastAttackTime = Time.time;
+            Debug.Log($"[Enemy] Taking damage from {attacker.name}, prioritizing this player");
+        }
+    }
+
+    private GameObject FindAttacker()
+    {
+        // Try to find the most recent damage source
+        // This is a simplified approach - in a real game you might want to pass attacker info through damage system
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        GameObject closestPlayer = null;
+        float closestDistance = float.MaxValue;
+        
+        foreach (GameObject player in players)
+        {
+            if (player != null && !IsPlayerDowned(player.transform))
+            {
+                float distance = Vector3.Distance(transform.position, player.transform.position);
+                if (distance < closestDistance && distance < 10f) // Within reasonable combat range
+                {
+                    closestDistance = distance;
+                    closestPlayer = player;
+                }
+            }
+        }
+        
+        return closestPlayer;
     }
 
     void Die()
