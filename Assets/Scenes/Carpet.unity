@@ -365,7 +365,7 @@ Light:
   m_Enabled: 1
   serializedVersion: 11
   m_Type: 1
-  m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
+  m_Color: {r: 0.48742133, g: 0.6862472, b: 1, a: 1}
   m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
@@ -1181,8 +1181,6 @@ MonoBehaviour:
   playerWon: 0
   outOfTime: 0
   playersDead: 0
-  totalCollectibles: 0
-  collectedCollectibles: 0
   reachedWarpPad: 0
 --- !u!4 &860208368
 Transform:
