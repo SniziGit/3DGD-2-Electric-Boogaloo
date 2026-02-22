@@ -126,6 +126,8 @@ MonoBehaviour:
   rotationSpeed: 50
   floatHeight: 0.3
   floatAmplitude: 0
+  despawnTime: 20
+  enableDespawn: 1
 --- !u!1 &5992675132359935159
 GameObject:
   m_ObjectHideFlags: 0

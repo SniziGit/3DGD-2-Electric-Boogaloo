@@ -7,18 +7,30 @@ public class HealthPickup : MonoBehaviour, IInteractable
     public float rotationSpeed = 50f;
     public float floatHeight = 0.3f; // Reduced height
     public float floatAmplitude = 0.1f; // Reduced amplitude for smoother movement
+    [Header("Despawn Settings")]
+    public float despawnTime = 30f; // Time in seconds before pickup despawns
+    public bool enableDespawn = true; // Toggle despawn on/off
     
     private Vector3 startPosition;
     private float timeOffset;
+    private float spawnTime;
     
     void Start()
     {
         startPosition = transform.position;
         timeOffset = Random.Range(0f, Mathf.PI * 2f);
+        spawnTime = Time.time;
     }
     
     void Update()
     {
+        // Check if pickup should despawn
+        if (enableDespawn && Time.time - spawnTime >= despawnTime)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        
         // Smoother floating animation using cosine for gentler movement
         float newY = startPosition.y + Mathf.Cos(Time.time * rotationSpeed * 0.5f + timeOffset) * floatAmplitude;
         transform.position = new Vector3(transform.position.x, newY, transform.position.z);
