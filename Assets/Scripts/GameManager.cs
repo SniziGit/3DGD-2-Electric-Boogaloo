@@ -10,11 +10,15 @@ public class GameManager : MonoBehaviour
     
     void Awake()
     {
+        // DISABLED - LevelManager now handles all game state management
         // Singleton pattern
-        if (Instance == null)
-            Instance = this;
-        else
-            Destroy(gameObject);
+        // if (Instance == null)
+        //     Instance = this;
+        // else
+        //     Destroy(gameObject);
+        
+        // Destroy this component since LevelManager handles everything
+        Destroy(this);
     }
     
     void Start()
@@ -81,15 +85,7 @@ public class GameManager : MonoBehaviour
     private void GameOver()
     {
         Debug.Log("GAME OVER - All players are downed!");
-        
-        // Force all players to die
-        foreach (PlayerHealth player in players)
-        {
-            player.ForceDeath();
-        }
-        
-        // You could add game over UI here
-        // For example: UIManager.Instance.ShowGameOver();
+        // LevelManager now handles all game over logic
     }
     
     public int GetDownedPlayerCount()

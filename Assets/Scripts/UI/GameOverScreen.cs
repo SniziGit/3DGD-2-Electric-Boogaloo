@@ -50,21 +50,7 @@ public class GameOverScreen : MonoBehaviour
 
     private void Start()
     {
-        // Listen for game over events
-        LevelManager levelManager = FindObjectOfType<LevelManager>();
-        if (levelManager != null)
-        {
-            // We'll check game over state in Update
-        }
-    }
-
-    private void Update()
-    {
-        LevelManager levelManager = FindObjectOfType<LevelManager>();
-        if (levelManager != null && levelManager.isGameOver && !gameOverPanel.activeInHierarchy)
-        {
-            ShowGameOver(levelManager.DidPlayerWin(), false, levelManager.IsOutOfTime());
-        }
+        // GameOverScreen is now controlled directly by LevelManager
     }
 
     public void ShowGameOver(bool isWin, bool outOfMoves, bool outOfTime)

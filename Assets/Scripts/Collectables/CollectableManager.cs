@@ -14,7 +14,7 @@ public class CollectableManager : MonoBehaviour
     
     private static CollectableManager instance;
     public int currentCollected = 0;
-    private bool gameCompleted = false;
+    [SerializeField] public bool allCollected = false;
     private int crystalsToSpawn = 0;
     private List<RoomGen> availableRooms = new List<RoomGen>();
     
@@ -40,7 +40,7 @@ public class CollectableManager : MonoBehaviour
     
     public bool IsGameCompleted()
     {
-        return gameCompleted;
+        return allCollected;
     }
     
     void Awake()
@@ -66,7 +66,7 @@ public class CollectableManager : MonoBehaviour
     
     public void CollectCollectable(GameObject player)
     {
-        if (gameCompleted)
+        if (allCollected)
             return;
         
         currentCollected++;
@@ -136,7 +136,7 @@ public class CollectableManager : MonoBehaviour
     
     void CompleteGame()
     {
-        gameCompleted = true;
+        allCollected = true;
         
         Debug.Log("Game Completed! All collectables gathered!");
         
@@ -162,7 +162,7 @@ public class CollectableManager : MonoBehaviour
     public void ResetProgress()
     {
         currentCollected = 0;
-        gameCompleted = false;
+        allCollected = false;
         crystalsToSpawn = totalRequiredCollectables;
         UpdateCollectableUI();
     }

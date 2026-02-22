@@ -196,10 +196,10 @@ public class PlayerHealth : MonoBehaviour
         currentHealth = 0;
         UpdateHealthFillTarget();
         
-        // Notify GameManager to check if all players are downed
-        if (GameManager.Instance != null)
+        // Notify LevelManager to check if all players are downed
+        if (LevelManager.Instance != null)
         {
-            GameManager.Instance.CheckPlayerDowned(this);
+            LevelManager.Instance.CheckPlayerDowned(this);
         }
         
         Debug.Log("Player is downed! Can be revived.");
@@ -267,10 +267,10 @@ public class PlayerHealth : MonoBehaviour
         currentHealth = reviveHealth;
         UpdateHealthFillTarget();
         
-        // Notify GameManager that player was revived
-        if (GameManager.Instance != null)
+        // Notify LevelManager that player was revived
+        if (LevelManager.Instance != null)
         {
-            GameManager.Instance.PlayerRevived(this);
+            LevelManager.Instance.PlayerRevived(this);
         }
         
         Debug.Log($"Player revived with {reviveHealth} health!");
@@ -279,7 +279,6 @@ public class PlayerHealth : MonoBehaviour
     public void ForceDeath()
     {
         // Called by GameManager when game should end
-        Time.timeScale = 0f;
         Debug.Log("Game Over - All players are downed!");
     }
     
