@@ -853,7 +853,7 @@ Camera:
     serializedVersion: 2
     m_Bits: 192
   m_RenderingPath: -1
-  m_TargetTexture: {fileID: 8400000, guid: ceeaa20aa50a98744818cb7677934695, type: 2}
+  m_TargetTexture: {fileID: 8400000, guid: 5a383cae0cecc1747879fec604adad03, type: 2}
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1
@@ -1094,7 +1094,7 @@ MonoBehaviour:
       m_Calls: []
   m_ActionEvents: []
   m_NeverAutoSwitchControlSchemes: 0
-  m_DefaultControlScheme: 
+  m_DefaultControlScheme: Keyboard Mouse
   m_DefaultActionMap: GamePlay
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 6851629534403498496}
@@ -8241,7 +8241,7 @@ MonoBehaviour:
       m_Calls: []
   m_ActionEvents: []
   m_NeverAutoSwitchControlSchemes: 0
-  m_DefaultControlScheme: 
+  m_DefaultControlScheme: Gamepad
   m_DefaultActionMap: GamePlay
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 8552735383582831665}
