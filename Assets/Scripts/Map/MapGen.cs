@@ -4,7 +4,6 @@ using System.Linq;
 
 using UnityEngine;
 
-using UnityEngine.AI;
 
 
 
@@ -34,13 +33,6 @@ public class MapGen : MonoBehaviour
     [SerializeField] private int minBranchesPerNode = 1;
     [SerializeField] private int maxBranchesPerNode = 3;
     
-    [Header("NavMesh Settings")]
-    [SerializeField] private bool bakeNavMeshAfterGeneration = true;
-    [SerializeField] private float navMeshCellSize = 0.3f;
-    [SerializeField] private float navMeshAgentHeight = 2f;
-    [SerializeField] private float navMeshAgentRadius = 0.5f;
-    [SerializeField] private float navMeshMaxSlope = 45f;
-    [SerializeField] private LayerMask navMeshLayerMask = -1;
 
     [Header("Regeneration Settings")]
     [SerializeField] private int maxRegenerationAttempts = 3;
@@ -116,11 +108,6 @@ public class MapGen : MonoBehaviour
         // Initialize spawning for all rooms (enemies, objects, crystals)
         InitializeRoomSpawning();
 
-        // Bake NavMesh for the entire generated dungeon
-        if (bakeNavMeshAfterGeneration)
-        {
-            BakeNavMesh();
-        }
         
         // Disable this component after generation is complete
         // GameObject remains for DoorAnimTrigger references and room management
@@ -1482,140 +1469,6 @@ public class MapGen : MonoBehaviour
     }
 
     
-
-    private void BakeNavMesh()
-
-    {
-
-        Debug.Log("[MapGen] Starting NavMesh baking for generated dungeon...");
-
-        
-
-        try
-
-        {
-
-            // Get all surfaces that should be included in the NavMesh
-
-            List<NavMeshBuildSource> sources = new List<NavMeshBuildSource>();
-
-            
-
-            // Collect colliders from all child objects (rooms and corridors)
-
-            Collider[] colliders = GetComponentsInChildren<Collider>();
-
-            foreach (Collider collider in colliders)
-
-            {
-
-                if (collider != null && ((navMeshLayerMask.value & (1 << collider.gameObject.layer)) != 0))
-
-                {
-
-                    NavMeshBuildSource source = new NavMeshBuildSource();
-
-                    source.shape = NavMeshBuildSourceShape.Mesh;
-
-                    
-
-                    // Try to get mesh from filter
-
-                    MeshFilter meshFilter = collider.GetComponent<MeshFilter>();
-
-                    if (meshFilter != null && meshFilter.sharedMesh != null)
-
-                    {
-
-                        source.transform = collider.transform.localToWorldMatrix;
-
-                        source.sourceObject = meshFilter.sharedMesh;
-
-                        source.area = 0; // Walkable area
-
-                        sources.Add(source);
-
-                    }
-
-                }
-
-            }
-
-            
-
-            if (sources.Count == 0)
-
-            {
-
-                Debug.LogWarning("[MapGen] No valid geometry found for NavMesh baking");
-
-                return;
-
-            }
-
-            
-
-            // Calculate bounds
-
-            Bounds bounds = new Bounds(transform.position, Vector3.zero);
-
-            foreach (var source in sources)
-
-            {
-
-                bounds.Encapsulate(new Bounds(source.transform.GetPosition(), Vector3.one));
-
-            }
-
-            bounds.Expand(10f); // Add some padding
-
-            
-
-            // Build NavMesh data
-
-            NavMeshData navMeshData = new NavMeshData();
-
-            
-
-            // Configure build settings
-
-            NavMeshBuildSettings buildSettings = NavMesh.GetSettingsByID(0);
-
-            buildSettings.agentHeight = navMeshAgentHeight;
-
-            buildSettings.agentRadius = navMeshAgentRadius;
-
-            buildSettings.agentClimb = 0.5f;
-
-            buildSettings.minRegionArea = 2f;
-
-            
-
-            // Build the NavMesh
-
-            navMeshData = NavMeshBuilder.BuildNavMeshData(buildSettings, sources, bounds, Vector3.zero, Quaternion.identity);
-
-            
-
-            // Add the NavMesh to the scene
-
-            NavMesh.AddNavMeshData(navMeshData);
-
-            
-
-            Debug.Log($"[MapGen] NavMesh baking completed successfully! Generated {sources.Count} surfaces, bounds: {bounds}");
-
-        }
-
-        catch (System.Exception e)
-
-        {
-
-            Debug.LogError($"[MapGen] Failed to bake NavMesh: {e.Message}\n{e.StackTrace}");
-
-        }
-
-    }
 
     private void TriggerMapRegeneration()
     {
