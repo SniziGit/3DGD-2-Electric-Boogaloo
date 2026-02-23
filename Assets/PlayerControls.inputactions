@@ -466,7 +466,7 @@
                     "path": "<Gamepad>/dpad/down",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": ";Gamepad",
                     "action": "PasswordDown",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -488,7 +488,7 @@
                     "path": "<Gamepad>/dpad/left",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": ";Gamepad",
                     "action": "PasswordLeft",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -510,7 +510,7 @@
                     "path": "<Gamepad>/dpad/right",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": ";Gamepad",
                     "action": "PasswordRight",
                     "isComposite": false,
                     "isPartOfComposite": false
