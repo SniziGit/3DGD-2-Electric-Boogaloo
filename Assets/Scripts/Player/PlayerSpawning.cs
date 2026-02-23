@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class PlayerSpawning : MonoBehaviour
 {
@@ -13,28 +14,26 @@ public class PlayerSpawning : MonoBehaviour
 
     void Start()
     {
-        Debug.Log("[PlayerSpawning] Start() called, subscribing to MapGen completion event");
-        
-        // Check if MapGen is already disabled (generation already complete)
-        MapGen mapGen = FindObjectOfType<MapGen>();
-        if (mapGen != null && !mapGen.enabled)
-        {
-            Debug.Log("[PlayerSpawning] MapGen is already disabled, spawning player immediately");
-            SpawnPlayerInFirstRoom();
-            return;
-        }
-        
-        // Subscribe to MapGen completion event
         MapGen.OnMapGenerationComplete += OnMapGenerationComplete;
-        Debug.Log("[PlayerSpawning] Subscribed to OnMapGenerationComplete event");
+        
+        // Start fallback timer in case event doesn't fire
+        StartCoroutine(FallbackSpawnAfterDelay());
+    }
+    
+    private IEnumerator FallbackSpawnAfterDelay()
+    {
+        yield return new WaitForSeconds(0.1f);
+        
+        // Only spawn if not already spawned
+        if (spawnedPlayer == null)
+        {
+            SpawnPlayerInFirstRoom();
+        }
     }
     
     private void OnMapGenerationComplete()
     {
-        Debug.Log("[PlayerSpawning] MapGen generation complete event received, spawning player");
         SpawnPlayerInFirstRoom();
-        
-        // Unsubscribe after use to prevent memory leaks
         MapGen.OnMapGenerationComplete -= OnMapGenerationComplete;
     }
     

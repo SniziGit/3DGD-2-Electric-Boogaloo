@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -104,18 +105,13 @@ public class MapGen : MonoBehaviour
         // Initialize spawning for all rooms (enemies, objects, crystals)
         InitializeRoomSpawning();
 
-        
-        // Disable this component after generation is complete
-        // GameObject remains for DoorAnimTrigger references and room management
-        
         // Notify all subscribers that map generation is complete
-        Debug.Log("[MapGen] Firing OnMapGenerationComplete event");
         OnMapGenerationComplete?.Invoke();
         
+        // Disable this component after generation is complete
         enabled = false;
-        Debug.Log("[MapGen] Generation complete - component disabled for optimization");
     }
-
+    
     private void GrowTreeFromRoom(RoomGen parentRoom, int currentDepth)
     {
         if (currentDepth >= maxTreeDepth || generatedRooms.Count >= maxRooms)

@@ -136,3 +136,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4816a26a481ab884180a467e53c3ebe6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerDetector: {fileID: 4911890329451640717}
+  interactionName: Activate Warp Pad
+  interactionRange: 3
