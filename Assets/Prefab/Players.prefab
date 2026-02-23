@@ -956,7 +956,7 @@ MonoBehaviour:
       m_Calls: []
   m_ActionEvents: []
   m_NeverAutoSwitchControlSchemes: 1
-  m_DefaultControlScheme: Gamepad
+  m_DefaultControlScheme: 
   m_DefaultActionMap: GamePlay
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 6851629534403498496}
@@ -5749,7 +5749,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7600996857167264115}
-  - component: {fileID: 417721308804174347}
   m_Layer: 0
   m_Name: PlayersAndUIFeedback
   m_TagString: Untagged
@@ -5775,20 +5774,6 @@ Transform:
   - {fileID: 2390048095144817067}
   m_Father: {fileID: 3840428832136161651}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &417721308804174347
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6156982607684857097}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a8f93504d8799134bb5d9677ec9e4fd4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerPrefab1: {fileID: 8107502639328764301}
-  playerPrefab2: {fileID: 1339493062219740337}
 --- !u!1 &6175571697033445104
 GameObject:
   m_ObjectHideFlags: 0
@@ -7691,7 +7676,7 @@ MonoBehaviour:
       m_Calls: []
   m_ActionEvents: []
   m_NeverAutoSwitchControlSchemes: 1
-  m_DefaultControlScheme: Keyboard Mouse
+  m_DefaultControlScheme: 
   m_DefaultActionMap: GamePlay
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 8552735383582831665}
