@@ -7,10 +7,8 @@ using UnityEngine.Events;
 public class GameOverScreen : MonoBehaviour
 {
     [Header("UI References")]
-    public Button winQuitButton;
-    public Button winMainMenuButton;
-    public Button loseQuitButton;
-    public Button loseMainMenuButton;
+    public Button[] quitButtons;
+    public Button[] mainMenuButtons;
 
     [Header("Stats Display")]
     public TextMeshProUGUI timeTakenText;
@@ -24,26 +22,28 @@ public class GameOverScreen : MonoBehaviour
 
     private void Awake()
     {
-        // Setup win screen button listeners
-        if (winQuitButton != null)
+        // Setup quit button listeners (for both win and lose screens)
+        if (quitButtons != null)
         {
-            winQuitButton.onClick.AddListener(QuitApplication);
+            for (int i = 0; i < quitButtons.Length; i++)
+            {
+                if (quitButtons[i] != null)
+                {
+                    quitButtons[i].onClick.AddListener(QuitApplication);
+                }
+            }
         }
 
-        if (winMainMenuButton != null)
+        // Setup main menu button listeners (for both win and lose screens)
+        if (mainMenuButtons != null)
         {
-            winMainMenuButton.onClick.AddListener(ExitToTitle);
-        }
-
-        // Setup lose screen button listeners
-        if (loseQuitButton != null)
-        {
-            loseQuitButton.onClick.AddListener(QuitApplication);
-        }
-
-        if (loseMainMenuButton != null)
-        {
-            loseMainMenuButton.onClick.AddListener(ExitToTitle);
+            for (int i = 0; i < mainMenuButtons.Length; i++)
+            {
+                if (mainMenuButtons[i] != null)
+                {
+                    mainMenuButtons[i].onClick.AddListener(GoToMainMenu);
+                }
+            }
         }
     }
 
@@ -55,15 +55,29 @@ public class GameOverScreen : MonoBehaviour
     public void ShowWin()
     {
         UpdateStatsDisplay();
+        DisablePlayerControls();
+        
+        // Only unlock cursor if it's currently locked
+        if (Cursor.lockState != CursorLockMode.None)
+        {
+            UnlockCursor();
+        }
+        
         onWin?.Invoke();
-        Time.timeScale = 0f;
     }
 
     public void ShowLose()
     {
         UpdateStatsDisplay();
+        DisablePlayerControls();
+        
+        // Only unlock cursor if it's currently locked
+        if (Cursor.lockState != CursorLockMode.None)
+        {
+            UnlockCursor();
+        }
+        
         onLose?.Invoke();
-        Time.timeScale = 0f;
     }
 
     private void UpdateStatsDisplay()
@@ -124,14 +138,106 @@ public class GameOverScreen : MonoBehaviour
         #endif
     }
 
-    public void ExitToTitle()
+    public void GoToMainMenu()
     {
-        Time.timeScale = 1f; // Resume time before loading
-        SceneManager.LoadScene("MainMenu");
+        if (LoadingSceneManager.Instance != null)
+        {
+            LoadingSceneManager.Instance.SwitchToScene("MainMenu");
+        }
+        else
+        {
+            // Fallback to direct scene loading
+            SceneManager.LoadScene("MainMenu");
+        }
     }
 
     public void HideGameOver()
     {
-        Time.timeScale = 1f;
+        EnablePlayerControls();
+        LockCursor();
+    }
+    
+    private void UnlockCursor()
+    {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+    
+    private void LockCursor()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+    
+    private void DisablePlayerControls()
+    {
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        
+        foreach (GameObject player in players)
+        {
+            // Disable FPSMovement
+            FPSMovement fpsMovement = player.GetComponent<FPSMovement>();
+            if (fpsMovement != null)
+            {
+                fpsMovement.enabled = false;
+            }
+            
+            // Disable PlayerGun
+            PlayerGun playerGun = player.GetComponentInChildren<PlayerGun>();
+            if (playerGun != null)
+            {
+                playerGun.enabled = false;
+            }
+            
+            // Disable PlayerShooting (input handler)
+            PlayerShooting playerShooting = player.GetComponentInChildren<PlayerShooting>();
+            if (playerShooting != null)
+            {
+                playerShooting.enabled = false;
+            }
+            
+            // Disable PauseManager
+            PauseManager pauseManager = player.GetComponent<PauseManager>();
+            if (pauseManager != null)
+            {
+                pauseManager.enabled = false;
+            }
+        }
+    }
+    
+    private void EnablePlayerControls()
+    {
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        
+        foreach (GameObject player in players)
+        {
+            // Enable FPSMovement
+            FPSMovement fpsMovement = player.GetComponent<FPSMovement>();
+            if (fpsMovement != null)
+            {
+                fpsMovement.enabled = true;
+            }
+            
+            // Enable PlayerGun
+            PlayerGun playerGun = player.GetComponentInChildren<PlayerGun>();
+            if (playerGun != null)
+            {
+                playerGun.enabled = true;
+            }
+            
+            // Enable PlayerShooting (input handler)
+            PlayerShooting playerShooting = player.GetComponentInChildren<PlayerShooting>();
+            if (playerShooting != null)
+            {
+                playerShooting.enabled = true;
+            }
+            
+            // Enable PauseManager
+            PauseManager pauseManager = player.GetComponent<PauseManager>();
+            if (pauseManager != null)
+            {
+                pauseManager.enabled = true;
+            }
+        }
     }
 }

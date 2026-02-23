@@ -9,6 +9,18 @@ public class PauseManager : MonoBehaviour
     private PlayerInput playerInput;
     private InputAction pauseAction;
     private bool isPaused = false;
+    
+    // Singleton for easy access
+    public static PauseManager Instance { get; private set; }
+
+    private void Awake()
+    {
+        // Singleton pattern
+        if (Instance == null)
+            Instance = this;
+        else
+            Destroy(gameObject);
+    }
 
     void Start()
     {
@@ -47,6 +59,12 @@ public class PauseManager : MonoBehaviour
 
     private void TogglePause(InputAction.CallbackContext context)
     {
+        // Don't allow pause/unpause if game is over
+        if (LevelManager.Instance != null && LevelManager.Instance.isGameOver)
+        {
+            return;
+        }
+        
         if (isPaused)
             UnpauseGame();
         else
@@ -56,7 +74,7 @@ public class PauseManager : MonoBehaviour
     private void PauseGame()
     {
         isPaused = true;
-        Time.timeScale = 0f; // Freeze the game
+        DisablePlayerControls();
         
         if (pauseMenu != null)
             pauseMenu.SetActive(true);
@@ -71,7 +89,7 @@ public class PauseManager : MonoBehaviour
     private void UnpauseGame()
     {
         isPaused = false;
-        Time.timeScale = 1f; // Unfreeze the game
+        EnablePlayerControls();
         
         if (pauseMenu != null)
             pauseMenu.SetActive(false);
@@ -93,5 +111,69 @@ public class PauseManager : MonoBehaviour
     void Update()
     {
         
+    }
+    
+    // Public property to check if game is paused
+    public bool IsPaused()
+    {
+        return isPaused;
+    }
+    
+    private void DisablePlayerControls()
+    {
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        
+        foreach (GameObject player in players)
+        {
+            // Disable FPSMovement
+            FPSMovement fpsMovement = player.GetComponent<FPSMovement>();
+            if (fpsMovement != null)
+            {
+                fpsMovement.enabled = false;
+            }
+            
+            // Disable PlayerGun
+            PlayerGun playerGun = player.GetComponentInChildren<PlayerGun>();
+            if (playerGun != null)
+            {
+                playerGun.enabled = false;
+            }
+            
+            // Disable PlayerShooting (input handler)
+            PlayerShooting playerShooting = player.GetComponentInChildren<PlayerShooting>();
+            if (playerShooting != null)
+            {
+                playerShooting.enabled = false;
+            }
+        }
+    }
+    
+    private void EnablePlayerControls()
+    {
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        
+        foreach (GameObject player in players)
+        {
+            // Enable FPSMovement
+            FPSMovement fpsMovement = player.GetComponent<FPSMovement>();
+            if (fpsMovement != null)
+            {
+                fpsMovement.enabled = true;
+            }
+            
+            // Enable PlayerGun
+            PlayerGun playerGun = player.GetComponentInChildren<PlayerGun>();
+            if (playerGun != null)
+            {
+                playerGun.enabled = true;
+            }
+            
+            // Enable PlayerShooting (input handler)
+            PlayerShooting playerShooting = player.GetComponentInChildren<PlayerShooting>();
+            if (playerShooting != null)
+            {
+                playerShooting.enabled = true;
+            }
+        }
     }
 }

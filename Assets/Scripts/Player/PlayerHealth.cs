@@ -155,6 +155,12 @@ public class PlayerHealth : MonoBehaviour
     
     public void OnCollisionEnter(Collision collision)
     {
+        // Don't take collision damage if game is paused
+        if (PauseManager.Instance != null && PauseManager.Instance.IsPaused())
+        {
+            return;
+        }
+        
         if (collision.gameObject.tag == "Damage")
         {
             DecreaseHealth(10);
@@ -163,16 +169,22 @@ public class PlayerHealth : MonoBehaviour
 
     private void DecreaseHealth(int decreaseAmount)
     {
+        // Don't take damage if game is paused
+        if (PauseManager.Instance != null && PauseManager.Instance.IsPaused())
+        {
+            return;
+        }
+        
         Debug.Log($"[PlayerHealth] Taking {decreaseAmount} damage. Current health: {currentHealth}");
         
         currentHealth = Mathf.Max(0, currentHealth - decreaseAmount);
         UpdateHealthFillTarget();
         
-        // Get the FPSMovement component from this GameObject
+        // Get FPSMovement component from this GameObject
         FPSMovement movement = GetComponent<FPSMovement>();
         if (movement != null)
         {
-            movement.AddShake(0.1f, 0.25f); // Shake the camera when taking damage
+            movement.AddShake(0.1f, 0.25f); // Shake camera when taking damage
         }
         
         // Trigger hit feedback directly
@@ -207,6 +219,12 @@ public class PlayerHealth : MonoBehaviour
     
     public void TakeDamage(int damageAmount)
     {
+        // Don't take damage if game is paused
+        if (PauseManager.Instance != null && PauseManager.Instance.IsPaused())
+        {
+            return;
+        }
+        
         DecreaseHealth(damageAmount);
     }
     

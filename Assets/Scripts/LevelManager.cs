@@ -84,6 +84,9 @@ public class LevelManager : MonoBehaviour
     {
         if (isGameOver || isPaused) return;
         
+        // Also check if game is paused via PauseManager
+        if (PauseManager.Instance != null && PauseManager.Instance.IsPaused()) return;
+        
         UpdateTimer();
         CheckWinConditions();
         CheckLoseConditions();
