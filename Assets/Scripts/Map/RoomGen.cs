@@ -21,6 +21,11 @@ public class RoomGen : MonoBehaviour
     [Tooltip("Size of the area (centered on this object) to spawn objects within, on the XZ plane")]
     [SerializeField] private Vector3 spawnAreaSize = new Vector3(10f, 0f, 10f);
 
+    public Vector3 GetSpawnAreaSize()
+    {
+        return spawnAreaSize;
+    }
+
     [Tooltip("If true, objects will be spawned automatically in Start()")] 
     [SerializeField] private bool spawnOnStart = true;
     
@@ -155,28 +160,12 @@ public class RoomGen : MonoBehaviour
     
     /// <summary>
     /// Spawns crystals in this room
+    /// Note: Spawning is now handled centrally by CollectableManager after MapGen is disabled
     /// </summary>
     public void SpawnCrystals()
     {
-        if (CollectableManager.Instance == null)
-            return;
-        
-        // Check if this room should spawn a crystal
-        if (!CollectableManager.Instance.ShouldSpawnCrystalInRoom(this))
-            return;
-        
-        GameObject crystalPrefab = CollectableManager.Instance.GetCrystalPrefab();
-        if (crystalPrefab == null)
-        {
-            Debug.LogWarning("[RoomGen] Crystal prefab not assigned in CollectableManager!");
-            return;
-        }
-        
-        Vector3 randomPosition = GetRandomSpawnPosition();
-        GameObject crystal = Instantiate(crystalPrefab, randomPosition, Quaternion.identity);
-        crystal.transform.SetParent(transform);
-        
-        Debug.Log($"[RoomGen] Spawned crystal in {gameObject.name}");
+        // Spawning is now handled by CollectableManager.SpawnAllCollectables()
+        // This method is kept for compatibility but does nothing
     }
     
     /// <summary>

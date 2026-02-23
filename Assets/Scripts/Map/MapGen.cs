@@ -1,16 +1,12 @@
 using System.Collections.Generic;
-
 using System.Linq;
-
 using UnityEngine;
 
-
-
-
 public class MapGen : MonoBehaviour
-
 {
-
+    // Static event that other scripts can subscribe to
+    public static System.Action OnMapGenerationComplete;
+    
     [Header("Room Settings")]
     [SerializeField] private GameObject[] roomPrefabs;
 
@@ -111,6 +107,11 @@ public class MapGen : MonoBehaviour
         
         // Disable this component after generation is complete
         // GameObject remains for DoorAnimTrigger references and room management
+        
+        // Notify all subscribers that map generation is complete
+        Debug.Log("[MapGen] Firing OnMapGenerationComplete event");
+        OnMapGenerationComplete?.Invoke();
+        
         enabled = false;
         Debug.Log("[MapGen] Generation complete - component disabled for optimization");
     }
