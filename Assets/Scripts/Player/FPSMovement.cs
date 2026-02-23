@@ -341,18 +341,18 @@ public class FPSMovement : MonoBehaviour
         // Handle idle animation when not moving and not crouching
         if (rb.linearVelocity.magnitude < 0.1f && !isCrouching && !isShooting)
         {
-            // playerAnimator.SetBool("PlayerIdle", true); // Parameter doesn't exist - removed
+            // playerAnimator.SetBool("PlayerIdle", true); 
         }
         else if (rb.linearVelocity.magnitude > 0.1f)
         {
-            // playerAnimator.SetBool("PlayerIdle", false); // Parameter doesn't exist - removed
+            // playerAnimator.SetBool("PlayerIdle", false); 
         }
         
         // Handle shooting animation (this would be called from the gun script)
         if (isShooting && !isCrouching)
         {
             playerAnimator.SetBool("PlayerShooting", true);
-            // playerAnimator.SetBool("PlayerIdle", false); // Parameter doesn't exist - removed
+            // playerAnimator.SetBool("PlayerIdle", false); 
         }
         else
         {
