@@ -23,6 +23,11 @@ public class LoadingSceneManager : MonoBehaviour
     [Header("Percentage Text")]
     public TMP_Text percentageText;
 
+    [Header("Spinning Image")]
+    public Image spinningImage;
+    public float rotationSpeed = 180f; // Degrees per second
+    public bool rotateClockwise = true;
+
     [Header("Fade Out Settings")]
     public CanvasGroup fadeOutGroup; // The new group to fade
     public float fadeOutDelayBefore = 0.5f; // Wait before fading
@@ -56,6 +61,16 @@ public class LoadingSceneManager : MonoBehaviour
         }
 
         fadeIn.alpha = 0f;
+    }
+
+    private void Update()
+    {
+        // Rotate the spinning image if it's assigned and the loading screen is active
+        if (spinningImage != null && m_LoadingSceneObject != null && m_LoadingSceneObject.activeInHierarchy)
+        {
+            float rotationDirection = rotateClockwise ? 1f : -1f;
+            spinningImage.transform.Rotate(0f, 0f, rotationSpeed * rotationDirection * Time.unscaledDeltaTime);
+        }
     }
 
     public void SwitchToScene(string id)
