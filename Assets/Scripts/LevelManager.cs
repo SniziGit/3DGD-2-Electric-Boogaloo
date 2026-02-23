@@ -29,7 +29,7 @@ public class LevelManager : MonoBehaviour
     public TextMeshProUGUI timerText;
 
     [Header("Game Progress")]
-    private CollectableManager collectableManager;
+    public CollectableManager collectableManager;
     public bool reachedWarpPad = false;
     
     // Player tracking (moved from GameManager)
@@ -155,28 +155,35 @@ public class LevelManager : MonoBehaviour
             case GameOverReason.Victory:
                 playerWon = true;
                 Debug.Log("Victory! All collectables gathered and warp pad reached!");
-                ShowGameOverScreen(true, false, false);
+                ShowGameOverScreen(true);
                 break;
             case GameOverReason.OutOfTime:
                 outOfTime = true;
                 Debug.Log("Game Over! Out of time!");
-                ShowGameOverScreen(false, false, true);
+                ShowGameOverScreen(false);
                 break;
             case GameOverReason.PlayersDead:
                 playersDead = true;
                 Debug.Log("Game Over! All players eliminated!");
-                ShowGameOverScreen(false, true, false);
+                ShowGameOverScreen(false);
                 break;
         }
         
         LoadMainMenuAfterDelay();
     }
     
-    private void ShowGameOverScreen(bool isWin, bool outOfMoves, bool outOfTime)
+    private void ShowGameOverScreen(bool isWin)
     {
         if (gameOverScreen != null)
         {
-            gameOverScreen.ShowGameOver(isWin, outOfMoves, outOfTime);
+            if (isWin)
+            {
+                gameOverScreen.ShowWin();
+            }
+            else
+            {
+                gameOverScreen.ShowLose();
+            }
         }
         else
         {

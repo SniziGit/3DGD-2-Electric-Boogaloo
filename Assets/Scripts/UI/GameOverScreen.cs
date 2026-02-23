@@ -2,49 +2,48 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
+using UnityEngine.Events;
 
 public class GameOverScreen : MonoBehaviour
 {
     [Header("UI References")]
-    public GameObject gameOverPanel;
-    public TextMeshProUGUI titleText;
-    public TextMeshProUGUI messageText;
-    public Button restartButton;
-    public Button exitButton;
+    public Button winQuitButton;
+    public Button winMainMenuButton;
+    public Button loseQuitButton;
+    public Button loseMainMenuButton;
 
-    [Header("Messages")]
-    [TextArea(3, 5)]
-    public string[] winMessages = {
-        "Excellent work! All bombs neutralized!"
-    };
+    [Header("Stats Display")]
+    public TextMeshProUGUI timeTakenText;
+    public TextMeshProUGUI player1HealthText;
+    public TextMeshProUGUI player2HealthText;
+    public TextMeshProUGUI crystalsCollectedText;
 
-    [TextArea(3, 5)]
-    public string[] outOfMovesMessages = {
-        "No moves remaining... Try again!"
-    };
-
-    [TextArea(3, 5)]
-    public string[] outOfTimeMessages = {
-        "Too slow! Mission failed!",
-    };
+    [Header("Events")]
+    public UnityEvent onWin;
+    public UnityEvent onLose;
 
     private void Awake()
     {
-        // Hide panel initially
-        if (gameOverPanel != null)
+        // Setup win screen button listeners
+        if (winQuitButton != null)
         {
-            gameOverPanel.SetActive(false);
+            winQuitButton.onClick.AddListener(QuitApplication);
         }
 
-        // Setup button listeners
-        if (restartButton != null)
+        if (winMainMenuButton != null)
         {
-            restartButton.onClick.AddListener(RestartLevel);
+            winMainMenuButton.onClick.AddListener(ExitToTitle);
         }
 
-        if (exitButton != null)
+        // Setup lose screen button listeners
+        if (loseQuitButton != null)
         {
-            exitButton.onClick.AddListener(ExitToTitle);
+            loseQuitButton.onClick.AddListener(QuitApplication);
+        }
+
+        if (loseMainMenuButton != null)
+        {
+            loseMainMenuButton.onClick.AddListener(ExitToTitle);
         }
     }
 
@@ -53,58 +52,76 @@ public class GameOverScreen : MonoBehaviour
         // GameOverScreen is now controlled directly by LevelManager
     }
 
-    public void ShowGameOver(bool isWin, bool outOfMoves, bool outOfTime)
+    public void ShowWin()
     {
-        if (gameOverPanel == null || titleText == null || messageText == null)
-        {
-            Debug.LogWarning("GameOverScreen: Missing UI references!");
-            return;
-        }
-
-        // Set title based on win/lose
-        titleText.text = isWin ? "VICTORY!" : "GAME OVER";
-        titleText.color = isWin ? Color.green : Color.red;
-
-        // Choose appropriate message
-        string message = "";
-        if (isWin)
-        {
-            message = GetRandomMessage(winMessages);
-        }
-        else if (outOfMoves)
-        {
-            message = GetRandomMessage(outOfMovesMessages);
-        }
-        else if (outOfTime)
-        {
-            message = GetRandomMessage(outOfTimeMessages);
-        }
-        else
-        {
-            message = "Game Over!";
-        }
-
-        messageText.text = message;
-
-        // Show the panel
-        gameOverPanel.SetActive(true);
-
-        // Pause the game when game over screen is shown
+        UpdateStatsDisplay();
+        onWin?.Invoke();
         Time.timeScale = 0f;
     }
 
-    private string GetRandomMessage(string[] messages)
+    public void ShowLose()
     {
-        if (messages == null || messages.Length == 0)
-            return "";
-
-        return messages[Random.Range(0, messages.Length)];
+        UpdateStatsDisplay();
+        onLose?.Invoke();
+        Time.timeScale = 0f;
     }
 
-    public void RestartLevel()
+    private void UpdateStatsDisplay()
     {
-        Time.timeScale = 1f; // Resume time before loading
-        SceneManager.LoadScene("Carpet");
+        if (LevelManager.Instance != null)
+        {
+            // Time taken
+            if (timeTakenText != null)
+            {
+                float timeTaken = LevelManager.Instance.maxTime - LevelManager.Instance.GetTimerRemaining();
+                var minutes = Mathf.FloorToInt(timeTaken / 60f);
+                var seconds = Mathf.FloorToInt(timeTaken % 60f);
+                timeTakenText.text = $"Time: {minutes:00}:{seconds:00}";
+            }
+
+            // Crystals collected
+            if (crystalsCollectedText != null)
+            {
+                int collected = LevelManager.Instance.collectableManager?.GetCurrentCollected() ?? 0;
+                int total = LevelManager.Instance.collectableManager?.GetTotalRequired() ?? 0;
+                crystalsCollectedText.text = $"Crystals: {collected}/{total}";
+            }
+        }
+
+        // Player health (separate for each player)
+        UpdatePlayerHealthDisplay();
+    }
+
+    private void UpdatePlayerHealthDisplay()
+    {
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        
+        for (int i = 0; i < players.Length && i < 2; i++)
+        {
+            PlayerHealth playerHealth = players[i].GetComponent<PlayerHealth>();
+            if (playerHealth != null)
+            {
+                TextMeshProUGUI healthText = (i == 0) ? player1HealthText : player2HealthText;
+                if (healthText != null)
+                {
+                    int currentHealth = playerHealth.GetCurrentHealth();
+                    int maxHealth = playerHealth.GetMaxHealth();
+                    healthText.text = $"Player {(i + 1)} Health: {currentHealth}/{maxHealth}";
+                }
+            }
+        }
+    }
+
+    public void QuitApplication()
+    {
+        Time.timeScale = 1f; // Resume time before quitting
+        Application.Quit();
+        
+        // Note: Application.Quit() doesn't work in the Unity Editor
+        // It only works in built applications
+        #if UNITY_EDITOR
+        Debug.Log("Quit Application - This will only work in a build, not the editor");
+        #endif
     }
 
     public void ExitToTitle()
@@ -115,10 +132,6 @@ public class GameOverScreen : MonoBehaviour
 
     public void HideGameOver()
     {
-        if (gameOverPanel != null)
-        {
-            gameOverPanel.SetActive(false);
-        }
         Time.timeScale = 1f;
     }
 }
