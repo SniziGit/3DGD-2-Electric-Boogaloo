@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 423358}
+  - component: {fileID: 3471715984119145271}
   m_Layer: 0
   m_Name: Wall_Gear_02_Half
   m_TagString: Untagged
@@ -32,6 +33,27 @@ Transform:
   - {fileID: 432588}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &3471715984119145271
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 123358}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.82, y: 3.61, z: 2.79}
+  m_Center: {x: -0.63, y: 1.77, z: 1.63}
 --- !u!1 &132580
 GameObject:
   m_ObjectHideFlags: 0
