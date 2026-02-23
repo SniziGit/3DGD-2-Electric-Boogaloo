@@ -2058,6 +2058,135 @@ RectTransform:
   m_AnchoredPosition: {x: -150, y: 4.4625015}
   m_SizeDelta: {x: 367.725, y: 364.27502}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &526405923
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 526405925}
+  - component: {fileID: 526405924}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!82 &526405924
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 526405923}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!4 &526405925
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 526405923}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -504.61295, y: 278.44482, z: 0.22574608}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &542798524
 GameObject:
   m_ObjectHideFlags: 0
@@ -2735,15 +2864,15 @@ RectTransform:
   m_GameObject: {fileID: 805689687}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.51684, y: 0.51684, z: 0.51684}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 2035182832}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 735, y: 352}
+  m_AnchoredPosition: {x: 0, y: -29}
+  m_SizeDelta: {x: 735, y: 250.1067}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &805689689
 MonoBehaviour:
@@ -2774,7 +2903,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4289184803
+    rgba: 4294967295
   m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -2792,8 +2921,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 20
-  m_fontSizeBase: 20
+  m_fontSize: 40
+  m_fontSizeBase: 40
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -2830,7 +2959,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 60.207855, z: 0, w: 0}
+  m_margin: {x: 0, y: 1.3170471, z: 0, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -3184,11 +3313,9 @@ MonoBehaviour:
       is to find crystals to power a Warp Pad to escape a hostile Robot Facility.
 
 
-
       Players
       are to Attack a multitude of enemies as they explore procedurally generated
       Maps to find crystals and ultimately, the Warp Pad.
-
 
 
       Enemies include
@@ -3196,15 +3323,13 @@ MonoBehaviour:
       on sight. Or Drones, annoying and hard to hit.
 
 
-
-      Players can revive
-      each other when they are downed but the game is lost when both players are
-      downed or players run out of time.
-
+      Players can revive each
+      other when they are downed but the game is lost when both players are downed
+      or players run out of time.
 
 
-      Players can find and shoot breakable
-      crates that have a chance to drop stamina and health pickups to assist themselves.'
+      Players can find and shoot breakable crates
+      that have a chance to drop stamina and health pickups to assist themselves.'
     typeSpeed: 40
     waitForCompletion: 0
     duration: 0.5
@@ -3226,9 +3351,9 @@ MonoBehaviour:
     setActiveState: 1
     enableSkip: 1
     skipToIndex: 3
-  typewriterAudioSource: {fileID: 0}
-  typewriterSound: {fileID: 0}
-  typewriterMinPitch: 0.9
+  typewriterAudioSource: {fileID: 526405924}
+  typewriterSound: {fileID: 8300000, guid: 7b9fd88388174d94386b355d62bebcf3, type: 3}
+  typewriterMinPitch: 0.95
   typewriterMaxPitch: 1.1
 --- !u!1 &1143317787
 GameObject:
@@ -3599,15 +3724,15 @@ RectTransform:
   m_GameObject: {fileID: 1230420397}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.51684, y: 0.51684, z: 0.51684}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 2035182832}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 735, y: 352}
+  m_AnchoredPosition: {x: 0, y: 202.82945}
+  m_SizeDelta: {x: 735, y: -432.8829}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1230420399
 MonoBehaviour:
@@ -3656,8 +3781,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 40
-  m_fontSizeBase: 40
+  m_fontSize: 70
+  m_fontSizeBase: 70
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -6869,7 +6994,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c8dbacbf9cd75c4195295b15dc4499c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playOnStart: 1
+  playOnStart: 0
   playOnAwake: 0
   loopSequence: 0
   useUnscaledTime: 1
@@ -6922,9 +7047,75 @@ MonoBehaviour:
     setActiveState: 1
     enableSkip: 0
     skipToIndex: 0
-  typewriterAudioSource: {fileID: 0}
-  typewriterSound: {fileID: 0}
-  typewriterMinPitch: 0.9
+  - actionType: 1
+    targetText: {fileID: 1230420399}
+    textToType: Objectives
+    typeSpeed: 40
+    waitForCompletion: 0
+    duration: 0.5
+    uiAnimationType: 0
+    targetPanel: {fileID: 0}
+    targetTransform: {fileID: 0}
+    startPosition: {x: 0, y: 0}
+    endPosition: {x: 0, y: 0}
+    startTransformPosition: {x: 0, y: 0, z: 0}
+    endTransformPosition: {x: 0, y: 0, z: 0}
+    animationDuration: 0
+    animationCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 0
+      m_PostInfinity: 0
+      m_RotationOrder: 0
+    targetObject: {fileID: 2035182831}
+    setActiveState: 1
+    enableSkip: 0
+    skipToIndex: 0
+  - actionType: 0
+    targetText: {fileID: 805689689}
+    textToType: '1. All Bobots are required to work collaboratively to collect ALL
+      Crystals in order to extract successfully.
+
+
+      2. All Bobots are required
+      to leave the Robot Facility ALIVE AT ALL COSTS.
+
+
+      3. All Bobots are permitted
+      but not limited to eliminating all hostiles in their path.
+
+
+      4. If by
+      any scenario both Bobots are unable to leave the facility in time or alive
+      with the Crystals, the mission will be terminated.
+
+
+      Last but not least,
+      good luck and have fun :]'
+    typeSpeed: 40
+    waitForCompletion: 0
+    duration: 0.5
+    uiAnimationType: 0
+    targetPanel: {fileID: 0}
+    targetTransform: {fileID: 0}
+    startPosition: {x: 0, y: 0}
+    endPosition: {x: 0, y: 0}
+    startTransformPosition: {x: 0, y: 0, z: 0}
+    endTransformPosition: {x: 0, y: 0, z: 0}
+    animationDuration: 0
+    animationCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 0
+      m_PostInfinity: 0
+      m_RotationOrder: 0
+    targetObject: {fileID: 2035182831}
+    setActiveState: 1
+    enableSkip: 0
+    skipToIndex: 0
+  typewriterAudioSource: {fileID: 526405924}
+  typewriterSound: {fileID: 8300000, guid: 7b9fd88388174d94386b355d62bebcf3, type: 3}
+  typewriterMinPitch: 0.95
   typewriterMaxPitch: 1.1
 --- !u!1 &1879543937
 GameObject:
@@ -7146,7 +7337,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c8dbacbf9cd75c4195295b15dc4499c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playOnStart: 1
+  playOnStart: 0
   playOnAwake: 0
   loopSequence: 0
   useUnscaledTime: 1
@@ -7199,9 +7390,9 @@ MonoBehaviour:
     setActiveState: 1
     enableSkip: 0
     skipToIndex: 0
-  typewriterAudioSource: {fileID: 0}
-  typewriterSound: {fileID: 0}
-  typewriterMinPitch: 0.9
+  typewriterAudioSource: {fileID: 526405924}
+  typewriterSound: {fileID: 8300000, guid: 7b9fd88388174d94386b355d62bebcf3, type: 3}
+  typewriterMinPitch: 0.95
   typewriterMaxPitch: 1.1
 --- !u!1 &1990171426
 GameObject:
@@ -7761,6 +7952,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2035182832}
+  - component: {fileID: 2035182833}
   m_Layer: 5
   m_Name: Pages
   m_TagString: Untagged
@@ -7784,11 +7976,25 @@ RectTransform:
   - {fileID: 805689688}
   m_Father: {fileID: 605826359}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2035182833
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2035182831}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3312d7739989d2b4e91e6319e9a96d76, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Padding: {x: 0, y: 0, z: 0, w: 0}
+  m_Softness: {x: 31, y: 30}
 --- !u!1 &2055696429
 GameObject:
   m_ObjectHideFlags: 0
@@ -8138,3 +8344,4 @@ SceneRoots:
   - {fileID: 829857835}
   - {fileID: 946390821}
   - {fileID: 1273042547}
+  - {fileID: 526405925}

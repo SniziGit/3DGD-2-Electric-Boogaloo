@@ -7,10 +7,17 @@ public class LevelSelectionHandler : MonoBehaviour
     {
         GameManager.Instance.DifficultySetting(levelIndex);
     }
+    
     public void Play()
     {
-        SceneManager.LoadScene("Carpet");
-
-
+        if (LoadingSceneManager.Instance != null)
+        {
+            LoadingSceneManager.Instance.SwitchToScene("Carpet");
+        }
+        else
+        {
+            // Fallback to direct scene loading
+            SceneManager.LoadScene("Carpet");
+        }
     }
 }
