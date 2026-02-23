@@ -273,7 +273,7 @@ public class DoorInteraction : MonoBehaviour
         }
 
         System.Collections.Generic.List<PasswordNode.Direction> seq = GenerateRandomSequence(passwordLength);
-        passwordUi.ShowSequence(seq, passwordDisplaySeconds, null);
+        passwordUi.ShowSequence(seq, passwordDisplaySeconds, () => OnPasswordTimerExpired());
         sequenceInput.StartListening(seq, OnPasswordFinished);
     }
 
@@ -284,6 +284,18 @@ public class DoorInteraction : MonoBehaviour
         for (int i = 0; i < length; i++)
             sequence.Add((PasswordNode.Direction)random.Next(0, 4));
         return sequence;
+    }
+
+    private void OnPasswordTimerExpired()
+    {
+        if (!isHacking)
+            return;
+
+        // Timer expired - treat as failure
+        if (targetDoor != null)
+            doorCooldownEndTime[targetDoor] = Time.time + hackCooldownSeconds;
+
+        CancelHack();
     }
 
     private void OnPasswordFinished(bool success)
