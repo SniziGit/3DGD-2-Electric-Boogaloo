@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 using TMPro;
 
@@ -23,9 +22,6 @@ public class LevelManager : MonoBehaviour
     public bool outOfTime = false;
     public bool playersDead = false;
     
-    [Header("Scene Loading")]
-    public string mainMenuSceneName = "MainMenu";
-    public float delayBeforeLoad = 2f;
     
     [Header("UI References")]
     public GameOverScreen gameOverScreen;
@@ -172,7 +168,6 @@ public class LevelManager : MonoBehaviour
                 break;
         }
         
-        LoadMainMenuAfterDelay();
     }
     
     private void ShowGameOverScreen(bool isWin)
@@ -194,16 +189,6 @@ public class LevelManager : MonoBehaviour
         }
     }
     
-    private void LoadMainMenuAfterDelay()
-    {
-        Invoke(nameof(LoadMainMenu), delayBeforeLoad);
-    }
-    
-    private void LoadMainMenu()
-    {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(mainMenuSceneName);
-    }
     
     // Collectible progress using CollectableManager
     public float GetCollectibleProgress()
