@@ -332,6 +332,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+      - m_Target: {fileID: 1670862467}
+        m_TargetAssemblyTypeName: LevelSelectionHandler, Assembly-CSharp
+        m_MethodName: DifficultyHandler
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 3
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
 --- !u!114 &32494270
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1094,6 +1106,18 @@ MonoBehaviour:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1670862467}
+        m_TargetAssemblyTypeName: LevelSelectionHandler, Assembly-CSharp
+        m_MethodName: DifficultyHandler
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 1
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -2686,6 +2710,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ba29b516d04015543b5732be2fdcefc4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  roomComplexity: 0
+  allocatedTime: 0
+  collectableQuantity: 0
 --- !u!4 &829857835
 Transform:
   m_ObjectHideFlags: 0
@@ -2975,6 +3002,18 @@ MonoBehaviour:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1670862467}
+        m_TargetAssemblyTypeName: LevelSelectionHandler, Assembly-CSharp
+        m_MethodName: DifficultyHandler
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 2
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
@@ -4813,7 +4852,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Time Allocated : 6mins'
+  m_text: 'Time Allocated : 8mins'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6e5eb989fc292d84c821ecea549af35e, type: 2}
   m_sharedMaterial: {fileID: -9160350926283955038, guid: 6e5eb989fc292d84c821ecea549af35e, type: 2}
@@ -5084,6 +5123,7 @@ GameObject:
   - component: {fileID: 1670862464}
   - component: {fileID: 1670862466}
   - component: {fileID: 1670862465}
+  - component: {fileID: 1670862467}
   m_Layer: 5
   m_Name: LevelSelect
   m_TagString: Untagged
@@ -5151,6 +5191,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1670862463}
   m_CullTransparentMesh: 1
+--- !u!114 &1670862467
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1670862463}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb22760218894634882fd4aeecfc0263, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1694714437
 GameObject:
   m_ObjectHideFlags: 0
@@ -5575,7 +5627,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1773114653}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1670862467}
+        m_TargetAssemblyTypeName: LevelSelectionHandler, Assembly-CSharp
+        m_MethodName: Play
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1773114653
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6112,7 +6176,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Time Allocated : 8mins'
+  m_text: 'Time Allocated : 6mins'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6e5eb989fc292d84c821ecea549af35e, type: 2}
   m_sharedMaterial: {fileID: -9160350926283955038, guid: 6e5eb989fc292d84c821ecea549af35e, type: 2}

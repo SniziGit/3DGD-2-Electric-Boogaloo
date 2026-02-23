@@ -919,9 +919,9 @@ MonoBehaviour:
   normalSpeed: 200
   sprintSpeed: 400
   crouchSpeed: 100
-  normalFOV: 100
-  sprintFOV: 120
-  crouchFOV: 90
+  normalFOV: 90
+  sprintFOV: 100
+  crouchFOV: 75
   jumpForce: 5
   mouseSensitivity: 20
   groundCheck: {fileID: 4355550080931093965}
@@ -7639,9 +7639,9 @@ MonoBehaviour:
   normalSpeed: 200
   sprintSpeed: 400
   crouchSpeed: 100
-  normalFOV: 100
-  sprintFOV: 120
-  crouchFOV: 90
+  normalFOV: 90
+  sprintFOV: 100
+  crouchFOV: 75
   jumpForce: 5
   mouseSensitivity: 20
   groundCheck: {fileID: 7585012700165835954}

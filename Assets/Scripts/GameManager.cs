@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -7,18 +8,22 @@ public class GameManager : MonoBehaviour
     
     private List<PlayerHealth> players = new List<PlayerHealth>();
     private int downedPlayerCount = 0;
-    
+
+    public int roomComplexity;
+    public float allocatedTime;
+    public int collectableQuantity;
+
     void Awake()
     {
         // DISABLED - LevelManager now handles all game state management
         // Singleton pattern
-        // if (Instance == null)
-        //     Instance = this;
-        // else
-        //     Destroy(gameObject);
-        
-        // Destroy this component since LevelManager handles everything
-        Destroy(this);
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+            Destroy(gameObject);
     }
     
     void Start()
@@ -34,9 +39,34 @@ public class GameManager : MonoBehaviour
                 players.Add(playerHealth);
             }
         }
-        
+        DifficultySetting(1); // Default to Easy difficulty
+
         Debug.Log($"Found {players.Count} players in the game");
     }
+
+    public void DifficultySetting(int difficultyIndex)
+    {
+        if(difficultyIndex == 1) // Easy
+        {
+            roomComplexity = 2;
+            allocatedTime = 480f; // 8 minutes
+            collectableQuantity = 2;
+        }
+        else if(difficultyIndex == 2) // Medium
+        {
+            roomComplexity = 3;
+            allocatedTime = 360f; // 6 minutes
+            collectableQuantity = 5;
+        }
+        else if(difficultyIndex == 3) // Hard
+        {
+            roomComplexity = 4;
+            allocatedTime = 240f; // 2 minutes
+            collectableQuantity = 10;
+        }
+    }
+
+
     
     public void CheckPlayerDowned(PlayerHealth downedPlayer)
     {
