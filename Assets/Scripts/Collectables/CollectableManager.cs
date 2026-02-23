@@ -98,12 +98,12 @@ public class CollectableManager : MonoBehaviour
         // Calculate remaining rooms that haven't been checked yet
         int remainingRooms = availableRooms.Count - availableRooms.IndexOf(room);
         
-        // Ensure we spawn exactly the required number of crystals
-        // If we have more crystals to spawn than remaining rooms, spawn in this room
+        // If we have more crystals to spawn than remaining rooms, force spawn in this room
+        // This ensures we can place all required collectables even if some rooms get multiple
         if (crystalsToSpawn >= remainingRooms)
         {
             crystalsToSpawn--;
-            Debug.Log($"[CollectableManager] Spawning crystal (forced). Remaining to spawn: {crystalsToSpawn}");
+            Debug.Log($"[CollectableManager] Spawning crystal (forced - insufficient rooms). Remaining to spawn: {crystalsToSpawn}");
             return true;
         }
         
@@ -143,11 +143,6 @@ public class CollectableManager : MonoBehaviour
         UpdateCollectableUI();
         
         // UI and completion effects are now handled by InteractionPreview.cs
-    }
-    public void AssignCollectableUI(TextMeshProUGUI collectableUI)
-    {
-        collectableText = collectableUI;
-        UpdateCollectableUI();
     }
     void UpdateCollectableUI()
     {

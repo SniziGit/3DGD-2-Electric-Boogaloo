@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
+using TMPro;
 
 public class LevelManager : MonoBehaviour
 {
@@ -25,7 +26,8 @@ public class LevelManager : MonoBehaviour
     
     [Header("UI References")]
     public GameOverScreen gameOverScreen;
-    
+    public TextMeshProUGUI timerText;
+
     [Header("Game Progress")]
     private CollectableManager collectableManager;
     public bool reachedWarpPad = false;
@@ -89,7 +91,10 @@ public class LevelManager : MonoBehaviour
     private void UpdateTimer()
     {
         currentTime -= Time.deltaTime;
-        
+        var minutes = Mathf.FloorToInt(currentTime / 60f);
+        var seconds = Mathf.FloorToInt(currentTime % 60f);
+        timerText.text = $"{minutes:00}:{seconds:00}";
+
         if (currentTime <= 0f)
         {
             currentTime = 0f;
