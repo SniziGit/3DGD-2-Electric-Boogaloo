@@ -8,7 +8,10 @@ public class LevelManager : MonoBehaviour
     [Header("Game State")]
     public bool isGameOver = false;
     public bool isPaused = false;
-    
+
+    [Header("Player Tracking")]
+    public int collectableQuantity = 10; // Total collectables required for victory
+
     [Header("Timer")]
     public float maxTime = 480f; // 8 minutes default
     private float currentTime;
@@ -213,6 +216,11 @@ public class LevelManager : MonoBehaviour
     public void ReachWarpPad()
     {
         reachedWarpPad = true;
+    }
+    
+    public void LeaveWarpPad()
+    {
+        reachedWarpPad = false;
     }
     
     // Player downed state management (moved from GameManager)

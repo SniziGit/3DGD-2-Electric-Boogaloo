@@ -1631,7 +1631,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: maxRooms
-      value: 5
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: wallPrefab
@@ -1990,6 +1990,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isGameOver: 0
   isPaused: 0
+  collectableQuantity: 1
   maxTime: 480
   playerWon: 0
   outOfTime: 0
@@ -4045,7 +4046,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   warpPadPrefab: {fileID: 4202254413491720941, guid: 4afc69acbdbb16a4f8db88a2867c8c42, type: 3}
   spawnHeight: 0
-  spawnDelay: 1
+  spawnDelay: 0.5
 --- !u!1 &2017626641
 GameObject:
   m_ObjectHideFlags: 0

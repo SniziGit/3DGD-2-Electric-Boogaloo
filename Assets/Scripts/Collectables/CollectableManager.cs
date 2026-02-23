@@ -45,6 +45,7 @@ public class CollectableManager : MonoBehaviour
     
     void Awake()
     {
+        totalRequiredCollectables = LevelManager.Instance.collectableQuantity;
         // Singleton pattern
         if (instance == null)
         {
@@ -63,28 +64,19 @@ public class CollectableManager : MonoBehaviour
         crystalsToSpawn = totalRequiredCollectables;
         UpdateCollectableUI();
         
-        Debug.Log("[CollectableManager] Start() called, subscribing to MapGen completion event");
-        
-        // Check if MapGen is already disabled (generation already complete)
         MapGen mapGen = FindObjectOfType<MapGen>();
         if (mapGen != null && !mapGen.enabled)
         {
-            Debug.Log("[CollectableManager] MapGen is already disabled, spawning collectables immediately");
             SpawnAllCollectables();
             return;
         }
         
-        // Subscribe to MapGen completion event
         MapGen.OnMapGenerationComplete += OnMapGenerationComplete;
-        Debug.Log("[CollectableManager] Subscribed to OnMapGenerationComplete event");
     }
     
     private void OnMapGenerationComplete()
     {
-        Debug.Log("[CollectableManager] MapGen generation complete event received, starting collectable spawning");
         SpawnAllCollectables();
-        
-        // Unsubscribe after use to prevent memory leaks
         MapGen.OnMapGenerationComplete -= OnMapGenerationComplete;
     }
     

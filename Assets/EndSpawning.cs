@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Linq;
 
 public class EndSpawning : MonoBehaviour
 {
@@ -9,22 +10,45 @@ public class EndSpawning : MonoBehaviour
     
     [Tooltip("Height above ground to spawn the warp pad")]
     [SerializeField] private float spawnHeight = 1f;
+    
+    [Tooltip("Delay before spawning warp pad after map generation")]
+    [SerializeField] private float spawnDelay = 0f;
 
     private GameObject spawnedWarpPad;
-
+    
     void Start()
     {
-        // Subscribe to MapGen completion event
         MapGen.OnMapGenerationComplete += OnMapGenerationComplete;
+        
+        // Start fallback timer in case event doesn't fire
+        StartCoroutine(FallbackSpawnAfterDelay());
+    }
+    
+    private IEnumerator FallbackSpawnAfterDelay()
+    {
+        yield return new WaitForSeconds(0.1f);
+        
+        // Only spawn if not already spawned
+        if (spawnedWarpPad == null)
+        {
+            SpawnWarpPadInLastRoom();
+        }
     }
     
     private void OnMapGenerationComplete()
     {
-        Debug.Log("[EndSpawning] MapGen generation complete event received, spawning warp pad");
-        SpawnWarpPadInLastRoom();
-        
-        // Unsubscribe after use to prevent memory leaks
+        StartCoroutine(SpawnWarpPadWithDelay());
         MapGen.OnMapGenerationComplete -= OnMapGenerationComplete;
+    }
+    
+    private IEnumerator SpawnWarpPadWithDelay()
+    {
+        if (spawnDelay > 0)
+        {
+            yield return new WaitForSeconds(spawnDelay);
+        }
+        
+        SpawnWarpPadInLastRoom();
     }
     
     private void OnDestroy()
@@ -39,30 +63,22 @@ public class EndSpawning : MonoBehaviour
     /// <returns>true if spawning was successful, false if room was not found</returns>
     private bool SpawnWarpPadInLastRoom()
     {
-        if (warpPadPrefab == null)
+        if (warpPadPrefab == null || spawnedWarpPad != null)
         {
-            Debug.LogError("[EndSpawning] Warp Pad prefab is not assigned!");
             return false;
         }
 
-        // Find the Last Room by name
         GameObject lastRoom = GameObject.Find("Last Room");
-        
         if (lastRoom == null)
         {
-            Debug.LogError("[EndSpawning] Last Room not found! Map generation may have failed or room naming is incorrect.");
             return false;
         }
 
-        // Calculate spawn position
         Vector3 spawnPosition = lastRoom.transform.position;
-        spawnPosition.y += spawnHeight; // Spawn slightly above ground
+        spawnPosition.y += spawnHeight;
         
-        // Spawn the warp pad
         spawnedWarpPad = Instantiate(warpPadPrefab, spawnPosition, Quaternion.identity);
-        
-        Debug.Log($"[EndSpawning] Warp Pad spawned in 'Last Room' at position {spawnPosition}");
-        return true;
+        return spawnedWarpPad != null;
     }
 
     /// <summary>

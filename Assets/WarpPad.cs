@@ -9,10 +9,9 @@ public class WarpPad : MonoBehaviour, IInteractable
     public string interactionName = "Activate Warp Pad";
     public float interactionRange = 3f;
     
-    private bool gameEnded = false;
+    private bool hasNotifiedPlayers = false;
     private LevelManager levelManager;
     private CollectableManager collectableManager;
-    private bool hasNotifiedPlayers = false;
     
     void Start()
     {
@@ -38,13 +37,12 @@ public class WarpPad : MonoBehaviour, IInteractable
 
     void Update()
     {
-        if (!gameEnded && playerDetector != null && playerDetector.playerCount >= 2)
+        if (playerDetector != null && playerDetector.playerCount >= 2)
         {
             // Notify LevelManager that both players reached the warp pad
             if (levelManager != null)
             {
                 levelManager.ReachWarpPad();
-                gameEnded = true;
                 Debug.Log("WarpPad: Both players reached the warp pad!");
             }
             
@@ -59,6 +57,13 @@ public class WarpPad : MonoBehaviour, IInteractable
         {
             // Reset notification when players leave
             hasNotifiedPlayers = false;
+            
+            // Reset warp pad status when players leave
+            if (levelManager != null)
+            {
+                levelManager.LeaveWarpPad();
+                Debug.Log("WarpPad: Players left the warp pad area.");
+            }
         }
     }
     
