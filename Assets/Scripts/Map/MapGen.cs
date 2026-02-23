@@ -40,6 +40,7 @@ public class MapGen : MonoBehaviour
   
     private void Start()
     {
+        maxRooms = GameManager.Instance.roomComplexity;
         if (generateOnStart)
         {
             GenerateDungeon();

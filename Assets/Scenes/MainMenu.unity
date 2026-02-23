@@ -913,7 +913,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Room Complexity: 2'
+  m_text: 'Room Complexity: 3'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6e5eb989fc292d84c821ecea549af35e, type: 2}
   m_sharedMaterial: {fileID: -9160350926283955038, guid: 6e5eb989fc292d84c821ecea549af35e, type: 2}
@@ -6700,7 +6700,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Room Complexity: 3'
+  m_text: 'Room Complexity: 2'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 6e5eb989fc292d84c821ecea549af35e, type: 2}
   m_sharedMaterial: {fileID: -9160350926283955038, guid: 6e5eb989fc292d84c821ecea549af35e, type: 2}

@@ -45,7 +45,7 @@ public class CollectableManager : MonoBehaviour
     
     void Awake()
     {
-        totalRequiredCollectables = LevelManager.Instance.collectableQuantity;
+        totalRequiredCollectables = GameManager.Instance.collectableQuantity;
         // Singleton pattern
         if (instance == null)
         {

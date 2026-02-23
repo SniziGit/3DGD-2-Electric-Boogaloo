@@ -41,6 +41,8 @@ public class LevelManager : MonoBehaviour
     
     private void Start()
     {
+        maxTime = GameManager.Instance.allocatedTime; // Get allocated time from GameManager
+        collectableQuantity = GameManager.Instance.collectableQuantity; // Get collectable quantity from GameManager
         currentTime = maxTime;
         collectableManager = CollectableManager.Instance;
         
