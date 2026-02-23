@@ -9,38 +9,28 @@ public class EndSpawning : MonoBehaviour
     
     [Tooltip("Height above ground to spawn the warp pad")]
     [SerializeField] private float spawnHeight = 1f;
-    
-    [Tooltip("How long to wait before attempting to spawn (to allow map generation to complete)")]
-    [SerializeField] private float spawnDelay = 1f;
 
     private GameObject spawnedWarpPad;
 
     void Start()
     {
-        StartCoroutine(DelayedSpawn());
+        // Subscribe to MapGen completion event
+        MapGen.OnMapGenerationComplete += OnMapGenerationComplete;
     }
-
-    private IEnumerator DelayedSpawn()
+    
+    private void OnMapGenerationComplete()
     {
-        // Wait for map generation to complete
-        yield return new WaitForSeconds(spawnDelay);
+        Debug.Log("[EndSpawning] MapGen generation complete event received, spawning warp pad");
+        SpawnWarpPadInLastRoom();
         
-        // Try to spawn, with retries if room not found yet
-        int maxRetries = 5;
-        float retryInterval = 0.5f;
-        
-        for (int i = 0; i < maxRetries; i++)
-        {
-            if (SpawnWarpPadInLastRoom())
-            {
-                yield break; // Success, exit coroutine
-            }
-            
-            Debug.LogWarning($"[EndSpawning] Last Room not found, retrying in {retryInterval} seconds... (attempt {i + 1}/{maxRetries})");
-            yield return new WaitForSeconds(retryInterval);
-        }
-        
-        Debug.LogError("[EndSpawning] Failed to find Last Room after all retries. Map generation may have failed.");
+        // Unsubscribe after use to prevent memory leaks
+        MapGen.OnMapGenerationComplete -= OnMapGenerationComplete;
+    }
+    
+    private void OnDestroy()
+    {
+        // Clean up event subscription
+        MapGen.OnMapGenerationComplete -= OnMapGenerationComplete;
     }
 
     /// <summary>
@@ -60,7 +50,8 @@ public class EndSpawning : MonoBehaviour
         
         if (lastRoom == null)
         {
-            return false; // Room not found, but don't log error here (let retry logic handle it)
+            Debug.LogError("[EndSpawning] Last Room not found! Map generation may have failed or room naming is incorrect.");
+            return false;
         }
 
         // Calculate spawn position

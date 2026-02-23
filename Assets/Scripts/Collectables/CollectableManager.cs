@@ -62,6 +62,86 @@ public class CollectableManager : MonoBehaviour
     {
         crystalsToSpawn = totalRequiredCollectables;
         UpdateCollectableUI();
+        
+        Debug.Log("[CollectableManager] Start() called, subscribing to MapGen completion event");
+        
+        // Check if MapGen is already disabled (generation already complete)
+        MapGen mapGen = FindObjectOfType<MapGen>();
+        if (mapGen != null && !mapGen.enabled)
+        {
+            Debug.Log("[CollectableManager] MapGen is already disabled, spawning collectables immediately");
+            SpawnAllCollectables();
+            return;
+        }
+        
+        // Subscribe to MapGen completion event
+        MapGen.OnMapGenerationComplete += OnMapGenerationComplete;
+        Debug.Log("[CollectableManager] Subscribed to OnMapGenerationComplete event");
+    }
+    
+    private void OnMapGenerationComplete()
+    {
+        Debug.Log("[CollectableManager] MapGen generation complete event received, starting collectable spawning");
+        SpawnAllCollectables();
+        
+        // Unsubscribe after use to prevent memory leaks
+        MapGen.OnMapGenerationComplete -= OnMapGenerationComplete;
+    }
+    
+    private void OnDestroy()
+    {
+        // Clean up event subscription
+        MapGen.OnMapGenerationComplete -= OnMapGenerationComplete;
+    }
+    
+    private void SpawnAllCollectables()
+    {
+        if (availableRooms.Count == 0)
+        {
+            Debug.LogWarning("[CollectableManager] No rooms registered for spawning!");
+            return;
+        }
+        
+        // Shuffle rooms for random distribution
+        List<RoomGen> shuffledRooms = new List<RoomGen>(availableRooms);
+        System.Random rng = new System.Random();
+        for (int i = shuffledRooms.Count - 1; i > 0; i--)
+        {
+            int j = rng.Next(i + 1);
+            RoomGen temp = shuffledRooms[i];
+            shuffledRooms[i] = shuffledRooms[j];
+            shuffledRooms[j] = temp;
+        }
+        
+        // Distribute collectables among rooms
+        int remainingCrystals = crystalsToSpawn;
+        int roomIndex = 0;
+        
+        while (remainingCrystals > 0 && roomIndex < shuffledRooms.Count)
+        {
+            RoomGen currentRoom = shuffledRooms[roomIndex];
+            
+            // Calculate how many crystals to place in this room
+            int remainingRooms = shuffledRooms.Count - roomIndex;
+            int maxCrystalsInThisRoom = Mathf.Min(remainingCrystals, Mathf.CeilToInt((float)remainingCrystals / remainingRooms) + 1);
+            int crystalsToPlaceInRoom = Random.Range(1, maxCrystalsInThisRoom + 1);
+            
+            // Ensure we don't exceed the total required
+            crystalsToPlaceInRoom = Mathf.Min(crystalsToPlaceInRoom, remainingCrystals);
+            
+            Debug.Log($"[CollectableManager] Placing {crystalsToPlaceInRoom} crystals in room {currentRoom.gameObject.name}");
+            
+            // Spawn the crystals in this room
+            for (int i = 0; i < crystalsToPlaceInRoom; i++)
+            {
+                SpawnCrystalInRoom(currentRoom);
+            }
+            
+            remainingCrystals -= crystalsToPlaceInRoom;
+            roomIndex++;
+        }
+        
+        Debug.Log($"[CollectableManager] Spawned {totalRequiredCollectables - remainingCrystals} collectables across {roomIndex} rooms");
     }
     
     public void CollectCollectable(GameObject player)
@@ -92,36 +172,51 @@ public class CollectableManager : MonoBehaviour
     
     public bool ShouldSpawnCrystalInRoom(RoomGen room)
     {
-        if (crystalsToSpawn <= 0 || !availableRooms.Contains(room))
-            return false;
-        
-        // Calculate remaining rooms that haven't been checked yet
-        int remainingRooms = availableRooms.Count - availableRooms.IndexOf(room);
-        
-        // If we have more crystals to spawn than remaining rooms, force spawn in this room
-        // This ensures we can place all required collectables even if some rooms get multiple
-        if (crystalsToSpawn >= remainingRooms)
-        {
-            crystalsToSpawn--;
-            Debug.Log($"[CollectableManager] Spawning crystal (forced - insufficient rooms). Remaining to spawn: {crystalsToSpawn}");
-            return true;
-        }
-        
-        // Otherwise, use probability to distribute remaining crystals among remaining rooms
-        float spawnProbability = (float)crystalsToSpawn / remainingRooms;
-        if (Random.value < spawnProbability)
-        {
-            crystalsToSpawn--;
-            Debug.Log($"[CollectableManager] Spawning crystal (probabilistic). Probability: {spawnProbability:F2}, Remaining to spawn: {crystalsToSpawn}");
-            return true;
-        }
-        
+        // This method is deprecated - spawning is now handled centrally by SpawnAllCollectables()
         return false;
     }
     
     public GameObject GetCrystalPrefab()
     {
         return crystalPrefab;
+    }
+    
+    public GameObject SpawnCrystalInRoom(RoomGen room)
+    {
+        if (room == null)
+        {
+            Debug.LogWarning("[CollectableManager] Room is null!");
+            return null;
+        }
+        
+        GameObject crystalPrefab = GetCrystalPrefab();
+        if (crystalPrefab == null)
+        {
+            Debug.LogWarning("[CollectableManager] Crystal prefab not assigned!");
+            return null;
+        }
+        
+        Vector3 randomPosition = GetRandomSpawnPositionInRoom(room);
+        GameObject crystal = Instantiate(crystalPrefab, randomPosition, Quaternion.identity);
+        crystal.transform.SetParent(room.transform);
+        
+        Debug.Log($"[CollectableManager] Spawned crystal in {room.gameObject.name}");
+        return crystal;
+    }
+    
+    private Vector3 GetRandomSpawnPositionInRoom(RoomGen room)
+    {
+        Vector3 roomPosition = room.transform.position;
+        Vector3 roomSize = room.GetSpawnAreaSize();
+        
+        Vector3 randomPos = roomPosition;
+        randomPos.x += Random.Range(-roomSize.x / 2f, roomSize.x / 2f);
+        randomPos.z += Random.Range(-roomSize.z / 2f, roomSize.z / 2f);
+        
+        // Add some height to spawn above ground (same as original RoomGen method)
+        randomPos.y = roomPosition.y + 2f;
+        
+        return randomPos;
     }
     
     public string GetCollectionText()
