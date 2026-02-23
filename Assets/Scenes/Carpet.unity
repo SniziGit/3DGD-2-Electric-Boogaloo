@@ -413,7 +413,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: maxRooms
-      value: 2
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 4598056477376431418, guid: 3420ec1c9009d9d4e997d96b257012cd, type: 3}
       propertyPath: wallPrefab
@@ -618,8 +618,6 @@ MonoBehaviour:
   playerWon: 0
   outOfTime: 0
   playersDead: 0
-  mainMenuSceneName: MainMenu
-  delayBeforeLoad: 2
   gameOverScreen: {fileID: 860208369}
   timerText: {fileID: 60172457}
   collectableManager: {fileID: 1532534069}
