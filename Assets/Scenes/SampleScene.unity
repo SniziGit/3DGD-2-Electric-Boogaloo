@@ -325,6 +325,63 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 1243662731942127474, guid: d1a5f3dd165bebe4cbb2874185804f3f, type: 3}
   m_PrefabInstance: {fileID: 673222907251893762}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &616378330
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3812826831972298582, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
+      propertyPath: m_Name
+      value: Enemy (FlyingLazerEyes)
+      objectReference: {fileID: 0}
+    - target: {fileID: 7956160817549174911, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.17719531
+      objectReference: {fileID: 0}
+    - target: {fileID: 7956160817549174911, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.1469028
+      objectReference: {fileID: 0}
+    - target: {fileID: 7956160817549174911, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -14.928388
+      objectReference: {fileID: 0}
+    - target: {fileID: 7956160817549174911, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7956160817549174911, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7956160817549174911, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7956160817549174911, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7956160817549174911, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7956160817549174911, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7956160817549174911, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 6033d5a472e28e24897d9fbade22f5af, type: 3}
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -1784,6 +1841,10 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4085704404721749738, guid: 7519ec4af7b11d44f8142fac794f786f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6222487978565273276, guid: 7519ec4af7b11d44f8142fac794f786f, type: 3}
       propertyPath: m_Name
       value: Enemy (Pistoleer)
@@ -1863,3 +1924,4 @@ SceneRoots:
   - {fileID: 541549450}
   - {fileID: 1414296252}
   - {fileID: 1057335778}
+  - {fileID: 616378330}

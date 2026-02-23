@@ -122,6 +122,9 @@ public class DirectionalSequenceUI : MonoBehaviour
         
         if (timerText != null)
             timerText.gameObject.SetActive(false);
+
+        // Call the completion callback when timer expires
+        onCompleteCallback?.Invoke();
     }
 
     private void DisplayArrows(List<PasswordNode.Direction> sequence)
@@ -183,21 +186,21 @@ public class DirectionalSequenceUI : MonoBehaviour
             yield break;
         }
 
-        float singleFlashTime = flickerDuration / flickerCount;
+        float singleFlashTime = flickerDuration / (flickerCount * 2f);
 
+        // Ensure the flicker object starts disabled
         flickerObject.SetActive(false);
 
         for (int i = 0; i < flickerCount; i++)
         {
             flickerObject.SetActive(true);
-            yield return new WaitForSecondsRealtime(singleFlashTime / 2f);
+            yield return new WaitForSecondsRealtime(singleFlashTime);
 
             flickerObject.SetActive(false);
-            yield return new WaitForSecondsRealtime(singleFlashTime / 2f);
+            yield return new WaitForSecondsRealtime(singleFlashTime);
         }
 
-        yield return new WaitForSecondsRealtime(0.2f);
-
+        // Remove the delay - close immediately after flickering
         HidePanel();
         onCompleteCallback?.Invoke();
     }

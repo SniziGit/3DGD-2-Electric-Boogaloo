@@ -991,7 +991,7 @@ MonoBehaviour:
   healthFillImage: {fileID: 191405687975285031}
   healthText: {fileID: 9172695067966967530}
   fillSmoothSpeed: 5
-  hitUIPrefab: {fileID: 3590087844419449276}
+  hitUIPrefab: {fileID: 5059645157731833783}
   fadeInDuration: 0.1
   fadeOutDuration: 0.4
   maxAlpha: 0.3
@@ -5842,6 +5842,7 @@ MonoBehaviour:
   flashSpawnPoint: {fileID: 2735656426260856173}
   ammoFillImage: {fileID: 1446375063083937727}
   fillSmoothSpeed: 5
+  playerHealth: {fileID: 7518572276422262463}
   recoilDistance: 0.1
   recoilSpeed: 15
   shootingSFX: {fileID: 8300000, guid: 883153b4aadef934a8362985a404d082, type: 3}
@@ -6458,6 +6459,7 @@ MonoBehaviour:
   flashSpawnPoint: {fileID: 2580650815911227455}
   ammoFillImage: {fileID: 7828386615683442505}
   fillSmoothSpeed: 5
+  playerHealth: {fileID: 3941402169704664518}
   recoilDistance: 0.1
   recoilSpeed: 15
   shootingSFX: {fileID: 8300000, guid: 883153b4aadef934a8362985a404d082, type: 3}

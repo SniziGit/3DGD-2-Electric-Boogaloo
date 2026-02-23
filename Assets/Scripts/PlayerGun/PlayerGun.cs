@@ -36,6 +36,9 @@ public class PlayerGun : MonoBehaviour
     [Header("Ammo UI")]
     public UnityEngine.UI.Image ammoFillImage;
     public float fillSmoothSpeed = 5f;
+    
+    [Header("Player Health")]
+    public PlayerHealth playerHealth;
 
     // Crosshair recoil variables
     private float nextTimeToFire;
@@ -125,6 +128,7 @@ public class PlayerGun : MonoBehaviour
     {
         if (isReloading) return;
         if (Time.time < nextTimeToFire) return;
+        if (playerHealth != null && playerHealth.IsDead()) return;
         
         if (currentAmmo <= 0)
         {
@@ -199,6 +203,8 @@ public class PlayerGun : MonoBehaviour
     {
         if (isHoldingShoot && !isReloading && Time.time >= nextTimeToFire)
         {
+            if (playerHealth != null && playerHealth.IsDead()) return;
+            
             if (currentAmmo <= 0)
             {
                 StartCoroutine(Reload());
