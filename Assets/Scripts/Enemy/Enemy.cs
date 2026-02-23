@@ -631,6 +631,12 @@ public class Enemy : MonoBehaviour, IDamageable
     {
         idleTimeCounter = idleTime; // Reset idle timer when attacking
         agent.ResetPath();
+        
+        // Don't attack if game is paused
+        if (PauseManager.Instance != null && PauseManager.Instance.IsPaused())
+        {
+            return;
+        }
 
         Shoot();
 
@@ -671,6 +677,12 @@ public class Enemy : MonoBehaviour, IDamageable
 
     private void Shoot()
     {
+        // Don't shoot if game is paused
+        if (PauseManager.Instance != null && PauseManager.Instance.IsPaused())
+        {
+            return;
+        }
+        
         if(Time.time > lastshotTime + fireRate)
         {
             // Check for required components
